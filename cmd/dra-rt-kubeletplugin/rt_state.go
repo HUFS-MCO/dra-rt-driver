@@ -80,7 +80,7 @@ func NewRtState(config *Config) (*RtState, error) {
 		containerToUtil: make(map[string]int),
 	}
 	// 	// here we don't have the cpuset functions we need to use s.th else
-	// 	state.cpuToUtil = make(map[int]float64, s.GetDefaultCPUSet().Size())
+	// 	state.cpuToUtil = make(map[int]int, s.GetDefaultCPUSet().Size())
 	// 	for _, cpu := range s.GetDefaultCPUSet().UnsortedList() {
 	// 		state.cpuToUtil[cpu] = 0
 	// 	}
