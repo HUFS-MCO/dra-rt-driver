@@ -15,6 +15,6 @@
  */
 
 // +k8s:deepcopy-gen=package
-// +groupName=nas.gpu.resource.example.com
+// +groupName=nas.rt.resource.example.com
 
 package v1alpha1

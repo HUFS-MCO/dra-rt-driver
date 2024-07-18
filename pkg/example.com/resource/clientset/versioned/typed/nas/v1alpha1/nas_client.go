@@ -31,7 +31,7 @@ type NasV1alpha1Interface interface {
 	NodeAllocationStatesGetter
 }
 
-// NasV1alpha1Client is used to interact with features provided by the nas.gpu.resource.example.com group.
+// NasV1alpha1Client is used to interact with features provided by the nas.rt.resource.example.com group.
 type NasV1alpha1Client struct {
 	restClient rest.Interface
 }

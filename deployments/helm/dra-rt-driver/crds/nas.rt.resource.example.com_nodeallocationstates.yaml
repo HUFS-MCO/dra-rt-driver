@@ -4,9 +4,9 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-  name: nodeallocationstates.nas.gpu.resource.example.com
+  name: nodeallocationstates.nas.rt.resource.example.com
 spec:
-  group: nas.gpu.resource.example.com
+  group: nas.rt.resource.example.com
   names:
     kind: NodeAllocationState
     listKind: NodeAllocationStateList
@@ -47,7 +47,7 @@ spec:
                     on a node.
                   properties:
                     rtcpu:
-                      description: AllocatableGpu represents an allocatable GPU on
+                      description: AllocatableCpu represents an allocatable GPU on
                         a node.
                       properties:
                         id:
