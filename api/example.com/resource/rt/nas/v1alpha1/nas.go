@@ -21,75 +21,76 @@ import (
 )
 
 // AllocatableGpu represents an allocatable GPU on a node.
-type AllocatableGpu struct {
-	UUID        string `json:"uuid"`
-	ProductName string `json:"productName"`
+type AllocatableCpu struct {
+	ID   int     `json:"id"`
+	Util float64 `json:"util"`
+	// ProductName string `json:"productName"` // let's assume that the UUID is enough for now
 }
 
 // AllocatableDevice represents an allocatable device on a node.
-type AllocatableDevice struct {
-	Gpu *AllocatableGpu `json:"gpu,omitempty"`
+type AllocatableRtCpu struct {
+	RtCpu *AllocatableCpu `json:"rtcpu,omitempty"`
 }
 
 // Type returns the type of AllocatableDevice this represents.
-func (d AllocatableDevice) Type() string {
-	if d.Gpu != nil {
-		return GpuDeviceType
+func (d AllocatableRtCpu) Type() string {
+	if d.RtCpu != nil {
+		return RtCpuType
 	}
 	return UnknownDeviceType
 }
 
 // AllocatedGpu represents an allocated GPU.
-type AllocatedGpu struct {
-	UUID string `json:"uuid,omitempty"`
+type AllocatedCpu struct {
+	ID string `json:"id,omitempty"`
 }
 
-// AllocatedGpus represents a set of allocated GPUs.
-type AllocatedGpus struct {
-	Devices []AllocatedGpu `json:"devices"`
+// AllocatedCpuset represents a set of allocated CPUs.
+type AllocatedCpuset struct {
+	Cpuset []AllocatedCpu `json:"cpuset"`
 }
 
-// AllocatedDevices represents a set of allocated devices.
-type AllocatedDevices struct {
-	Gpu *AllocatedGpus `json:"gpu,omitempty"`
+// AllocatedRtCpu represents a set of allocated CPUs.
+type AllocatedRtCpu struct {
+	RtCpu *AllocatedCpuset `json:"rtcpu,omitempty"`
 }
 
 // Type returns the type of AllocatedDevices this represents.
-func (r AllocatedDevices) Type() string {
-	if r.Gpu != nil {
-		return GpuDeviceType
+func (r AllocatedRtCpu) Type() string {
+	if r.RtCpu != nil {
+		return RtCpuType
 	}
 	return UnknownDeviceType
 }
 
 // PreparedGpu represents a prepared GPU on a node.
-type PreparedGpu struct {
-	UUID string `json:"uuid"`
+type PreparedCpu struct {
+	ID string `json:"id"`
 }
 
 // PreparedGpus represents a set of prepared GPUs on a node.
-type PreparedGpus struct {
-	Devices []PreparedGpu `json:"devices"`
+type PreparedCpuset struct {
+	Cpuset []PreparedCpu `json:"cpuset"`
 }
 
 // PreparedDevices represents a set of prepared devices on a node.
-type PreparedDevices struct {
-	Gpu *PreparedGpus `json:"gpu,omitempty"`
+type PreparedRtCpu struct {
+	RtCpu *PreparedCpuset `json:"rtcpu,omitempty"`
 }
 
 // Type returns the type of PreparedDevices this represents.
-func (d PreparedDevices) Type() string {
-	if d.Gpu != nil {
-		return GpuDeviceType
+func (d PreparedRtCpu) Type() string {
+	if d.RtCpu != nil {
+		return RtCpuType
 	}
 	return UnknownDeviceType
 }
 
 // NodeAllocationStateSpec is the spec for the NodeAllocationState CRD.
 type NodeAllocationStateSpec struct {
-	AllocatableDevices []AllocatableDevice         `json:"allocatableDevices,omitempty"`
-	AllocatedClaims    map[string]AllocatedDevices `json:"allocatedClaims,omitempty"`
-	PreparedClaims     map[string]PreparedDevices  `json:"preparedClaims,omitempty"`
+	AllocatableRtCpu []AllocatableRtCpu        `json:"allocatableRtCpu,omitempty"`
+	AllocatedClaims  map[string]AllocatedRtCpu `json:"allocatedClaims,omitempty"`
+	PreparedClaims   map[string]PreparedRtCpu  `json:"preparedClaims,omitempty"`
 }
 
 // +genclient

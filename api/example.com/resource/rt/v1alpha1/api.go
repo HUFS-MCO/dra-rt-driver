@@ -17,29 +17,31 @@
 package v1alpha1
 
 import (
-	nascrd "sigs.k8s.io/dra-example-driver/api/example.com/resource/gpu/nas/v1alpha1"
+	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
 )
 
 const (
-	GroupName = "gpu.resource.example.com"
+	GroupName = "rt.resource.example.com"
 	Version   = "v1alpha1"
 
-	GpuClaimParametersKind = "GpuClaimParameters"
+	RtClaimParametersKind = "RtClaimParameters"
 )
 
 func DefaultDeviceClassParametersSpec() *DeviceClassParametersSpec {
 	return &DeviceClassParametersSpec{
 		DeviceSelector: []DeviceSelector{
 			{
-				Type: nascrd.GpuDeviceType,
+				Type: nascrd.RtCpuType,
 				Name: "*",
 			},
 		},
 	}
 }
 
-func DefaultGpuClaimParametersSpec() *GpuClaimParametersSpec {
-	return &GpuClaimParametersSpec{
-		Count: 1,
+func DefaultRtClaimParametersSpec() *RtClaimParametersSpec {
+	return &RtClaimParametersSpec{
+		Count:   1,
+		Runtime: 10, //should we put the default as miliseconds?
+		Period:  100,
 	}
 }

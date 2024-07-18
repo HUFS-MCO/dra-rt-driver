@@ -19,40 +19,36 @@ package main
 import (
 	"math/rand"
 	"os"
-
-	"github.com/google/uuid"
 )
 
-func enumerateAllPossibleDevices() (AllocatableDevices, error) {
+func enumerateAllPossibleDevices() (AllocatableRtCpus, error) {
 	numGPUs := 8
 	seed := os.Getenv("NODE_NAME")
-	uuids := generateUUIDs(seed, numGPUs)
+	ids := generateIDs(seed, numGPUs)
 
-	alldevices := make(AllocatableDevices)
-	for _, uuid := range uuids {
-		deviceInfo := &AllocatableDeviceInfo{
-			GpuInfo: &GpuInfo{
-				uuid:  uuid,
-				model: "LATEST-GPU-MODEL",
+	alldevices := make(AllocatableRtCpus)
+	for _, id := range ids {
+		deviceInfo := &AllocatableCpusetInfo{
+			RtCpuInfo: &RtCpuInfo{
+				id:   id,
+				util: 0.1,
 			},
 		}
-		alldevices[uuid] = deviceInfo
+		alldevices[string(id)] = deviceInfo
 	}
 	return alldevices, nil
 }
 
-func generateUUIDs(seed string, count int) []string {
+func generateIDs(seed string, count int) []int {
 	rand := rand.New(rand.NewSource(hash(seed)))
 
-	uuids := make([]string, count)
+	ids := make([]int, count)
 	for i := 0; i < count; i++ {
-		charset := make([]byte, 16)
-		rand.Read(charset)
-		uuid, _ := uuid.FromBytes(charset)
-		uuids[i] = "GPU-" + uuid.String()
+		id := rand.Int()
+		ids[i] = id
 	}
 
-	return uuids
+	return ids
 }
 
 func hash(s string) int64 {

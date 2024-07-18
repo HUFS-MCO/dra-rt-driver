@@ -41,42 +41,41 @@ spec:
             description: NodeAllocationStateSpec is the spec for the NodeAllocationState
               CRD.
             properties:
-              allocatableDevices:
+              allocatableRtCpu:
                 items:
                   description: AllocatableDevice represents an allocatable device
                     on a node.
                   properties:
-                    gpu:
+                    rtcpu:
                       description: AllocatableGpu represents an allocatable GPU on
                         a node.
                       properties:
-                        productName:
-                          type: string
-                        uuid:
-                          type: string
+                        id:
+                          type: integer
+                        util: {}
                       required:
-                      - productName
-                      - uuid
+                      - id
+                      - util
                       type: object
                   type: object
                 type: array
               allocatedClaims:
                 additionalProperties:
-                  description: AllocatedDevices represents a set of allocated devices.
+                  description: AllocatedRtCpu represents a set of allocated CPUs.
                   properties:
-                    gpu:
-                      description: AllocatedGpus represents a set of allocated GPUs.
+                    rtcpu:
+                      description: AllocatedCpuset represents a set of allocated CPUs.
                       properties:
-                        devices:
+                        cpuset:
                           items:
                             description: AllocatedGpu represents an allocated GPU.
                             properties:
-                              uuid:
+                              id:
                                 type: string
                             type: object
                           type: array
                       required:
-                      - devices
+                      - cpuset
                       type: object
                   type: object
                 type: object
@@ -85,23 +84,23 @@ spec:
                   description: PreparedDevices represents a set of prepared devices
                     on a node.
                   properties:
-                    gpu:
+                    rtcpu:
                       description: PreparedGpus represents a set of prepared GPUs
                         on a node.
                       properties:
-                        devices:
+                        cpuset:
                           items:
                             description: PreparedGpu represents a prepared GPU on
                               a node.
                             properties:
-                              uuid:
+                              id:
                                 type: string
                             required:
-                            - uuid
+                            - id
                             type: object
                           type: array
                       required:
-                      - devices
+                      - cpuset
                       type: object
                   type: object
                 type: object

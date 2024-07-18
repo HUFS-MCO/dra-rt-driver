@@ -23,28 +23,28 @@ import (
 	resourcev1 "k8s.io/api/resource/v1alpha2"
 	"k8s.io/dynamic-resource-allocation/controller"
 
-	nascrd "sigs.k8s.io/dra-example-driver/api/example.com/resource/gpu/nas/v1alpha1"
-	gpucrd "sigs.k8s.io/dra-example-driver/api/example.com/resource/gpu/v1alpha1"
+	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
+	rtcrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/v1alpha1"
 )
 
-type gpudriver struct {
+type rtdriver struct {
 	PendingAllocatedClaims *PerNodeAllocatedClaims
 }
 
-func NewGpuDriver() *gpudriver {
-	return &gpudriver{
+func NewRtDriver() *rtdriver {
+	return &rtdriver{
 		PendingAllocatedClaims: NewPerNodeAllocatedClaims(),
 	}
 }
 
-func (g *gpudriver) ValidateClaimParameters(claimParams *gpucrd.GpuClaimParametersSpec) error {
+func (g *rtdriver) ValidateClaimParameters(claimParams *rtcrd.RtClaimParametersSpec) error {
 	if claimParams.Count < 1 {
 		return fmt.Errorf("invalid number of GPUs requested: %v", claimParams.Count)
 	}
 	return nil
 }
 
-func (g *gpudriver) Allocate(crd *nascrd.NodeAllocationState, claim *resourcev1.ResourceClaim, claimParams *gpucrd.GpuClaimParametersSpec, class *resourcev1.ResourceClass, classParams *gpucrd.DeviceClassParametersSpec, selectedNode string) (OnSuccessCallback, error) {
+func (g *rtdriver) Allocate(crd *nascrd.NodeAllocationState, claim *resourcev1.ResourceClaim, claimParams *rtcrd.RtClaimParametersSpec, class *resourcev1.ResourceClass, classParams *rtcrd.DeviceClassParametersSpec, selectedNode string) (OnSuccessCallback, error) {
 	claimUID := string(claim.UID)
 
 	if !g.PendingAllocatedClaims.Exists(claimUID, selectedNode) {
@@ -59,24 +59,24 @@ func (g *gpudriver) Allocate(crd *nascrd.NodeAllocationState, claim *resourcev1.
 	return onSuccess, nil
 }
 
-func (g *gpudriver) Deallocate(crd *nascrd.NodeAllocationState, claim *resourcev1.ResourceClaim) error {
+func (g *rtdriver) Deallocate(crd *nascrd.NodeAllocationState, claim *resourcev1.ResourceClaim) error {
 	g.PendingAllocatedClaims.Remove(string(claim.UID))
 	return nil
 }
 
-func (g *gpudriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.Pod, gpucas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, potentialNode string) error {
-	g.PendingAllocatedClaims.VisitNode(potentialNode, func(claimUID string, allocation nascrd.AllocatedDevices) {
+func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.Pod, rtcas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, potentialNode string) error {
+	rt.PendingAllocatedClaims.VisitNode(potentialNode, func(claimUID string, allocation nascrd.AllocatedRtCpu) {
 		if _, exists := crd.Spec.AllocatedClaims[claimUID]; exists {
-			g.PendingAllocatedClaims.Remove(claimUID)
+			rt.PendingAllocatedClaims.Remove(claimUID)
 		} else {
 			crd.Spec.AllocatedClaims[claimUID] = allocation
 		}
 	})
 
-	allocated := g.allocate(crd, pod, gpucas, allcas, potentialNode)
-	for _, ca := range gpucas {
+	allocated := rt.allocate(crd, pod, rtcas, allcas, potentialNode)
+	for _, ca := range rtcas {
 		claimUID := string(ca.Claim.UID)
-		claimParams, _ := ca.ClaimParameters.(*gpucrd.GpuClaimParametersSpec)
+		claimParams, _ := ca.ClaimParameters.(*rtcrd.RtClaimParametersSpec)
 
 		if claimParams.Count != len(allocated[claimUID]) {
 			for _, ca := range allcas {
@@ -85,33 +85,33 @@ func (g *gpudriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 			return nil
 		}
 
-		var devices []nascrd.AllocatedGpu
+		var devices []nascrd.AllocatedCpu
 		for _, gpu := range allocated[claimUID] {
-			device := nascrd.AllocatedGpu{
-				UUID: gpu,
+			device := nascrd.AllocatedCpu{
+				ID: gpu,
 			}
 			devices = append(devices, device)
 		}
 
-		allocatedDevices := nascrd.AllocatedDevices{
-			Gpu: &nascrd.AllocatedGpus{
-				Devices: devices,
+		allocatedDevices := nascrd.AllocatedRtCpu{
+			RtCpu: &nascrd.AllocatedCpuset{
+				Cpuset: devices,
 			},
 		}
 
-		g.PendingAllocatedClaims.Set(claimUID, potentialNode, allocatedDevices)
+		rt.PendingAllocatedClaims.Set(claimUID, potentialNode, allocatedDevices)
 	}
 
 	return nil
 }
 
-func (g *gpudriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, gpucas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, node string) map[string][]string {
-	available := make(map[string]*nascrd.AllocatableGpu)
+func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, gpucas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, node string) map[string][]string {
+	available := make(map[string]*nascrd.AllocatableCpu)
 
-	for _, device := range crd.Spec.AllocatableDevices {
+	for _, device := range crd.Spec.AllocatableRtCpu {
 		switch device.Type() {
-		case nascrd.GpuDeviceType:
-			available[device.Gpu.UUID] = device.Gpu
+		case nascrd.RtCpuType:
+			available[string(device.RtCpu.ID)] = device.RtCpu
 		default:
 			// skip other devices
 		}
@@ -119,9 +119,9 @@ func (g *gpudriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, g
 
 	for _, allocation := range crd.Spec.AllocatedClaims {
 		switch allocation.Type() {
-		case nascrd.GpuDeviceType:
-			for _, device := range allocation.Gpu.Devices {
-				delete(available, device.UUID)
+		case nascrd.RtCpuType:
+			for _, device := range allocation.RtCpu.Cpuset {
+				delete(available, device.ID)
 			}
 		default:
 			// skip other devices
@@ -132,19 +132,19 @@ func (g *gpudriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, g
 	for _, ca := range gpucas {
 		claimUID := string(ca.Claim.UID)
 		if _, exists := crd.Spec.AllocatedClaims[claimUID]; exists {
-			devices := crd.Spec.AllocatedClaims[claimUID].Gpu.Devices
+			devices := crd.Spec.AllocatedClaims[claimUID].RtCpu.Cpuset
 			for _, device := range devices {
-				allocated[claimUID] = append(allocated[claimUID], device.UUID)
+				allocated[claimUID] = append(allocated[claimUID], device.ID)
 			}
 			continue
 		}
 
-		claimParams, _ := ca.ClaimParameters.(*gpucrd.GpuClaimParametersSpec)
+		claimParams, _ := ca.ClaimParameters.(*rtcrd.RtClaimParametersSpec)
 		var devices []string
 		for i := 0; i < claimParams.Count; i++ {
 			for _, device := range available {
-				devices = append(devices, device.UUID)
-				delete(available, device.UUID)
+				devices = append(devices, string(device.ID))
+				delete(available, string(device.ID))
 				break
 			}
 		}

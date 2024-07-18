@@ -28,10 +28,10 @@ import (
 	plugin "k8s.io/dynamic-resource-allocation/kubeletplugin"
 	"k8s.io/klog/v2"
 
-	nascrd "sigs.k8s.io/dra-example-driver/api/example.com/resource/gpu/nas/v1alpha1"
-	gpucrd "sigs.k8s.io/dra-example-driver/api/example.com/resource/gpu/v1alpha1"
-	exampleclientset "sigs.k8s.io/dra-example-driver/pkg/example.com/resource/clientset/versioned"
-	"sigs.k8s.io/dra-example-driver/pkg/flags"
+	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
+	gpucrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/v1alpha1"
+	exampleclientset "github.com/nasim-samimi/dra-rt-driver/pkg/example.com/resource/clientset/versioned"
+	"github.com/nasim-samimi/dra-rt-driver/pkg/flags"
 )
 
 const (

@@ -1,59 +1,32 @@
-/*
- * Copyright 2023 The Kubernetes Authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package main
 
 import (
 	"fmt"
 	"sync"
 
-	nascrd "sigs.k8s.io/dra-example-driver/api/example.com/resource/gpu/nas/v1alpha1"
+	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
+	"k8s.io/utils/cpuset"
 )
 
-type AllocatableDevices map[string]*AllocatableDeviceInfo
-type PreparedClaims map[string]*PreparedDevices
+// ContainerCPUAssignments type used in cpu manager state
+type ContainerCPUAssignments map[string]map[string]cpuset.CPUSet
 
-type GpuInfo struct {
-	uuid  string
-	model string
-}
-
-type PreparedGpus struct {
-	Devices []*GpuInfo
-}
-
-type PreparedDevices struct {
-	Gpu *PreparedGpus
-}
-
-func (d PreparedDevices) Type() string {
-	if d.Gpu != nil {
-		return nascrd.GpuDeviceType
+// Clone returns a copy of ContainerCPUAssignments
+func (as ContainerCPUAssignments) Clone() ContainerCPUAssignments {
+	ret := make(ContainerCPUAssignments, len(as))
+	for pod := range as {
+		ret[pod] = make(map[string]cpuset.CPUSet, len(as[pod]))
+		for container, cset := range as[pod] {
+			ret[pod][container] = cset
+		}
 	}
-	return nascrd.UnknownDeviceType
-}
-
-type AllocatableDeviceInfo struct {
-	*GpuInfo
+	return ret
 }
 
 type DeviceState struct {
 	sync.Mutex
 	cdi         *CDIHandler
-	allocatable AllocatableDevices
+	allocatable AllocatableRtCpus
 	prepared    PreparedClaims
 }
 
@@ -79,7 +52,7 @@ func NewDeviceState(config *Config) (*DeviceState, error) {
 		prepared:    make(PreparedClaims),
 	}
 
-	err = state.syncPreparedDevicesFromCRDSpec(&config.nascr.Spec)
+	err = state.syncPreparedRtCpuFromCRDSpec(&config.nascr.Spec)
 	if err != nil {
 		return nil, fmt.Errorf("unable to sync prepared devices from CRD: %v", err)
 	}
@@ -87,24 +60,25 @@ func NewDeviceState(config *Config) (*DeviceState, error) {
 	return state, nil
 }
 
-func (s *DeviceState) Prepare(claimUID string, allocation nascrd.AllocatedDevices) ([]string, error) {
+func (s *DeviceState) Prepare(claimUID string, allocation nascrd.AllocatedRtCpu) ([]string, error) {
 	s.Lock()
 	defer s.Unlock()
 
-	if s.prepared[claimUID] != nil {
-		cdiDevices, err := s.cdi.GetClaimDevices(claimUID, s.prepared[claimUID])
-		if err != nil {
-			return nil, fmt.Errorf("unable to get CDI devices names: %v", err)
-		}
-		return cdiDevices, nil
-	}
+	// uncomment and fix this when you know how to get the prepared cpuset
+	// if s.prepared[claimUID] != nil {
+	// 	cpuset, err := s.cgroup.GetClaimCpuset(claimUID, s.prepared[claimUID])
+	// 	if err != nil {
+	// 		return nil, fmt.Errorf("unable to get CDI devices names: %v", err)
+	// 	}
+	// 	return cdiDevices, nil
+	// }
 
-	prepared := &PreparedDevices{}
+	prepared := &PreparedRtCpu{}
 
 	var err error
 	switch allocation.Type() {
-	case nascrd.GpuDeviceType:
-		prepared.Gpu, err = s.prepareGpus(claimUID, allocation.Gpu)
+	case nascrd.RtCpuType:
+		prepared.RtCpu, err = s.prepareRtCpus(claimUID, &allocation)
 	default:
 		err = fmt.Errorf("unknown device type: %v", allocation.Type())
 	}
@@ -135,8 +109,8 @@ func (s *DeviceState) Unprepare(claimUID string) error {
 	}
 
 	switch s.prepared[claimUID].Type() {
-	case nascrd.GpuDeviceType:
-		err := s.unprepareGpus(claimUID, s.prepared[claimUID])
+	case nascrd.RtCpuType:
+		err := s.unprepareRtCpus(claimUID, s.prepared[claimUID])
 		if err != nil {
 			return fmt.Errorf("unprepare failed: %v", err)
 		}
@@ -159,12 +133,12 @@ func (s *DeviceState) GetUpdatedSpec(inspec *nascrd.NodeAllocationStateSpec) (*n
 	defer s.Unlock()
 
 	outspec := inspec.DeepCopy()
-	err := s.syncAllocatableDevicesToCRDSpec(outspec)
+	err := s.syncAllocatableRtCpusToCRDSpec(outspec)
 	if err != nil {
 		return nil, fmt.Errorf("synching allocatable devices to CR spec: %v", err)
 	}
 
-	err = s.syncPreparedDevicesToCRDSpec(outspec)
+	err = s.syncPreparedRtCpuToCRDSpec(outspec)
 	if err != nil {
 		return nil, fmt.Errorf("synching prepared devices to CR spec: %v", err)
 	}
@@ -172,57 +146,57 @@ func (s *DeviceState) GetUpdatedSpec(inspec *nascrd.NodeAllocationStateSpec) (*n
 	return outspec, nil
 }
 
-func (s *DeviceState) prepareGpus(claimUID string, allocated *nascrd.AllocatedGpus) (*PreparedGpus, error) {
-	prepared := &PreparedGpus{}
+func (s *DeviceState) prepareRtCpus(claimUID string, allocated *nascrd.AllocatedRtCpu) (*PreparedCpuset, error) {
+	prepared := &PreparedRtCpu{}
 
-	for _, device := range allocated.Devices {
-		gpuInfo := s.allocatable[device.UUID].GpuInfo
+	for _, device := range allocated.RtCpu.Cpuset {
+		cpuInfo := s.allocatable[device.ID].RtCpuInfo
 
-		if _, exists := s.allocatable[device.UUID]; !exists {
-			return nil, fmt.Errorf("requested GPU does not exist: %v", device.UUID)
+		if _, exists := s.allocatable[device.ID]; !exists {
+			return nil, fmt.Errorf("requested CPU does not exist: %v", device.ID)
 		}
 
-		prepared.Devices = append(prepared.Devices, gpuInfo)
+		prepared.RtCpu.Cpuset = append(prepared.RtCpu.Cpuset, cpuInfo)
 	}
 
-	return prepared, nil
+	return prepared.RtCpu, nil
 }
 
-func (s *DeviceState) unprepareGpus(claimUID string, devices *PreparedDevices) error {
+func (s *DeviceState) unprepareRtCpus(claimUID string, devices *PreparedRtCpu) error {
 	return nil
 }
 
-func (s *DeviceState) syncAllocatableDevicesToCRDSpec(spec *nascrd.NodeAllocationStateSpec) error {
-	gpus := make(map[string]nascrd.AllocatableDevice)
+func (s *DeviceState) syncAllocatableRtCpusToCRDSpec(spec *nascrd.NodeAllocationStateSpec) error {
+	cpus := make(map[int]nascrd.AllocatableRtCpu)
 	for _, device := range s.allocatable {
-		gpus[device.uuid] = nascrd.AllocatableDevice{
-			Gpu: &nascrd.AllocatableGpu{
-				UUID:        device.uuid,
-				ProductName: device.model,
+		cpus[device.id] = nascrd.AllocatableRtCpu{
+			RtCpu: &nascrd.AllocatableCpu{
+				ID:   device.id,
+				Util: device.util,
 			},
 		}
 	}
 
-	var allocatable []nascrd.AllocatableDevice
-	for _, device := range gpus {
+	var allocatable []nascrd.AllocatableRtCpu
+	for _, device := range cpus {
 		allocatable = append(allocatable, device)
 	}
 
-	spec.AllocatableDevices = allocatable
+	spec.AllocatableRtCpu = allocatable
 
 	return nil
 }
 
-func (s *DeviceState) syncPreparedDevicesFromCRDSpec(spec *nascrd.NodeAllocationStateSpec) error {
-	gpus := s.allocatable
+func (s *DeviceState) syncPreparedRtCpuFromCRDSpec(spec *nascrd.NodeAllocationStateSpec) error {
+	cpus := s.allocatable
 
 	prepared := make(PreparedClaims)
 	for claim, devices := range spec.PreparedClaims {
 		switch devices.Type() {
-		case nascrd.GpuDeviceType:
-			prepared[claim] = &PreparedDevices{Gpu: &PreparedGpus{}}
-			for _, d := range devices.Gpu.Devices {
-				prepared[claim].Gpu.Devices = append(prepared[claim].Gpu.Devices, gpus[d.UUID].GpuInfo)
+		case nascrd.RtCpuType:
+			prepared[claim] = &PreparedRtCpu{RtCpu: &PreparedCpuset{}}
+			for _, d := range devices.RtCpu.Cpuset {
+				prepared[claim].RtCpu.Cpuset = append(prepared[claim].RtCpu.Cpuset, cpus[d.ID].RtCpuInfo)
 			}
 		default:
 			return fmt.Errorf("unknown device type: %v", devices.Type())
@@ -234,18 +208,18 @@ func (s *DeviceState) syncPreparedDevicesFromCRDSpec(spec *nascrd.NodeAllocation
 	return nil
 }
 
-func (s *DeviceState) syncPreparedDevicesToCRDSpec(spec *nascrd.NodeAllocationStateSpec) error {
-	outcas := make(map[string]nascrd.PreparedDevices)
+func (s *DeviceState) syncPreparedRtCpuToCRDSpec(spec *nascrd.NodeAllocationStateSpec) error {
+	outcas := make(map[string]nascrd.PreparedRtCpu)
 	for claim, devices := range s.prepared {
-		var prepared nascrd.PreparedDevices
+		var prepared nascrd.PreparedRtCpu
 		switch devices.Type() {
-		case nascrd.GpuDeviceType:
-			prepared.Gpu = &nascrd.PreparedGpus{}
-			for _, device := range devices.Gpu.Devices {
-				outdevice := nascrd.PreparedGpu{
-					UUID: device.uuid,
+		case nascrd.RtCpuType:
+			prepared.RtCpu = &nascrd.PreparedCpuset{}
+			for _, device := range devices.RtCpu.Cpuset {
+				outdevice := nascrd.PreparedCpu{
+					ID: string(device.id),
 				}
-				prepared.Gpu.Devices = append(prepared.Gpu.Devices, outdevice)
+				prepared.RtCpu.Cpuset = append(prepared.RtCpu.Cpuset, outdevice)
 			}
 		default:
 			return fmt.Errorf("unknown device type: %v", devices.Type())

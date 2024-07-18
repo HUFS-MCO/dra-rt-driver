@@ -4,21 +4,21 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-  name: gpuclaimparameters.gpu.resource.example.com
+  name: rtclaimparameters.gpu.resource.example.com
 spec:
   group: gpu.resource.example.com
   names:
-    kind: GpuClaimParameters
-    listKind: GpuClaimParametersList
-    plural: gpuclaimparameters
-    singular: gpuclaimparameters
+    kind: RtClaimParameters
+    listKind: RtClaimParametersList
+    plural: rtclaimparameters
+    singular: rtclaimparameters
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: GpuClaimParameters holds the set of parameters provided when
-          creating a resource claim for a GPU.
+        description: RtClaimParameters holds the set of parameters provided when creating
+          a resource claim for a Rt.
         properties:
           apiVersion:
             description: |-
@@ -38,10 +38,24 @@ spec:
           metadata:
             type: object
           spec:
-            description: GpuClaimParametersSpec is the spec for the GpuClaimParameters
+            description: RtClaimParametersSpec is the spec for the RtClaimParameters
               CRD.
             properties:
               count:
+                type: integer
+              period:
+                description: |-
+                  A Duration represents the elapsed time between two instants
+                  as an int64 nanosecond count. The representation limits the
+                  largest representable duration to approximately 290 years.
+                format: int64
+                type: integer
+              runtime:
+                description: |-
+                  A Duration represents the elapsed time between two instants
+                  as an int64 nanosecond count. The representation limits the
+                  largest representable duration to approximately 290 years.
+                format: int64
                 type: integer
             type: object
         type: object

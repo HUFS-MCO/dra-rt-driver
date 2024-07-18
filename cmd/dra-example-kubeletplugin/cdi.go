@@ -23,7 +23,7 @@ import (
 	cdiapi "github.com/container-orchestrated-devices/container-device-interface/pkg/cdi"
 	cdispec "github.com/container-orchestrated-devices/container-device-interface/specs-go"
 
-	nascrd "sigs.k8s.io/dra-example-driver/api/example.com/resource/gpu/nas/v1alpha1"
+	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
 )
 
 const (
@@ -89,7 +89,7 @@ func (cdi *CDIHandler) CreateCommonSpecFile() error {
 	return cdi.registry.SpecDB().WriteSpec(spec, specName)
 }
 
-func (cdi *CDIHandler) CreateClaimSpecFile(claimUID string, devices *PreparedDevices) error {
+func (cdi *CDIHandler) CreateClaimSpecFile(claimUID string, devices *PreparedRtCpu) error {
 	specName := cdiapi.GenerateTransientSpecName(cdiVendor, cdiClass, claimUID)
 
 	spec := &cdispec.Spec{
@@ -99,13 +99,13 @@ func (cdi *CDIHandler) CreateClaimSpecFile(claimUID string, devices *PreparedDev
 
 	gpuIdx := 0
 	switch devices.Type() {
-	case nascrd.GpuDeviceType:
-		for _, device := range devices.Gpu.Devices {
+	case nascrd.RtCpuType:
+		for _, device := range devices.RtCpu.Cpuset {
 			cdiDevice := cdispec.Device{
-				Name: device.uuid,
+				Name: string(device.id),
 				ContainerEdits: cdispec.ContainerEdits{
 					Env: []string{
-						fmt.Sprintf("GPU_DEVICE_%d=%s", gpuIdx, device.uuid),
+						fmt.Sprintf("GPU_DEVICE_%d=%v", gpuIdx, device.id),
 					},
 				},
 			}
@@ -130,15 +130,15 @@ func (cdi *CDIHandler) DeleteClaimSpecFile(claimUID string) error {
 	return cdi.registry.SpecDB().RemoveSpec(specName)
 }
 
-func (cdi *CDIHandler) GetClaimDevices(claimUID string, devices *PreparedDevices) ([]string, error) {
+func (cdi *CDIHandler) GetClaimDevices(claimUID string, devices *PreparedRtCpu) ([]string, error) {
 	cdiDevices := []string{
 		cdiapi.QualifiedName(cdiVendor, cdiClass, cdiCommonDeviceName),
 	}
 
 	switch devices.Type() {
-	case nascrd.GpuDeviceType:
-		for _, device := range devices.Gpu.Devices {
-			cdiDevice := cdiapi.QualifiedName(cdiVendor, cdiClass, device.uuid)
+	case nascrd.RtCpuType:
+		for _, device := range devices.RtCpu.Cpuset {
+			cdiDevice := cdiapi.QualifiedName(cdiVendor, cdiClass, string(device.id))
 			cdiDevices = append(cdiDevices, cdiDevice)
 		}
 	default:

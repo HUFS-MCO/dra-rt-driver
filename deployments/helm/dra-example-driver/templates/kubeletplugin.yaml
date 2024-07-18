@@ -2,14 +2,14 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: {{ include "dra-example-driver.fullname" . }}-kubeletplugin
-  namespace: {{ include "dra-example-driver.namespace" . }}
+  name: {{ include "dra-rt-driver.fullname" . }}-kubeletplugin
+  namespace: {{ include "dra-rt-driver.namespace" . }}
   labels:
-    {{- include "dra-example-driver.labels" . | nindent 4 }}
+    {{- include "dra-rt-driver.labels" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
-      {{- include "dra-example-driver.selectorLabels" . | nindent 6 }}
+      {{- include "dra-rt-driver.selectorLabels" . | nindent 6 }}
   {{- with .Values.kubeletPlugin.updateStrategy }}
   updateStrategy:
     {{- toYaml . | nindent 4 }}
@@ -21,7 +21,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "dra-example-driver.templateLabels" . | nindent 8 }}
+        {{- include "dra-rt-driver.templateLabels" . | nindent 8 }}
     spec:
       {{- if .Values.kubeletPlugin.priorityClassName }}
       priorityClassName: {{ .Values.kubeletPlugin.priorityClassName }}
@@ -30,14 +30,14 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "dra-example-driver.serviceAccountName" . }}
+      serviceAccountName: {{ include "dra-rt-driver.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.kubeletPlugin.podSecurityContext | nindent 8 }}
       initContainers:
       - name: init
         securityContext:
           {{- toYaml .Values.kubeletPlugin.containers.init.securityContext | nindent 10 }}
-        image: {{ include "dra-example-driver.fullimage" . }}
+        image: {{ include "dra-rt-driver.fullimage" . }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         command: ["set-nas-status", "--status", "NotReady"]
         resources:
@@ -55,9 +55,9 @@ spec:
       - name: plugin
         securityContext:
           {{- toYaml .Values.kubeletPlugin.containers.plugin.securityContext | nindent 10 }}
-        image: {{ include "dra-example-driver.fullimage" . }}
+        image: {{ include "dra-rt-driver.fullimage" . }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        command: ["dra-example-kubeletplugin"]
+        command: ["dra-rt-kubeletplugin"]
         resources:
           {{- toYaml .Values.kubeletPlugin.containers.plugin.resources | nindent 10 }}
         env:

@@ -2,15 +2,15 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "dra-example-driver.fullname" . }}-controller
-  namespace: {{ include "dra-example-driver.namespace" . }}
+  name: {{ include "dra-rt-driver.fullname" . }}-controller
+  namespace: {{ include "dra-rt-driver.namespace" . }}
   labels:
-    {{- include "dra-example-driver.labels" . | nindent 4 }}
+    {{- include "dra-rt-driver.labels" . | nindent 4 }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      {{- include "dra-example-driver.selectorLabels" . | nindent 6 }}
+      {{- include "dra-rt-driver.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.controller.podAnnotations }}
@@ -18,7 +18,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "dra-example-driver.templateLabels" . | nindent 8 }}
+        {{- include "dra-rt-driver.templateLabels" . | nindent 8 }}
     spec:
       {{- if .Values.controller.priorityClassName }}
       priorityClassName: {{ .Values.controller.priorityClassName }}
@@ -27,16 +27,16 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "dra-example-driver.serviceAccountName" . }}
+      serviceAccountName: {{ include "dra-rt-driver.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.controller.podSecurityContext | nindent 8 }}
       containers:
       - name: controller
         securityContext:
           {{- toYaml .Values.controller.containers.controller.securityContext | nindent 10 }}
-        image: {{ include "dra-example-driver.fullimage" . }}
+        image: {{ include "dra-rt-driver.fullimage" . }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        command: ["dra-example-controller"]
+        command: ["dra-rt-controller"]
         resources:
           {{- toYaml .Values.controller.containers.controller.resources | nindent 10 }}
         env:

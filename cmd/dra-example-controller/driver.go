@@ -25,14 +25,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/dynamic-resource-allocation/controller"
 
-	nascrd "sigs.k8s.io/dra-example-driver/api/example.com/resource/gpu/nas/v1alpha1"
-	nasclient "sigs.k8s.io/dra-example-driver/api/example.com/resource/gpu/nas/v1alpha1/client"
-	gpucrd "sigs.k8s.io/dra-example-driver/api/example.com/resource/gpu/v1alpha1"
-	clientset "sigs.k8s.io/dra-example-driver/pkg/example.com/resource/clientset/versioned"
+	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
+	nasclient "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1/client"
+	rtcrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/v1alpha1"
+	clientset "github.com/nasim-samimi/dra-rt-driver/pkg/example.com/resource/clientset/versioned"
 )
 
 const (
-	DriverAPIGroup = gpucrd.GroupName
+	DriverAPIGroup = rtcrd.GroupName
 )
 
 type OnSuccessCallback func()
@@ -41,7 +41,7 @@ type driver struct {
 	lock      *PerNodeMutex
 	namespace string
 	clientset clientset.Interface
-	gpu       *gpudriver
+	rtdriver  *rtdriver
 }
 
 var _ controller.Driver = &driver{}
@@ -51,18 +51,18 @@ func NewDriver(config *Config) *driver {
 		lock:      NewPerNodeMutex(),
 		namespace: config.namespace,
 		clientset: config.clientSets.Example,
-		gpu:       NewGpuDriver(),
+		rtdriver:  NewRtDriver(),
 	}
 }
 
 func (d driver) GetClassParameters(ctx context.Context, class *resourcev1.ResourceClass) (interface{}, error) {
 	if class.ParametersRef == nil {
-		return gpucrd.DefaultDeviceClassParametersSpec(), nil
+		return rtcrd.DefaultDeviceClassParametersSpec(), nil
 	}
 	if class.ParametersRef.APIGroup != DriverAPIGroup {
 		return nil, fmt.Errorf("incorrect API group: %v", class.ParametersRef.APIGroup)
 	}
-	dc, err := d.clientset.GpuV1alpha1().DeviceClassParameters().Get(ctx, class.ParametersRef.Name, metav1.GetOptions{})
+	dc, err := d.clientset.RtV1alpha1().DeviceClassParameters().Get(ctx, class.ParametersRef.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("error getting DeviceClassParameters called '%v': %v", class.ParametersRef.Name, err)
 	}
@@ -71,21 +71,21 @@ func (d driver) GetClassParameters(ctx context.Context, class *resourcev1.Resour
 
 func (d driver) GetClaimParameters(ctx context.Context, claim *resourcev1.ResourceClaim, class *resourcev1.ResourceClass, classParameters interface{}) (interface{}, error) {
 	if claim.Spec.ParametersRef == nil {
-		return gpucrd.DefaultGpuClaimParametersSpec(), nil
+		return rtcrd.DefaultRtClaimParametersSpec(), nil
 	}
 	if claim.Spec.ParametersRef.APIGroup != DriverAPIGroup {
 		return nil, fmt.Errorf("incorrect API group: %v", claim.Spec.ParametersRef.APIGroup)
 	}
 
 	switch claim.Spec.ParametersRef.Kind {
-	case gpucrd.GpuClaimParametersKind:
-		gc, err := d.clientset.GpuV1alpha1().GpuClaimParameters(claim.Namespace).Get(ctx, claim.Spec.ParametersRef.Name, metav1.GetOptions{})
+	case rtcrd.RtClaimParametersKind:
+		gc, err := d.clientset.RtV1alpha1().RtClaimParameters(claim.Namespace).Get(ctx, claim.Spec.ParametersRef.Name, metav1.GetOptions{})
 		if err != nil {
-			return nil, fmt.Errorf("error getting GpuClaimParameters called '%v' in namespace '%v': %v", claim.Spec.ParametersRef.Name, claim.Namespace, err)
+			return nil, fmt.Errorf("error getting RtClaimParameters called '%v' in namespace '%v': %v", claim.Spec.ParametersRef.Name, claim.Namespace, err)
 		}
-		err = d.gpu.ValidateClaimParameters(&gc.Spec)
+		err = d.rtdriver.ValidateClaimParameters(&gc.Spec)
 		if err != nil {
-			return nil, fmt.Errorf("error validating GpuClaimParameters called '%v' in namespace '%v': %v", claim.Spec.ParametersRef.Name, claim.Namespace, err)
+			return nil, fmt.Errorf("error validating RtClaimParameters called '%v' in namespace '%v': %v", claim.Spec.ParametersRef.Name, claim.Namespace, err)
 		}
 		return &gc.Spec, nil
 	default:
@@ -129,7 +129,7 @@ func (d driver) allocate(ctx context.Context, claim *resourcev1.ResourceClaim, c
 	}
 
 	if crd.Spec.AllocatedClaims == nil {
-		crd.Spec.AllocatedClaims = make(map[string]nascrd.AllocatedDevices)
+		crd.Spec.AllocatedClaims = make(map[string]nascrd.AllocatedRtCpu)
 	}
 
 	if _, exists := crd.Spec.AllocatedClaims[string(claim.UID)]; exists {
@@ -137,11 +137,11 @@ func (d driver) allocate(ctx context.Context, claim *resourcev1.ResourceClaim, c
 	}
 
 	var onSuccess OnSuccessCallback
-	classParams, _ := classParameters.(*gpucrd.DeviceClassParametersSpec)
+	classParams, _ := classParameters.(*rtcrd.DeviceClassParametersSpec)
 
 	switch claimParams := claimParameters.(type) {
-	case *gpucrd.GpuClaimParametersSpec:
-		onSuccess, err = d.gpu.Allocate(crd, claim, claimParams, class, classParams, selectedNode)
+	case *rtcrd.RtClaimParametersSpec:
+		onSuccess, err = d.rtdriver.Allocate(crd, claim, claimParams, class, classParams, selectedNode)
 	default:
 		err = fmt.Errorf("unknown ResourceClaim.ParametersRef.Kind: %v", claim.Spec.ParametersRef.Kind)
 	}
@@ -190,8 +190,8 @@ func (d driver) Deallocate(ctx context.Context, claim *resourcev1.ResourceClaim)
 
 	devices := crd.Spec.AllocatedClaims[string(claim.UID)]
 	switch devices.Type() {
-	case nascrd.GpuDeviceType:
-		err = d.gpu.Deallocate(crd, claim)
+	case nascrd.RtCpuType:
+		err = d.rtdriver.Deallocate(crd, claim)
 	default:
 		err = fmt.Errorf("unknown AllocatedDevices.Type(): %v", devices.Type())
 	}
@@ -251,23 +251,23 @@ func (d driver) unsuitableNode(ctx context.Context, pod *corev1.Pod, allcas []*c
 	}
 
 	if crd.Spec.AllocatedClaims == nil {
-		crd.Spec.AllocatedClaims = make(map[string]nascrd.AllocatedDevices)
+		crd.Spec.AllocatedClaims = make(map[string]nascrd.AllocatedRtCpu)
 	}
 
 	perKindCas := make(map[string][]*controller.ClaimAllocation)
 	for _, ca := range allcas {
 		switch ca.ClaimParameters.(type) {
-		case *gpucrd.GpuClaimParametersSpec:
-			perKindCas[gpucrd.GpuClaimParametersKind] = append(perKindCas[gpucrd.GpuClaimParametersKind], ca)
+		case *rtcrd.RtClaimParametersSpec:
+			perKindCas[rtcrd.RtClaimParametersKind] = append(perKindCas[rtcrd.RtClaimParametersKind], ca)
 		default:
 			return fmt.Errorf("unknown ResourceClaimParameters kind: %T", ca.ClaimParameters)
 		}
 	}
-	for _, kind := range []string{gpucrd.GpuClaimParametersKind} {
+	for _, kind := range []string{rtcrd.RtClaimParametersKind} {
 		var err error
 		switch kind {
-		case gpucrd.GpuClaimParametersKind:
-			err = d.gpu.UnsuitableNode(crd, pod, perKindCas[kind], allcas, potentialNode)
+		case rtcrd.RtClaimParametersKind:
+			err = d.rtdriver.UnsuitableNode(crd, pod, perKindCas[kind], allcas, potentialNode)
 		default:
 			err = fmt.Errorf("unknown ResourceClaimParameters kind: %+v", kind)
 		}

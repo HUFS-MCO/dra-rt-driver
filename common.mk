@@ -21,10 +21,10 @@ VERSION  ?= v0.1.0
 vVERSION := v$(VERSION:v%=%)
 
 VENDOR := example.com
-APIS := gpu/nas/v1alpha1 gpu/v1alpha1
+APIS := rt/nas/v1alpha1 rt/v1alpha1
 
 PLURAL_EXCEPTIONS  = DeviceClassParameters:DeviceClassParameters
-PLURAL_EXCEPTIONS += GpuClaimParameters:GpuClaimParameters
+PLURAL_EXCEPTIONS += RtClaimParameters:RtClaimParameters
 
 ifeq ($(IMAGE_NAME),)
 REGISTRY ?= registry.example.com

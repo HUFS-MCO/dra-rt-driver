@@ -17,12 +17,16 @@
 package v1alpha1
 
 import (
+	"time"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// GpuClaimParametersSpec is the spec for the GpuClaimParameters CRD.
-type GpuClaimParametersSpec struct {
-	Count int `json:"count,omitempty"`
+// RtClaimParametersSpec is the spec for the RtClaimParameters CRD.
+type RtClaimParametersSpec struct {
+	Count   int           `json:"count,omitempty"`
+	Runtime time.Duration `json:"runtime,omitempty"`
+	Period  time.Duration `json:"period,omitempty"`
 }
 
 // +genclient
@@ -30,20 +34,20 @@ type GpuClaimParametersSpec struct {
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:scope=Namespaced
 
-// GpuClaimParameters holds the set of parameters provided when creating a resource claim for a GPU.
-type GpuClaimParameters struct {
+// RtClaimParameters holds the set of parameters provided when creating a resource claim for a Rt.
+type RtClaimParameters struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec GpuClaimParametersSpec `json:"spec,omitempty"`
+	Spec RtClaimParametersSpec `json:"spec,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// GpuClaimParametersList represents the "plural" of a GpuClaimParameters CRD object.
-type GpuClaimParametersList struct {
+// RtClaimParametersList represents the "plural" of a RtClaimParameters CRD object.
+type RtClaimParametersList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 
-	Items []GpuClaimParameters `json:"items"`
+	Items []RtClaimParameters `json:"items"`
 }
