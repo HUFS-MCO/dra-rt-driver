@@ -22,8 +22,8 @@ import (
 
 // AllocatableGpu represents an allocatable GPU on a node.
 type AllocatableCpu struct {
-	ID   int     `json:"id"`
-	Util float64 `json:"util"`
+	ID   int `json:"id"`
+	Util int `json:"util"`
 	// ProductName string `json:"productName"` // let's assume that the UUID is enough for now
 }
 

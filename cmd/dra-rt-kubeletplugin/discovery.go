@@ -31,7 +31,7 @@ func enumerateAllPossibleDevices() (AllocatableRtCpus, error) {
 		deviceInfo := &AllocatableCpusetInfo{
 			RtCpuInfo: &RtCpuInfo{
 				id:   id,
-				util: 0.1,
+				util: 10,
 			},
 		}
 		alldevices[string(id)] = deviceInfo

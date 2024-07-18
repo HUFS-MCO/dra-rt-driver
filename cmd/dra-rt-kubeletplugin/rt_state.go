@@ -32,7 +32,7 @@ type PreparedClaims map[string]*PreparedRtCpu
 // //	}
 type RtCpuInfo struct {
 	id   int
-	util float64
+	util int
 }
 
 // //	type PreparedGpus struct {
@@ -62,8 +62,8 @@ type RtState struct {
 	allocatable     AllocatableRtCpus
 	prepared        PreparedClaims
 	cgroup          *CgroupManager
-	containerToUtil map[string]float64
-	cpuToUtil       map[int]float64
+	containerToUtil map[string]int
+	cpuToUtil       map[int]int
 }
 
 func NewRtState(config *Config) (*RtState, error) {
@@ -77,7 +77,7 @@ func NewRtState(config *Config) (*RtState, error) {
 	state := &RtState{
 		allocatable:     allocatable,
 		prepared:        make(PreparedClaims),
-		containerToUtil: make(map[string]float64),
+		containerToUtil: make(map[string]int),
 	}
 	// 	// here we don't have the cpuset functions we need to use s.th else
 	// 	state.cpuToUtil = make(map[int]float64, s.GetDefaultCPUSet().Size())

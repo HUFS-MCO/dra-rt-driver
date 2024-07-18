@@ -47,12 +47,13 @@ spec:
                     on a node.
                   properties:
                     rtcpu:
-                      description: AllocatableCpu represents an allocatable GPU on
+                      description: AllocatableGpu represents an allocatable GPU on
                         a node.
                       properties:
                         id:
                           type: integer
-                        util: {}
+                        util:
+                          type: integer
                       required:
                       - id
                       - util
