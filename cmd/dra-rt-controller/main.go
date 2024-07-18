@@ -110,8 +110,8 @@ func newApp() *cli.App {
 	cliFlags = append(cliFlags, flags.nasConfig.Flags()...)
 
 	app := &cli.App{
-		Name:            "dra-example-controller",
-		Usage:           "dra-example-controller implements a DRA driver controller.",
+		Name:            "dra-rt-controller",
+		Usage:           "dra-rt-controller implements a DRA driver controller.",
 		ArgsUsage:       " ",
 		HideHelpCommand: true,
 		Flags:           cliFlags,

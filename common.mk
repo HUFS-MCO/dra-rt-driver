@@ -14,8 +14,8 @@
 
 GOLANG_VERSION ?= 1.22.2
 
-DRIVER_NAME := dra-example-driver
-MODULE := sigs.k8s.io/$(DRIVER_NAME)
+DRIVER_NAME := dra-rt-driver
+MODULE := github.com/nasim-samimi/$(DRIVER_NAME)
 
 VERSION  ?= v0.1.0
 vVERSION := v$(VERSION:v%=%)

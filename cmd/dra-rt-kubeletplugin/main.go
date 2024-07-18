@@ -29,13 +29,13 @@ import (
 	"k8s.io/klog/v2"
 
 	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
-	gpucrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/v1alpha1"
+	rtcrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/v1alpha1"
 	exampleclientset "github.com/nasim-samimi/dra-rt-driver/pkg/example.com/resource/clientset/versioned"
 	"github.com/nasim-samimi/dra-rt-driver/pkg/flags"
 )
 
 const (
-	DriverName = gpucrd.GroupName
+	DriverName = rtcrd.GroupName
 
 	PluginRegistrationPath = "/var/lib/kubelet/plugins_registry/" + DriverName + ".sock"
 	DriverPluginPath       = "/var/lib/kubelet/plugins/" + DriverName
@@ -81,8 +81,8 @@ func newApp() *cli.App {
 	cliFlags = append(cliFlags, flags.loggingConfig.Flags()...)
 
 	app := &cli.App{
-		Name:            "dra-example-kubeletplugin",
-		Usage:           "dra-example-kubeletplugin implements a DRA driver plugin.",
+		Name:            "dra-rt-kubeletplugin",
+		Usage:           "dra-rt-kubeletplugin implements a DRA driver plugin.",
 		ArgsUsage:       " ",
 		HideHelpCommand: true,
 		Flags:           cliFlags,

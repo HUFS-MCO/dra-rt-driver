@@ -121,7 +121,7 @@ func (d driver) allocate(ctx context.Context, claim *resourcev1.ResourceClaim, c
 	client := nasclient.New(crd, d.clientset.NasV1alpha1())
 	err := client.Get(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("error retrieving node specific Gpu CRD: %v", err)
+		return nil, fmt.Errorf("error retrieving node specific Cpu CRD: %v", err)
 	}
 
 	if crd.Status != nascrd.NodeAllocationStateStatusReady {
@@ -177,7 +177,7 @@ func (d driver) Deallocate(ctx context.Context, claim *resourcev1.ResourceClaim)
 	client := nasclient.New(crd, d.clientset.NasV1alpha1())
 	err := client.Get(ctx)
 	if err != nil {
-		return fmt.Errorf("error retrieving node specific Gpu CRD: %v", err)
+		return fmt.Errorf("error retrieving node specific Cpu CRD: %v", err)
 	}
 
 	if crd.Spec.AllocatedClaims == nil {

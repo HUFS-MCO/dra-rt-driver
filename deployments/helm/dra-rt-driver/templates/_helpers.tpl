@@ -1,7 +1,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "dra-example-driver.name" -}}
+{{- define "dra-rt-driver.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -10,7 +10,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "dra-example-driver.fullname" -}}
+{{- define "dra-rt-driver.fullname" -}}
 {{- if .Values.fullnameOverride -}}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
@@ -26,7 +26,7 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Allow the release namespace to be overridden for multi-namespace deployments in combined charts
 */}}
-{{- define "dra-example-driver.namespace" -}}
+{{- define "dra-rt-driver.namespace" -}}
   {{- if .Values.namespaceOverride -}}
     {{- .Values.namespaceOverride -}}
   {{- else -}}
@@ -37,7 +37,7 @@ Allow the release namespace to be overridden for multi-namespace deployments in 
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "dra-example-driver.chart" -}}
+{{- define "dra-rt-driver.chart" -}}
 {{- $name := default .Chart.Name .Values.nameOverride -}}
 {{- printf "%s-%s" $name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
@@ -45,9 +45,9 @@ Create chart name and version as used by the chart label.
 {{/*
 Common labels
 */}}
-{{- define "dra-example-driver.labels" -}}
-helm.sh/chart: {{ include "dra-example-driver.chart" . }}
-{{ include "dra-example-driver.templateLabels" . }}
+{{- define "dra-rt-driver.labels" -}}
+helm.sh/chart: {{ include "dra-rt-driver.chart" . }}
+{{ include "dra-rt-driver.templateLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -57,8 +57,8 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Template labels
 */}}
-{{- define "dra-example-driver.templateLabels" -}}
-app.kubernetes.io/name: {{ include "dra-example-driver.name" . }}
+{{- define "dra-rt-driver.templateLabels" -}}
+app.kubernetes.io/name: {{ include "dra-rt-driver.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- if .Values.selectorLabelsOverride }}
 {{ toYaml .Values.selectorLabelsOverride }}
@@ -68,18 +68,18 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{/*
 Selector labels
 */}}
-{{- define "dra-example-driver.selectorLabels" -}}
+{{- define "dra-rt-driver.selectorLabels" -}}
 {{- if .Values.selectorLabelsOverride -}}
 {{ toYaml .Values.selectorLabelsOverride }}
 {{- else -}}
-{{ include "dra-example-driver.templateLabels" . }}
+{{ include "dra-rt-driver.templateLabels" . }}
 {{- end }}
 {{- end }}
 
 {{/*
 Full image name with tag
 */}}
-{{- define "dra-example-driver.fullimage" -}}
+{{- define "dra-rt-driver.fullimage" -}}
 {{- $tag := printf "v%s" .Chart.AppVersion }}
 {{- .Values.image.repository -}}:{{- .Values.image.tag | default $tag -}}
 {{- end }}
@@ -87,8 +87,8 @@ Full image name with tag
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "dra-example-driver.serviceAccountName" -}}
-{{- $name := printf "%s-service-account" (include "dra-example-driver.fullname" .) }}
+{{- define "dra-rt-driver.serviceAccountName" -}}
+{{- $name := printf "%s-service-account" (include "dra-rt-driver.fullname" .) }}
 {{- if .Values.serviceAccount.create }}
 {{- default $name .Values.serviceAccount.name }}
 {{- else }}

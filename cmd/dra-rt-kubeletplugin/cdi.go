@@ -28,7 +28,7 @@ import (
 
 const (
 	cdiVendor = "k8s." + DriverName
-	cdiClass  = "gpu"
+	cdiClass  = "cpu"
 	cdiKind   = cdiVendor + "/" + cdiClass
 
 	cdiCommonDeviceName = "common"

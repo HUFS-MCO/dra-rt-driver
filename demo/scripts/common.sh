@@ -23,7 +23,7 @@
 SCRIPTS_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)"
 
 # The name of the example driver 
-: ${DRIVER_NAME:=dra-example-driver}
+: ${DRIVER_NAME:=dra-rt-driver}
 
 # The registry, image and tag for the example driver
 : ${DRIVER_IMAGE_REGISTRY:="registry.example.com"}
