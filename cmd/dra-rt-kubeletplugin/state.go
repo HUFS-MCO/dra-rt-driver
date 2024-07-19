@@ -153,8 +153,8 @@ func (s *DeviceState) unprepareRtCpus(claimUID string, devices *PreparedRtCpu) e
 func (s *DeviceState) syncAllocatableRtCpusToCRDSpec(spec *nascrd.NodeAllocationStateSpec) error {
 	cpus := make(map[int]nascrd.AllocatableRtCpu)
 	for _, device := range s.allocatable {
-		fmt.Println("check the error from here. device: %v and device id:%v", device, device.id)
-		fmt.Println("these are allocatable cpus: %v", cpus)
+		// fmt.Println("check the error from here. device: %v and device id:%v", device, device.id)
+		// fmt.Println("these are allocatable cpus: %v", cpus)
 		cpus[device.id] = nascrd.AllocatableRtCpu{
 			RtCpu: &nascrd.AllocatableCpu{
 				ID:   device.id,
