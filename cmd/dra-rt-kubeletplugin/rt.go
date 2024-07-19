@@ -17,6 +17,8 @@
 package main
 
 import (
+	"sort"
+
 	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
 	"k8s.io/kubernetes/pkg/kubelet/cm/cpumanager/topology"
 	"k8s.io/utils/cpuset"
@@ -73,74 +75,74 @@ type realTimePolicy struct {
 	reservedCpus cpuset.CPUSet
 }
 
-// func (p *realTimePolicy) worstFit(cpuToUtil map[int]float64, reqUtil float64, reqCpus int64) []int {
-// 	type scoredCpu struct {
-// 		cpu   int
-// 		score float64
-// 	}
+func (p *realTimePolicy) worstFit(s *DeviceState, reqUtil int, reqCpus int64) []int {
+	type scoredCpu struct {
+		cpu   int
+		score int
+	}
 
-// 	var scoredCpus []scoredCpu
-// 	for cpu, util := range cpuToUtil {
-// 		score := p.allocableRtUtil - util - reqUtil
-// 		if score > 0 {
-// 			scoredCpus = append(scoredCpus, scoredCpu{
-// 				cpu:   cpu,
-// 				score: score,
-// 			})
-// 		}
-// 	}
+	var scoredCpus []scoredCpu
+	for _, cpuinfo := range s.allocatable {
+		score := cpuinfo.RtCpuInfo.util - reqUtil
+		if score > 0 {
+			scoredCpus = append(scoredCpus, scoredCpu{
+				cpu:   cpuinfo.RtCpuInfo.id,
+				score: score,
+			})
+		}
+	}
 
-// 	if int64(len(scoredCpus)) < reqCpus {
-// 		return nil
-// 	}
+	if int64(len(scoredCpus)) < reqCpus {
+		return nil
+	}
 
-// 	sort.SliceStable(scoredCpus, func(i, j int) bool {
-// 		if scoredCpus[i].score > scoredCpus[j].score {
-// 			return true
-// 		}
-// 		return false
-// 	})
+	sort.SliceStable(scoredCpus, func(i, j int) bool {
+		if scoredCpus[i].score > scoredCpus[j].score {
+			return true
+		}
+		return false
+	})
 
-// 	var fittingCpus []int
-// 	for i := int64(0); i < reqCpus; i++ {
-// 		fittingCpus = append(fittingCpus, scoredCpus[i].cpu)
-// 	}
+	var fittingCpus []int
+	for i := int64(0); i < reqCpus; i++ {
+		fittingCpus = append(fittingCpus, scoredCpus[i].cpu)
+	}
 
-// 	return fittingCpus
-// }
+	return fittingCpus
+}
 
-// func (p *realTimePolicy) bestFit(cpuToUtil map[int]float64, reqUtil float64, reqCpus int64) []int {
-// 	type scoredCpu struct {
-// 		cpu   int
-// 		score float64
-// 	}
+func (p *realTimePolicy) bestFit(s *DeviceState, reqUtil int, reqCpus int64) []int {
+	type scoredCpu struct {
+		cpu   int
+		score int
+	}
 
-// 	var scoredCpus []scoredCpu
-// 	for cpu, util := range cpuToUtil {
-// 		score := p.allocableRtUtil - util - reqUtil
-// 		if score > 0 {
-// 			scoredCpus = append(scoredCpus, scoredCpu{
-// 				cpu:   cpu,
-// 				score: score,
-// 			})
-// 		}
-// 	}
+	var scoredCpus []scoredCpu
+	for _, cpuinfo := range s.allocatable {
+		score := cpuinfo.RtCpuInfo.util - reqUtil
+		if score > 0 {
+			scoredCpus = append(scoredCpus, scoredCpu{
+				cpu:   cpuinfo.RtCpuInfo.id,
+				score: score,
+			})
+		}
+	}
 
-// 	if int64(len(scoredCpus)) < reqCpus {
-// 		return nil
-// 	}
+	if int64(len(scoredCpus)) < reqCpus {
+		return nil
+	}
 
-// 	sort.SliceStable(scoredCpus, func(i, j int) bool {
-// 		if scoredCpus[i].score < scoredCpus[j].score {
-// 			return true
-// 		}
-// 		return false
-// 	})
+	sort.SliceStable(scoredCpus, func(i, j int) bool {
+		if scoredCpus[i].score < scoredCpus[j].score {
+			return true
+		}
+		return false
+	})
 
-// 	var fittingCpus []int
-// 	for i := int64(0); i < reqCpus; i++ {
-// 		fittingCpus = append(fittingCpus, scoredCpus[i].cpu)
-// 	}
+	var fittingCpus []int
+	for i := int64(0); i < reqCpus; i++ {
+		fittingCpus = append(fittingCpus, scoredCpus[i].cpu)
+	}
 
-// 	return fittingCpus
-// }
+	return fittingCpus
+}
