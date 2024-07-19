@@ -34,7 +34,7 @@ func enumeratecpusets(machineInfo *cadvisorapiv1.MachineInfo) (AllocatableRtCpus
 
 	allCPUSet := topo.CPUDetails.CPUs()
 
-	for id, _ := range allCPUSet.List() {
+	for id := range allCPUSet.List() {
 
 		deviceInfo := &AllocatableCpusetInfo{
 			RtCpuInfo: &RtCpuInfo{

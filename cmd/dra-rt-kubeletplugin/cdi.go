@@ -28,7 +28,7 @@ import (
 
 const (
 	cdiVendor = "k8s." + DriverName
-	cdiClass  = "cpu"
+	cdiClass  = "gpu"
 	cdiKind   = cdiVendor + "/" + cdiClass
 
 	cdiCommonDeviceName = "common"
@@ -67,7 +67,7 @@ func (cdi *CDIHandler) CreateCommonSpecFile() error {
 				Name: cdiCommonDeviceName,
 				ContainerEdits: cdispec.ContainerEdits{
 					Env: []string{
-						fmt.Sprintf("GPU_NODE_NAME=%s", os.Getenv("NODE_NAME")),
+						fmt.Sprintf("RT_NODE_NAME=%s", os.Getenv("NODE_NAME")),
 						fmt.Sprintf("DRA_RESOURCE_DRIVER_NAME=%s", DriverName),
 					},
 				},
@@ -97,7 +97,7 @@ func (cdi *CDIHandler) CreateClaimSpecFile(claimUID string, devices *PreparedRtC
 		Devices: []cdispec.Device{},
 	}
 
-	gpuIdx := 0
+	cpuIdx := 0
 	switch devices.Type() {
 	case nascrd.RtCpuType:
 		for _, device := range devices.RtCpu.Cpuset {
@@ -105,12 +105,12 @@ func (cdi *CDIHandler) CreateClaimSpecFile(claimUID string, devices *PreparedRtC
 				Name: string(device.id),
 				ContainerEdits: cdispec.ContainerEdits{
 					Env: []string{
-						fmt.Sprintf("GPU_DEVICE_%d=%v", gpuIdx, device.id),
+						fmt.Sprintf("GPU_DEVICE_%d=%v", cpuIdx, device.id),
 					},
 				},
 			}
 			spec.Devices = append(spec.Devices, cdiDevice)
-			gpuIdx++
+			cpuIdx++
 		}
 	default:
 		return fmt.Errorf("unknown device type: %v", devices.Type())

@@ -5,23 +5,7 @@ import (
 	"sync"
 
 	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
-	"k8s.io/utils/cpuset"
 )
-
-// ContainerCPUAssignments type used in cpu manager state
-type ContainerCPUAssignments map[string]map[string]cpuset.CPUSet
-
-// Clone returns a copy of ContainerCPUAssignments
-func (as ContainerCPUAssignments) Clone() ContainerCPUAssignments {
-	ret := make(ContainerCPUAssignments, len(as))
-	for pod := range as {
-		ret[pod] = make(map[string]cpuset.CPUSet, len(as[pod]))
-		for container, cset := range as[pod] {
-			ret[pod][container] = cset
-		}
-	}
-	return ret
-}
 
 type DeviceState struct {
 	sync.Mutex
@@ -64,14 +48,13 @@ func (s *DeviceState) Prepare(claimUID string, allocation nascrd.AllocatedRtCpu)
 	s.Lock()
 	defer s.Unlock()
 
-	// uncomment and fix this when you know how to get the prepared cpuset
-	// if s.prepared[claimUID] != nil {
-	// 	cpuset, err := s.cgroup.GetClaimCpuset(claimUID, s.prepared[claimUID])
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("unable to get CDI devices names: %v", err)
-	// 	}
-	// 	return cdiDevices, nil
-	// }
+	if s.prepared[claimUID] != nil {
+		cdiDevices, err := s.cdi.GetClaimDevices(claimUID, s.prepared[claimUID])
+		if err != nil {
+			return nil, fmt.Errorf("unable to get CDI devices names: %v", err)
+		}
+		return cdiDevices, nil
+	}
 
 	prepared := &PreparedRtCpu{}
 
@@ -169,6 +152,8 @@ func (s *DeviceState) unprepareRtCpus(claimUID string, devices *PreparedRtCpu) e
 func (s *DeviceState) syncAllocatableRtCpusToCRDSpec(spec *nascrd.NodeAllocationStateSpec) error {
 	cpus := make(map[int]nascrd.AllocatableRtCpu)
 	for _, device := range s.allocatable {
+		fmt.Printf("check the error from here. device: %v and device id:%v", device, device.id)
+		fmt.Printf("these are allocatable cpus: %v", cpus)
 		cpus[device.id] = nascrd.AllocatableRtCpu{
 			RtCpu: &nascrd.AllocatableCpu{
 				ID:   device.id,
