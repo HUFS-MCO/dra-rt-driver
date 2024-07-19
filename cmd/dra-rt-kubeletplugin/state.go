@@ -135,9 +135,9 @@ func (s *DeviceState) prepareRtCpus(claimUID string, allocated nascrd.AllocatedR
 
 	for _, device := range allocated.RtCpu.Cpuset {
 		fmt.Println("lets see device", device, " and device ID: ", device.ID)
-		cpuInfo := s.allocatable[claimUID].RtCpuInfo
+		cpuInfo := s.allocatable[device.ID].RtCpuInfo
 
-		if _, exists := s.allocatable[claimUID]; !exists {
+		if _, exists := s.allocatable[device.ID]; !exists {
 			return nil, fmt.Errorf("requested CPU does not exist: %v", device.ID)
 		}
 		fmt.Println("Appending to Cpuset: device ID:", device.ID, "cpuInfo: %v\n", cpuInfo)
@@ -205,7 +205,7 @@ func (s *DeviceState) syncPreparedRtCpuToCRDSpec(spec *nascrd.NodeAllocationStat
 			prepared.RtCpu = &nascrd.PreparedCpuset{}
 			for _, device := range devices.RtCpu.Cpuset {
 				outdevice := nascrd.PreparedCpu{
-					ID: string(device.id),
+					ID: device.id,
 				}
 				prepared.RtCpu.Cpuset = append(prepared.RtCpu.Cpuset, outdevice)
 			}

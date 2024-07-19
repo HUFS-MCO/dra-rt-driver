@@ -65,7 +65,7 @@ func (r AllocatedRtCpu) Type() string {
 
 // PreparedGpu represents a prepared GPU on a node.
 type PreparedCpu struct {
-	ID string `json:"id"`
+	ID int `json:"id"`
 }
 
 // PreparedGpus represents a set of prepared GPUs on a node.

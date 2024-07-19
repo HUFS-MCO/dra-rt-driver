@@ -42,7 +42,7 @@ func enumeratecpusets(machineInfo *cadvisorapiv1.MachineInfo) (AllocatableRtCpus
 				util: 10,
 			},
 		}
-		alldevices[string(id)] = deviceInfo
+		alldevices[id] = deviceInfo
 	}
 	return alldevices, nil
 }
@@ -60,7 +60,7 @@ func enumerateAllPossibleDevices() (AllocatableRtCpus, error) {
 				util: 10,
 			},
 		}
-		alldevices[string(id)] = deviceInfo
+		alldevices[id] = deviceInfo
 	}
 	return alldevices, nil
 }
