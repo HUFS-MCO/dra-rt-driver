@@ -138,7 +138,8 @@ func (s *DeviceState) prepareRtCpus(claimUID string, allocated nascrd.AllocatedR
 		if _, exists := s.allocatable[device.ID]; !exists {
 			return nil, fmt.Errorf("requested CPU does not exist: %v", device.ID)
 		}
-
+		fmt.Println("Appending to Cpuset: device ID:", device.ID, "cpuInfo: %v\n", cpuInfo)
+		fmt.Println("Current Cpuset:\n", prepared.RtCpu.Cpuset)
 		prepared.RtCpu.Cpuset = append(prepared.RtCpu.Cpuset, cpuInfo)
 	}
 
