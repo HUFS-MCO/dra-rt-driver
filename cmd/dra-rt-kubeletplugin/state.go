@@ -61,7 +61,7 @@ func (s *DeviceState) Prepare(claimUID string, allocation nascrd.AllocatedRtCpu)
 	var err error
 	switch allocation.Type() {
 	case nascrd.RtCpuType:
-		prepared.RtCpu, err = s.prepareRtCpus(claimUID, &allocation)
+		prepared.RtCpu, err = s.prepareRtCpus(claimUID, allocation)
 	default:
 		err = fmt.Errorf("unknown device type: %v", allocation.Type())
 	}
@@ -129,7 +129,7 @@ func (s *DeviceState) GetUpdatedSpec(inspec *nascrd.NodeAllocationStateSpec) (*n
 	return outspec, nil
 }
 
-func (s *DeviceState) prepareRtCpus(claimUID string, allocated *nascrd.AllocatedRtCpu) (*PreparedCpuset, error) {
+func (s *DeviceState) prepareRtCpus(claimUID string, allocated nascrd.AllocatedRtCpu) (*PreparedCpuset, error) {
 	prepared := &PreparedRtCpu{}
 
 	for _, device := range allocated.RtCpu.Cpuset {
