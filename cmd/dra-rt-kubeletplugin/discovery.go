@@ -17,9 +17,35 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
 	"os"
+
+	cadvisorapiv1 "github.com/google/cadvisor/info/v1"
+	"k8s.io/kubernetes/pkg/kubelet/cm/cpumanager/topology"
 )
+
+func enumeratecpusets(machineInfo *cadvisorapiv1.MachineInfo) (AllocatableRtCpus, error) {
+	alldevices := make(AllocatableRtCpus)
+	topo, err := topology.Discover(machineInfo)
+	if err != nil {
+		return nil, fmt.Errorf("unable to discover CPU topology info: %s", err)
+	}
+
+	allCPUSet := topo.CPUDetails.CPUs()
+
+	for id, _ := range allCPUSet.List() {
+
+		deviceInfo := &AllocatableCpusetInfo{
+			RtCpuInfo: &RtCpuInfo{
+				id:   id,
+				util: 10,
+			},
+		}
+		alldevices[string(id)] = deviceInfo
+	}
+	return alldevices, nil
+}
 
 func enumerateAllPossibleDevices() (AllocatableRtCpus, error) {
 	numGPUs := 8
@@ -44,7 +70,7 @@ func generateIDs(seed string, count int) []int {
 
 	ids := make([]int, count)
 	for i := 0; i < count; i++ {
-		id := rand.Int()
+		id := rand.Intn(16)
 		ids[i] = id
 	}
 
