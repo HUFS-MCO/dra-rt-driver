@@ -105,13 +105,13 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 	return nil
 }
 
-func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, gpucas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, node string) map[string][]string {
-	available := make(map[string]*nascrd.AllocatableCpu)
+func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, gpucas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, node string) map[string][]int {
+	available := make(map[int]*nascrd.AllocatableCpu)
 
 	for _, device := range crd.Spec.AllocatableRtCpu {
 		switch device.Type() {
 		case nascrd.RtCpuType:
-			available[string(device.RtCpu.ID)] = device.RtCpu
+			available[device.RtCpu.ID] = device.RtCpu
 		default:
 			// skip other devices
 		}
@@ -128,7 +128,7 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, gp
 		}
 	}
 
-	allocated := make(map[string][]string)
+	allocated := make(map[string][]int)
 	for _, ca := range gpucas {
 		claimUID := string(ca.Claim.UID)
 		if _, exists := crd.Spec.AllocatedClaims[claimUID]; exists {
@@ -140,11 +140,11 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, gp
 		}
 
 		claimParams, _ := ca.ClaimParameters.(*rtcrd.RtClaimParametersSpec)
-		var devices []string
+		var devices []int
 		for i := 0; i < claimParams.Count; i++ {
 			for _, device := range available {
-				devices = append(devices, string(device.ID))
-				delete(available, string(device.ID))
+				devices = append(devices, device.ID)
+				delete(available, device.ID)
 				break
 			}
 		}
