@@ -28,12 +28,12 @@ type AllocatableCpu struct {
 }
 
 // AllocatableDevice represents an allocatable device on a node.
-type AllocatableRtCpu struct {
+type AllocatableCpuset struct {
 	RtCpu *AllocatableCpu `json:"rtcpu,omitempty"`
 }
 
 // Type returns the type of AllocatableDevice this represents.
-func (d AllocatableRtCpu) Type() string {
+func (d AllocatableCpuset) Type() string {
 	if d.RtCpu != nil {
 		return RtCpuType
 	}
@@ -91,9 +91,9 @@ func (d PreparedCpuset) Type() string {
 
 // NodeAllocationStateSpec is the spec for the NodeAllocationState CRD.
 type NodeAllocationStateSpec struct {
-	AllocatableRtCpu []AllocatableRtCpu         `json:"allocatableRtCpu,omitempty"`
-	AllocatedClaims  map[string]AllocatedCpuset `json:"allocatedClaims,omitempty"`
-	PreparedClaims   map[string]PreparedCpuset  `json:"preparedClaims,omitempty"`
+	AllocatableCpuset []AllocatableCpuset        `json:"allocatableCpuset,omitempty"`
+	AllocatedClaims   map[string]AllocatedCpuset `json:"allocatedClaims,omitempty"`
+	PreparedClaims    map[string]PreparedCpuset  `json:"preparedClaims,omitempty"`
 }
 
 // +genclient

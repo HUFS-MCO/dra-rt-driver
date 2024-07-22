@@ -149,9 +149,9 @@ func (s *DeviceState) unprepareRtCpus(claimUID string, devices *PreparedCpuset) 
 }
 
 func (s *DeviceState) syncAllocatableRtCpusToCRDSpec(spec *nascrd.NodeAllocationStateSpec) error {
-	cpus := make(map[int]nascrd.AllocatableRtCpu)
+	cpus := make(map[int]nascrd.AllocatableCpuset)
 	for _, device := range s.allocatable {
-		cpus[device.id] = nascrd.AllocatableRtCpu{
+		cpus[device.id] = nascrd.AllocatableCpuset{
 			RtCpu: &nascrd.AllocatableCpu{
 				ID:   device.id,
 				Util: device.util,
@@ -159,12 +159,12 @@ func (s *DeviceState) syncAllocatableRtCpusToCRDSpec(spec *nascrd.NodeAllocation
 		}
 	}
 
-	var allocatable []nascrd.AllocatableRtCpu
+	var allocatable []nascrd.AllocatableCpuset
 	for _, device := range cpus {
 		allocatable = append(allocatable, device)
 	}
 
-	spec.AllocatableRtCpu = allocatable
+	spec.AllocatableCpuset = allocatable
 
 	return nil
 }

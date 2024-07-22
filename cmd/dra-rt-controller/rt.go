@@ -106,7 +106,7 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, gpucas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, node string) map[string][]nascrd.AllocatedCpu {
 	available := make(map[int]*nascrd.AllocatableCpu)
 
-	for _, device := range crd.Spec.AllocatableRtCpu {
+	for _, device := range crd.Spec.AllocatableCpuset {
 		switch device.Type() {
 		case nascrd.RtCpuType:
 			available[device.RtCpu.ID] = device.RtCpu
