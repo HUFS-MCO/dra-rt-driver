@@ -17,16 +17,14 @@
 package v1alpha1
 
 import (
-	"time"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // RtClaimParametersSpec is the spec for the RtClaimParameters CRD.
 type RtClaimParametersSpec struct {
-	Count   int           `json:"count,omitempty"`
-	Runtime time.Duration `json:"runtime,omitempty"`
-	Period  time.Duration `json:"period,omitempty"`
+	Count   int `json:"count,omitempty"`
+	Runtime int `json:"runtime,omitempty"`
+	Period  int `json:"period,omitempty"`
 }
 
 // +genclient
