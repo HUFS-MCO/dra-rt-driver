@@ -133,6 +133,7 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, gp
 			devices := crd.Spec.AllocatedClaims[claimUID].RtCpu.Cpuset
 			for _, device := range devices {
 				allocated[claimUID] = append(allocated[claimUID], device)
+				fmt.Println("Allocated device", device)
 			}
 			continue
 		}
@@ -148,8 +149,10 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, gp
 				}
 				devices = append(devices, d)
 				delete(available, device.ID)
+				fmt.Println("Available device", device)
 				break
 			}
+			fmt.Println("Print allocated device again", devices[i])
 		}
 		allocated[claimUID] = devices
 	}
