@@ -65,7 +65,7 @@ func (g *rtdriver) Deallocate(crd *nascrd.NodeAllocationState, claim *resourcev1
 }
 
 func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.Pod, rtcas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, potentialNode string) error {
-	rt.PendingAllocatedClaims.VisitNode(potentialNode, func(claimUID string, allocation nascrd.AllocatedRtCpu) {
+	rt.PendingAllocatedClaims.VisitNode(potentialNode, func(claimUID string, allocation nascrd.AllocatedCpuset) {
 		if _, exists := crd.Spec.AllocatedClaims[claimUID]; exists {
 			rt.PendingAllocatedClaims.Remove(claimUID)
 		} else {
@@ -93,8 +93,8 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 			devices = append(devices, device)
 		}
 
-		allocatedDevices := nascrd.AllocatedRtCpu{
-			RtCpu: &nascrd.AllocatedCpuset{
+		allocatedDevices := nascrd.AllocatedCpuset{
+			RtCpu: &nascrd.AllocatedRtCpu{
 				Cpuset: devices,
 			},
 		}

@@ -24,12 +24,12 @@ import (
 
 type PerNodeAllocatedClaims struct {
 	sync.RWMutex
-	allocations map[string]map[string]nascrd.AllocatedRtCpu
+	allocations map[string]map[string]nascrd.AllocatedCpuset
 }
 
 func NewPerNodeAllocatedClaims() *PerNodeAllocatedClaims {
 	return &PerNodeAllocatedClaims{
-		allocations: make(map[string]map[string]nascrd.AllocatedRtCpu),
+		allocations: make(map[string]map[string]nascrd.AllocatedCpuset),
 	}
 }
 
@@ -46,17 +46,17 @@ func (p *PerNodeAllocatedClaims) Exists(claimUID, node string) bool {
 	return exists
 }
 
-func (p *PerNodeAllocatedClaims) Get(claimUID, node string) nascrd.AllocatedRtCpu {
+func (p *PerNodeAllocatedClaims) Get(claimUID, node string) nascrd.AllocatedCpuset {
 	p.RLock()
 	defer p.RUnlock()
 
 	if !p.Exists(claimUID, node) {
-		return nascrd.AllocatedRtCpu{}
+		return nascrd.AllocatedCpuset{}
 	}
 	return p.allocations[claimUID][node]
 }
 
-func (p *PerNodeAllocatedClaims) VisitNode(node string, visitor func(claimUID string, allocation nascrd.AllocatedRtCpu)) {
+func (p *PerNodeAllocatedClaims) VisitNode(node string, visitor func(claimUID string, allocation nascrd.AllocatedCpuset)) {
 	p.RLock()
 	for claimUID := range p.allocations {
 		if allocation, exists := p.allocations[claimUID][node]; exists {
@@ -68,7 +68,7 @@ func (p *PerNodeAllocatedClaims) VisitNode(node string, visitor func(claimUID st
 	p.RUnlock()
 }
 
-func (p *PerNodeAllocatedClaims) Visit(visitor func(claimUID, node string, allocation nascrd.AllocatedRtCpu)) {
+func (p *PerNodeAllocatedClaims) Visit(visitor func(claimUID, node string, allocation nascrd.AllocatedCpuset)) {
 	p.RLock()
 	for claimUID := range p.allocations {
 		for node, allocation := range p.allocations[claimUID] {
@@ -80,13 +80,13 @@ func (p *PerNodeAllocatedClaims) Visit(visitor func(claimUID, node string, alloc
 	p.RUnlock()
 }
 
-func (p *PerNodeAllocatedClaims) Set(claimUID, node string, devices nascrd.AllocatedRtCpu) {
+func (p *PerNodeAllocatedClaims) Set(claimUID, node string, devices nascrd.AllocatedCpuset) {
 	p.Lock()
 	defer p.Unlock()
 
 	_, exists := p.allocations[claimUID]
 	if !exists {
-		p.allocations[claimUID] = make(map[string]nascrd.AllocatedRtCpu)
+		p.allocations[claimUID] = make(map[string]nascrd.AllocatedCpuset)
 	}
 
 	p.allocations[claimUID][node] = devices

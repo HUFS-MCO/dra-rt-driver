@@ -25,7 +25,7 @@ import (
 )
 
 type AllocatableRtCpus map[int]*AllocatableCpusetInfo
-type PreparedClaims map[string]*PreparedRtCpu
+type PreparedClaims map[string]*PreparedCpuset
 
 // //	type GpuInfo struct {
 // //		uuid  string
@@ -39,15 +39,15 @@ type RtCpuInfo struct {
 // //	type PreparedGpus struct {
 // //		Devices []*GpuInfo
 // //	}
-type PreparedCpuset struct {
+type PreparedRtCpu struct {
 	Cpuset []*RtCpuInfo
 }
 
-type PreparedRtCpu struct {
-	RtCpu *PreparedCpuset
+type PreparedCpuset struct {
+	RtCpu *PreparedRtCpu
 }
 
-func (d PreparedRtCpu) Type() string {
+func (d PreparedCpuset) Type() string {
 	if d.RtCpu != nil {
 		return nascrd.RtCpuType
 	}

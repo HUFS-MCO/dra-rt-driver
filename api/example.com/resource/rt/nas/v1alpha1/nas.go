@@ -46,17 +46,17 @@ type AllocatedCpu struct {
 }
 
 // AllocatedCpuset represents a set of allocated CPUs.
-type AllocatedCpuset struct {
+type AllocatedRtCpu struct {
 	Cpuset []AllocatedCpu `json:"cpuset"`
 }
 
 // AllocatedRtCpu represents a set of allocated CPUs.
-type AllocatedRtCpu struct {
-	RtCpu *AllocatedCpuset `json:"rtcpu,omitempty"`
+type AllocatedCpuset struct {
+	RtCpu *AllocatedRtCpu `json:"rtcpu,omitempty"`
 }
 
 // Type returns the type of AllocatedDevices this represents.
-func (r AllocatedRtCpu) Type() string {
+func (r AllocatedCpuset) Type() string {
 	if r.RtCpu != nil {
 		return RtCpuType
 	}
@@ -69,17 +69,17 @@ type PreparedCpu struct {
 }
 
 // PreparedGpus represents a set of prepared GPUs on a node.
-type PreparedCpuset struct {
+type PreparedRtCpu struct {
 	Cpuset []PreparedCpu `json:"cpuset"`
 }
 
 // PreparedDevices represents a set of prepared devices on a node.
-type PreparedRtCpu struct {
-	RtCpu *PreparedCpuset `json:"rtcpu,omitempty"`
+type PreparedCpuset struct {
+	RtCpu *PreparedRtCpu `json:"rtcpu,omitempty"`
 }
 
 // Type returns the type of PreparedDevices this represents.
-func (d PreparedRtCpu) Type() string {
+func (d PreparedCpuset) Type() string {
 	if d.RtCpu != nil {
 		return RtCpuType
 	}
@@ -88,9 +88,9 @@ func (d PreparedRtCpu) Type() string {
 
 // NodeAllocationStateSpec is the spec for the NodeAllocationState CRD.
 type NodeAllocationStateSpec struct {
-	AllocatableRtCpu []AllocatableRtCpu        `json:"allocatableRtCpu,omitempty"`
-	AllocatedClaims  map[string]AllocatedRtCpu `json:"allocatedClaims,omitempty"`
-	PreparedClaims   map[string]PreparedRtCpu  `json:"preparedClaims,omitempty"`
+	AllocatableRtCpu []AllocatableRtCpu         `json:"allocatableRtCpu,omitempty"`
+	AllocatedClaims  map[string]AllocatedCpuset `json:"allocatedClaims,omitempty"`
+	PreparedClaims   map[string]PreparedCpuset  `json:"preparedClaims,omitempty"`
 }
 
 // +genclient
