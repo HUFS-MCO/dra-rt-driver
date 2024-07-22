@@ -18,13 +18,13 @@ spec:
     resourceClassName: rt.example.com
     parametersRef:
       apiVersion: v1
-      kind: rtClaimParameters
+      kind: RtClaimParameters
       name: rt.example.com
 
 ---
 
 apiVersion: resource.k8s.io/v1alpha1
-kind: rtClaimParameters
+kind: RtClaimParameters
 metadata:
   namespace: rt-test1
   name: rt.example.com
