@@ -17,7 +17,7 @@ spec:
   spec:
     resourceClassName: rt.example.com
     parametersRef:
-      apiVersion: v1
+      apiGroup: rt.resource.example.com
       kind: RtClaimParameters
       name: rt.example.com
 
