@@ -105,10 +105,11 @@ func (cdi *CDIHandler) CreateClaimSpecFile(claimUID string, devices *PreparedCpu
 				Name: string(device.id),
 				ContainerEdits: cdispec.ContainerEdits{
 					Env: []string{
-						fmt.Sprintf("RT_DEVICE_%d=%v", cpuIdx, device.id),
+						fmt.Sprintf("RT_DEVICE_%d=%v", cpuIdx, string(device.id)),
 					},
 				},
 			}
+			fmt.Println("after creating each cdidevice,", "cdiDevice: ", cdiDevice)
 			spec.Devices = append(spec.Devices, cdiDevice)
 			cpuIdx++
 		}
