@@ -152,7 +152,7 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, gp
 				fmt.Println("Available device", device)
 				break
 			}
-			fmt.Println("Print allocated device again", devices[i])
+			fmt.Println("Print allocated device again", devices)
 		}
 		allocated[claimUID] = devices
 	}
