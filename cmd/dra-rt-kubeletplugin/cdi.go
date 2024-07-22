@@ -19,6 +19,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	cdiapi "github.com/container-orchestrated-devices/container-device-interface/pkg/cdi"
@@ -103,10 +104,10 @@ func (cdi *CDIHandler) CreateClaimSpecFile(claimUID string, devices *PreparedCpu
 	case nascrd.RtCpuType:
 		for _, device := range devices.RtCpu.Cpuset {
 			cdiDevice := cdispec.Device{
-				Name: string(device.id),
+				Name: strconv.Itoa(device.id),
 				ContainerEdits: cdispec.ContainerEdits{
 					Env: []string{
-						fmt.Sprintf("RT_DEVICE_%d=%v", cpuIdx, string(device.id)),
+						fmt.Sprintf("RT_DEVICE_%d=%v", cpuIdx, strconv.Itoa(device.id)),
 					},
 				},
 			}
@@ -140,7 +141,7 @@ func (cdi *CDIHandler) GetClaimDevices(claimUID string, devices *PreparedCpuset)
 	switch devices.Type() {
 	case nascrd.RtCpuType:
 		for _, device := range devices.RtCpu.Cpuset {
-			cdiDevice := cdiapi.QualifiedName(cdiVendor, cdiClass, sanitizeInput(string(device.id)))
+			cdiDevice := cdiapi.QualifiedName(cdiVendor, cdiClass, sanitizeInput(strconv.Itoa(device.id)))
 			fmt.Println("cdiDevice: ", cdiDevice)
 			cdiDevices = append(cdiDevices, cdiDevice)
 		}
