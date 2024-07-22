@@ -118,12 +118,12 @@ func (s *DeviceState) GetUpdatedSpec(inspec *nascrd.NodeAllocationStateSpec) (*n
 	outspec := inspec.DeepCopy()
 	err := s.syncAllocatableRtCpusToCRDSpec(outspec)
 	if err != nil {
-		return nil, fmt.Errorf("synching allocatable devices to CR spec: %v", err)
+		return nil, fmt.Errorf("synching allocatable devices to CRD spec: %v", err)
 	}
 
 	err = s.syncPreparedRtCpuToCRDSpec(outspec)
 	if err != nil {
-		return nil, fmt.Errorf("synching prepared devices to CR spec: %v", err)
+		return nil, fmt.Errorf("synching prepared devices to CRD spec: %v", err)
 	}
 
 	return outspec, nil

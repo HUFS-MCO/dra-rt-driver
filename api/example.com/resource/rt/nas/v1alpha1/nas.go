@@ -42,7 +42,9 @@ func (d AllocatableRtCpu) Type() string {
 
 // AllocatedGpu represents an allocated GPU.
 type AllocatedCpu struct {
-	ID int `json:"id,omitempty"`
+	ID      int `json:"id,omitempty"`
+	Runtime int `json:"runtime,omitempty"`
+	Period  int `json:"period,omitempty"`
 }
 
 // AllocatedCpuset represents a set of allocated CPUs.
@@ -65,7 +67,8 @@ func (r AllocatedCpuset) Type() string {
 
 // PreparedGpu represents a prepared GPU on a node.
 type PreparedCpu struct {
-	ID int `json:"id"`
+	ID   int `json:"id"`
+	Util int `json:"util"`
 }
 
 // PreparedGpus represents a set of prepared GPUs on a node.
