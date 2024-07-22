@@ -41,7 +41,7 @@ spec:
             description: NodeAllocationStateSpec is the spec for the NodeAllocationState
               CRD.
             properties:
-              allocatableRtCpu:
+              allocatableCpuset:
                 items:
                   description: AllocatableDevice represents an allocatable device
                     on a node.
@@ -72,7 +72,11 @@ spec:
                             description: AllocatedGpu represents an allocated GPU.
                             properties:
                               id:
-                                type: string
+                                type: integer
+                              runtime:
+                                type: integer
+                              period:
+                                type: integer
                             type: object
                           type: array
                       required:
