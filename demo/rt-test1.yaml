@@ -19,7 +19,7 @@ spec:
     parametersRef:
       apiGroup: rt.resource.example.com
       kind: RtClaimParameters
-      name: rt.example.com
+      name: rtclaims
 
 ---
 
@@ -27,7 +27,7 @@ apiVersion: resource.k8s.io/v1alpha1
 kind: RtClaimParameters
 metadata:
   namespace: rt-test1
-  name: rt.example.com
+  name: rtclaims
 spec:
   count: 1
   runtime: 100
