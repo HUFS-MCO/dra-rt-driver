@@ -24,7 +24,7 @@ import (
 	"k8s.io/utils/cpuset"
 )
 
-type AllocatableRtCpus map[string]*AllocatableCpusetInfo
+type AllocatableRtCpus map[int]*AllocatableCpusetInfo
 type PreparedClaims map[string]*PreparedRtCpu
 
 // //	type GpuInfo struct {
