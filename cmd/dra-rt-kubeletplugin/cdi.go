@@ -19,6 +19,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	cdiapi "github.com/container-orchestrated-devices/container-device-interface/pkg/cdi"
 	cdispec "github.com/container-orchestrated-devices/container-device-interface/specs-go"
@@ -139,7 +140,7 @@ func (cdi *CDIHandler) GetClaimDevices(claimUID string, devices *PreparedCpuset)
 	switch devices.Type() {
 	case nascrd.RtCpuType:
 		for _, device := range devices.RtCpu.Cpuset {
-			cdiDevice := cdiapi.QualifiedName(cdiVendor, cdiClass, string(device.id))
+			cdiDevice := cdiapi.QualifiedName(cdiVendor, cdiClass, sanitizeInput(string(device.id)))
 			fmt.Println("cdiDevice: ", cdiDevice)
 			cdiDevices = append(cdiDevices, cdiDevice)
 		}
@@ -148,4 +149,9 @@ func (cdi *CDIHandler) GetClaimDevices(claimUID string, devices *PreparedCpuset)
 	}
 
 	return cdiDevices, nil
+}
+
+// /quick fix
+func sanitizeInput(input string) string {
+	return strings.ReplaceAll(input, "\r", "")
 }
