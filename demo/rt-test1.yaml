@@ -29,10 +29,9 @@ metadata:
   namespace: rt-test1
   name: rt.example.com
 spec:
-  spec:
-    count: 1
-    runtime: 100
-    period: 1000
+  count: 1
+  runtime: 100
+  period: 1000
 
 ---
 apiVersion: v1
