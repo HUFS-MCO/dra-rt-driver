@@ -61,7 +61,6 @@ func (s *DeviceState) Prepare(claimUID string, allocation nascrd.AllocatedCpuset
 	var err error
 	switch allocation.Type() {
 	case nascrd.RtCpuType:
-		fmt.Println("let's see allocation first: ", allocation)
 		prepared.RtCpu, err = s.prepareRtCpus(claimUID, allocation.RtCpu)
 	default:
 		err = fmt.Errorf("unknown device type: %v", allocation.Type())
@@ -134,15 +133,11 @@ func (s *DeviceState) prepareRtCpus(claimUID string, allocated *nascrd.Allocated
 	prepared := &PreparedRtCpu{}
 
 	for _, device := range allocated.Cpuset {
-		fmt.Println("lets see device", device, " and device ID: ", device.ID)
 		cpuInfo := s.allocatable[device.ID].RtCpuInfo
 
 		if _, exists := s.allocatable[device.ID]; !exists {
 			return nil, fmt.Errorf("requested CPU does not exist: %v", device.ID)
 		}
-		fmt.Println("Appending to Cpuset: device ID:", device.ID, "cpuInfo: %v\n", cpuInfo)
-
-		fmt.Println("Current Cpuset:\n", prepared.Cpuset)
 		prepared.Cpuset = append(prepared.Cpuset, cpuInfo)
 	}
 
@@ -156,8 +151,6 @@ func (s *DeviceState) unprepareRtCpus(claimUID string, devices *PreparedCpuset) 
 func (s *DeviceState) syncAllocatableRtCpusToCRDSpec(spec *nascrd.NodeAllocationStateSpec) error {
 	cpus := make(map[int]nascrd.AllocatableRtCpu)
 	for _, device := range s.allocatable {
-		// fmt.Println("check the error from here. device: %v and device id:%v", device, device.id)
-		// fmt.Println("these are allocatable cpus: %v", cpus)
 		cpus[device.id] = nascrd.AllocatableRtCpu{
 			RtCpu: &nascrd.AllocatableCpu{
 				ID:   device.id,
