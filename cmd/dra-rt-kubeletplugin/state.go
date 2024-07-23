@@ -164,13 +164,18 @@ func (s *DeviceState) GetUpdatedSpec(inspec *nascrd.NodeAllocationStateSpec) (*n
 
 func (s *DeviceState) prepareRtCpus(claimUID string, allocated *nascrd.AllocatedRtCpu) (*PreparedRtCpu, error) {
 	prepared := &PreparedRtCpu{}
+	util := make(map[int]int)
+	for _, device := range allocated.Cpuset {
+		util[device.ID] = s.allocatable[device.ID].RtCpuInfo.util
+	}
 
 	for _, device := range allocated.Cpuset {
 		cpuInfo := &PreparedRtCpuInfo{
 			id:      s.allocatable[device.ID].RtCpuInfo.id,
-			util:    int(device.Runtime*1000/device.Period) + s.allocatable[device.ID].RtCpuInfo.util,
+			util:    int(device.Runtime*1000/device.Period) + util[device.ID],
 			runtime: device.Runtime,
 		}
+		util[device.ID] = cpuInfo.util
 
 		if _, exists := s.allocatable[device.ID]; !exists {
 			return nil, fmt.Errorf("requested CPU does not exist: %v", device.ID)
