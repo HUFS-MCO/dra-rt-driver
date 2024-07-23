@@ -36,11 +36,17 @@ type RtCpuInfo struct {
 	util int
 }
 
+type PreparedRtCpuInfo struct {
+	id      int
+	util    int
+	runtime int
+}
+
 // //	type PreparedGpus struct {
 // //		Devices []*GpuInfo
 // //	}
 type PreparedRtCpu struct {
-	Cpuset []*RtCpuInfo
+	Cpuset []*PreparedRtCpuInfo
 }
 
 type PreparedCpuset struct {

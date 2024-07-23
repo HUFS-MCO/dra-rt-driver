@@ -133,7 +133,12 @@ func (s *DeviceState) prepareRtCpus(claimUID string, allocated *nascrd.Allocated
 	prepared := &PreparedRtCpu{}
 
 	for _, device := range allocated.Cpuset {
-		cpuInfo := s.allocatable[device.ID].RtCpuInfo
+		cpuInfo := &PreparedRtCpuInfo{
+			id:      s.allocatable[device.ID].RtCpuInfo.id,
+			util:    (device.Runtime/device.Period)*1000 + s.allocatable[device.ID].RtCpuInfo.util,
+			runtime: device.Runtime,
+		}
+		fmt.Println("cpuinfo:", cpuInfo)
 
 		if _, exists := s.allocatable[device.ID]; !exists {
 			return nil, fmt.Errorf("requested CPU does not exist: %v", device.ID)
@@ -178,7 +183,11 @@ func (s *DeviceState) syncPreparedCpusetFromCRDSpec(spec *nascrd.NodeAllocationS
 		case nascrd.RtCpuType:
 			prepared[claim] = &PreparedCpuset{RtCpu: &PreparedRtCpu{}}
 			for _, d := range devices.RtCpu.Cpuset {
-				prepared[claim].RtCpu.Cpuset = append(prepared[claim].RtCpu.Cpuset, cpus[d.ID].RtCpuInfo)
+				cpu := &PreparedRtCpuInfo{
+					id:   cpus[d.ID].id,
+					util: cpus[d.Util].util,
+				}
+				prepared[claim].RtCpu.Cpuset = append(prepared[claim].RtCpu.Cpuset, cpu)
 			}
 		default:
 			return fmt.Errorf("unknown device type: %v", devices.Type())

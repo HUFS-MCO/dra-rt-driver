@@ -73,9 +73,9 @@ spec:
                             properties:
                               id:
                                 type: integer
-                              runtime:
-                                type: integer
                               period:
+                                type: integer
+                              runtime:
                                 type: integer
                             type: object
                           type: array
@@ -99,9 +99,12 @@ spec:
                               a node.
                             properties:
                               id:
-                                type: string
+                                type: integer
+                              util:
+                                type: integer
                             required:
                             - id
+                            - util
                             type: object
                           type: array
                       required:

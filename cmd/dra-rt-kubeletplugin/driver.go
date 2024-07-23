@@ -57,7 +57,7 @@ func NewDriver(ctx context.Context, config *Config) (*driver, error) {
 
 		updatedSpec, err := state.GetUpdatedSpec(&config.nascr.Spec)
 		if err != nil {
-			return fmt.Errorf("error getting updated CR spec: %v", err)
+			return fmt.Errorf("error getting updated CRD spec: %v", err)
 		}
 
 		err = client.Update(ctx, updatedSpec)
