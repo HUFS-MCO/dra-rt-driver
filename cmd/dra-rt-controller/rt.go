@@ -117,16 +117,16 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, gp
 		}
 	}
 
-	for _, allocation := range crd.Spec.AllocatedClaims {
-		switch allocation.Type() {
-		case nascrd.RtCpuType:
-			for _, device := range allocation.RtCpu.Cpuset {
-				delete(available, device.ID)
-			}
-		default:
-			// skip other devices
-		}
-	}
+	// for _, allocation := range crd.Spec.AllocatedClaims {
+	// 	switch allocation.Type() {
+	// 	case nascrd.RtCpuType:
+	// 		for _, device := range allocation.RtCpu.Cpuset {
+	// 			delete(available, device.ID)
+	// 		}
+	// 	default:
+	// 		// skip other devices
+	// 	}
+	// }
 
 	allocated := make(map[string][]nascrd.AllocatedCpu)
 	for _, ca := range gpucas {
@@ -141,22 +141,22 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, gp
 
 		claimParams, _ := ca.ClaimParameters.(*rtcrd.RtClaimParametersSpec)
 		var devices []nascrd.AllocatedCpu
-		bestFitCpus := bestFit(crd, (claimParams.Runtime/claimParams.Period)*1000, claimParams.Count)
-		fmt.Println("Best fit CPUs:", bestFitCpus)
 		for i := 0; i < claimParams.Count; i++ {
-			for _, device := range available {
-				claimUtil := (claimParams.Runtime / claimParams.Period) * 1000
-				if claimUtil+device.Util <= 1000 {
-					d := nascrd.AllocatedCpu{
-						ID:      device.ID,
-						Runtime: claimParams.Runtime,
-						Period:  claimParams.Period,
-					}
-					devices = append(devices, d)
-					delete(available, device.ID)
-					break
+			// for _, device := range available {
+			bestFitCpus := bestFit(available, (claimParams.Runtime/claimParams.Period)*1000, claimParams.Count)
+			fmt.Println("Best fit CPUs:", bestFitCpus)
+			claimUtil := (claimParams.Runtime / claimParams.Period) * 1000
+			if claimUtil+available[bestFitCpus[0]].Util <= 1000 {
+				d := nascrd.AllocatedCpu{
+					ID:      bestFitCpus[0],
+					Runtime: claimParams.Runtime,
+					Period:  claimParams.Period,
 				}
+				devices = append(devices, d)
+				delete(available, d.ID)
+				break
 			}
+			// }
 		}
 		allocated[claimUID] = devices
 	}
@@ -200,18 +200,18 @@ func worstFit(spec *nascrd.NodeAllocationState, reqUtil int, reqCpus int) []int 
 	return fittingCpus
 }
 
-func bestFit(spec *nascrd.NodeAllocationState, reqUtil int, reqCpus int) []int {
+func bestFit(spec map[int]*nascrd.AllocatableCpu, reqUtil int, reqCpus int) []int {
 	type scoredCpu struct {
 		cpu   int
 		score int
 	}
 
 	var scoredCpus []scoredCpu
-	for _, cpuinfo := range spec.Spec.AllocatableCpuset {
-		score := cpuinfo.RtCpu.Util - reqUtil
+	for _, cpuinfo := range spec {
+		score := cpuinfo.Util - reqUtil
 		if score > 0 {
 			scoredCpus = append(scoredCpus, scoredCpu{
-				cpu:   cpuinfo.RtCpu.ID,
+				cpu:   cpuinfo.ID,
 				score: score,
 			})
 		}
