@@ -185,7 +185,7 @@ func (s *DeviceState) syncPreparedCpusetFromCRDSpec(spec *nascrd.NodeAllocationS
 			for _, d := range devices.RtCpu.Cpuset {
 				cpu := &PreparedRtCpuInfo{
 					id:   cpus[d.ID].id,
-					util: cpus[d.Util].util,
+					util: cpus[d.ID].util,
 				}
 				prepared[claim].RtCpu.Cpuset = append(prepared[claim].RtCpu.Cpuset, cpu)
 			}
