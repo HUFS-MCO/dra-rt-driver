@@ -168,7 +168,7 @@ func (s *DeviceState) prepareRtCpus(claimUID string, allocated *nascrd.Allocated
 	for _, device := range allocated.Cpuset {
 		cpuInfo := &PreparedRtCpuInfo{
 			id:      s.allocatable[device.ID].RtCpuInfo.id,
-			util:    (device.Runtime/device.Period)*1000 + s.allocatable[device.ID].RtCpuInfo.util,
+			util:    int(device.Runtime*1000/device.Period) + s.allocatable[device.ID].RtCpuInfo.util,
 			runtime: device.Runtime,
 		}
 		fmt.Println("cpuinfo,runtime:", (device.Runtime))
