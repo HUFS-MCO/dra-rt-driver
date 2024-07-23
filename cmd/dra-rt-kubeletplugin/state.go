@@ -171,11 +171,6 @@ func (s *DeviceState) prepareRtCpus(claimUID string, allocated *nascrd.Allocated
 			util:    int(device.Runtime*1000/device.Period) + s.allocatable[device.ID].RtCpuInfo.util,
 			runtime: device.Runtime,
 		}
-		fmt.Println("cpuinfo,runtime:", (device.Runtime))
-		fmt.Println("cpuinfo,period:", (device.Period))
-		fmt.Println("cpuinfo,util part1:", (device.Runtime * 1000 / device.Period))
-		fmt.Println("cpuinfo,util part2:", s.allocatable[device.ID].RtCpuInfo.util)
-		fmt.Println("cpuinfo:", cpuInfo)
 
 		if _, exists := s.allocatable[device.ID]; !exists {
 			return nil, fmt.Errorf("requested CPU does not exist: %v", device.ID)
