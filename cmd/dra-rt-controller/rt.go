@@ -152,8 +152,6 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, gp
 						Runtime: claimParams.Runtime,
 						Period:  claimParams.Period,
 					}
-					fmt.Println("Allocating device", d)
-					fmt.Println("Available device", device)
 					devices = append(devices, d)
 					delete(available, device.ID)
 					break
