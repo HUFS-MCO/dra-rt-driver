@@ -18,12 +18,14 @@ package main
 
 import (
 	"fmt"
+	"sort"
+
+	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
 
 	corev1 "k8s.io/api/core/v1"
 	resourcev1 "k8s.io/api/resource/v1alpha2"
 	"k8s.io/dynamic-resource-allocation/controller"
 
-	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
 	rtcrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/v1alpha1"
 )
 
@@ -139,6 +141,8 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, gp
 
 		claimParams, _ := ca.ClaimParameters.(*rtcrd.RtClaimParametersSpec)
 		var devices []nascrd.AllocatedCpu
+		bestFitCpus := bestFit(crd, (claimParams.Runtime/claimParams.Period)*1000, claimParams.Count)
+		fmt.Println("Best fit CPUs:", bestFitCpus)
 		for i := 0; i < claimParams.Count; i++ {
 			for _, device := range available {
 				claimUtil := (claimParams.Runtime / claimParams.Period) * 1000
@@ -160,4 +164,76 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, gp
 	}
 
 	return allocated
+}
+
+func worstFit(spec *nascrd.NodeAllocationState, reqUtil int, reqCpus int) []int {
+	type scoredCpu struct {
+		cpu   int
+		score int
+	}
+
+	var scoredCpus []scoredCpu
+	for _, cpuinfo := range spec.Spec.AllocatableCpuset {
+		score := cpuinfo.RtCpu.Util - reqUtil
+		if score > 0 {
+			scoredCpus = append(scoredCpus, scoredCpu{
+				cpu:   cpuinfo.RtCpu.ID,
+				score: score,
+			})
+		}
+	}
+
+	if int(len(scoredCpus)) < reqCpus {
+		return nil
+	}
+
+	sort.SliceStable(scoredCpus, func(i, j int) bool {
+		if scoredCpus[i].score > scoredCpus[j].score {
+			return true
+		}
+		return false
+	})
+
+	var fittingCpus []int
+	for i := int(0); i < reqCpus; i++ {
+		fittingCpus = append(fittingCpus, scoredCpus[i].cpu)
+	}
+
+	return fittingCpus
+}
+
+func bestFit(spec *nascrd.NodeAllocationState, reqUtil int, reqCpus int) []int {
+	type scoredCpu struct {
+		cpu   int
+		score int
+	}
+
+	var scoredCpus []scoredCpu
+	for _, cpuinfo := range spec.Spec.AllocatableCpuset {
+		score := cpuinfo.RtCpu.Util - reqUtil
+		if score > 0 {
+			scoredCpus = append(scoredCpus, scoredCpu{
+				cpu:   cpuinfo.RtCpu.ID,
+				score: score,
+			})
+		}
+	}
+
+	if int(len(scoredCpus)) < reqCpus {
+		return nil
+	}
+
+	sort.SliceStable(scoredCpus, func(i, j int) bool {
+		if scoredCpus[i].score < scoredCpus[j].score {
+			return true
+		}
+		return false
+	})
+
+	var fittingCpus []int
+	for i := int(0); i < reqCpus; i++ {
+		fittingCpus = append(fittingCpus, scoredCpus[i].cpu)
+	}
+
+	return fittingCpus
 }

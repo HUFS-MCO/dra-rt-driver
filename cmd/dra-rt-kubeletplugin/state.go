@@ -7,6 +7,39 @@ import (
 	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
 )
 
+type AllocatableRtCpus map[int]*AllocatableCpusetInfo
+type PreparedClaims map[string]*PreparedCpuset
+
+type RtCpuInfo struct {
+	id   int
+	util int
+}
+
+type PreparedRtCpuInfo struct {
+	id      int
+	util    int
+	runtime int
+}
+
+type PreparedRtCpu struct {
+	Cpuset []*PreparedRtCpuInfo
+}
+
+type PreparedCpuset struct {
+	RtCpu *PreparedRtCpu
+}
+
+func (d PreparedCpuset) Type() string {
+	if d.RtCpu != nil {
+		return nascrd.RtCpuType
+	}
+	return nascrd.UnknownDeviceType
+}
+
+type AllocatableCpusetInfo struct {
+	*RtCpuInfo
+}
+
 type DeviceState struct {
 	sync.Mutex
 	cdi         *CDIHandler
@@ -138,6 +171,8 @@ func (s *DeviceState) prepareRtCpus(claimUID string, allocated *nascrd.Allocated
 			util:    (device.Runtime/device.Period)*1000 + s.allocatable[device.ID].RtCpuInfo.util,
 			runtime: device.Runtime,
 		}
+		fmt.Println("cpuinfo,util part1:", (device.Runtime/device.Period)*1000)
+		fmt.Println("cpuinfo,util part2:", s.allocatable[device.ID].RtCpuInfo.util)
 		fmt.Println("cpuinfo:", cpuInfo)
 
 		if _, exists := s.allocatable[device.ID]; !exists {
