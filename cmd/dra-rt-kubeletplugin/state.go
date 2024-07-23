@@ -208,7 +208,8 @@ func (s *DeviceState) syncPreparedRtCpuToCRDSpec(spec *nascrd.NodeAllocationStat
 			prepared.RtCpu = &nascrd.PreparedRtCpu{}
 			for _, device := range devices.RtCpu.Cpuset {
 				outdevice := nascrd.PreparedCpu{
-					ID: device.id,
+					ID:   device.id,
+					Util: device.util,
 				}
 				prepared.RtCpu.Cpuset = append(prepared.RtCpu.Cpuset, outdevice)
 			}
