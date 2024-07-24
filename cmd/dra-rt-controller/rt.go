@@ -149,7 +149,7 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 		for i := 0; i < claimParams.Count; i++ {
 			// for _, device := range available {
 			fmt.Println("Available CPUs:", available)
-			bestFitCpus := bestFit(available, (claimParams.Runtime/claimParams.Period)*1000, claimParams.Count)
+			bestFitCpus := bestFit(available, (claimParams.Runtime * 1000 / claimParams.Period), claimParams.Count)
 			fmt.Println("Best fit CPUs:", bestFitCpus)
 			claimUtil := (claimParams.Runtime * 1000 / claimParams.Period)
 			if _, exist := util[bestFitCpus[0]]; !exist {
@@ -165,9 +165,7 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 					Period:  claimParams.Period,
 				}
 				devices = append(devices, d)
-				fmt.Println("let's see if util changes,before:", util[d.ID].Util)
 				util[d.ID].Util = util[d.ID].Util + claimUtil
-				fmt.Println("let's see if util changes,after:", util[d.ID].Util)
 				if util[d.ID].Util >= 1000 {
 					delete(available, d.ID)
 				}
@@ -177,7 +175,6 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 		}
 		allocated[claimUID] = devices
 	}
-	fmt.Println("let's see the allocated utils:", crd.Spec.AllocatedUtilToCpu)
 
 	var utilisations []nascrd.AllocatedUtilset
 	for _, device := range util {
@@ -188,7 +185,9 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 		utilisations = append(utilisations, utilslice)
 	}
 	crd.Spec.AllocatedUtilToCpu = utilisations
-	fmt.Println("let's see the allocated utils at the end:", crd.Spec.AllocatedUtilToCpu)
+	for _, u := range crd.Spec.AllocatedUtilToCpu {
+		fmt.Println("let's see the utils that are computed:", u)
+	}
 
 	return allocated
 }
