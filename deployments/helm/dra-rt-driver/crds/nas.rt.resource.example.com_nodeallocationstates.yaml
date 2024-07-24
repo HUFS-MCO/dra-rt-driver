@@ -85,14 +85,18 @@ spec:
                   type: object
                 type: object
               AllocatedUtilToCpu:
-                type: object
                 additionalProperties:
-                  type: object
+                  description: PreparedDevices represents a set of prepared devices
+                    on a node.
                   properties:
-                    Util:
+                    id:
                       type: integer
-                    ID:
+                    util:
                       type: integer
+                  required:
+                  - id
+                  - util
+                  type: object
               preparedClaims:
                 additionalProperties:
                   description: PreparedDevices represents a set of prepared devices
