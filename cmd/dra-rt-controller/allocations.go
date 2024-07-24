@@ -25,6 +25,7 @@ import (
 type PerNodeAllocatedClaims struct {
 	sync.RWMutex
 	allocations map[string]map[string]nascrd.AllocatedCpuset
+	utilisation map[string]map[int]int
 }
 
 func NewPerNodeAllocatedClaims() *PerNodeAllocatedClaims {

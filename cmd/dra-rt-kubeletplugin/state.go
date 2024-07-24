@@ -9,6 +9,7 @@ import (
 
 type AllocatableRtCpus map[int]*AllocatableCpusetInfo
 type PreparedClaims map[string]*PreparedCpuset
+type AllocatedUtil map[int]int
 
 type RtCpuInfo struct {
 	id   int
@@ -42,9 +43,10 @@ type AllocatableCpusetInfo struct {
 
 type DeviceState struct {
 	sync.Mutex
-	cdi         *CDIHandler
-	allocatable AllocatableRtCpus
-	prepared    PreparedClaims
+	cdi           *CDIHandler
+	allocatable   AllocatableRtCpus
+	prepared      PreparedClaims
+	allocatedUtil AllocatedUtil
 }
 
 func NewDeviceState(config *Config) (*DeviceState, error) {
@@ -64,9 +66,10 @@ func NewDeviceState(config *Config) (*DeviceState, error) {
 	}
 
 	state := &DeviceState{
-		cdi:         cdi,
-		allocatable: allocatable,
-		prepared:    make(PreparedClaims),
+		cdi:           cdi,
+		allocatable:   allocatable,
+		prepared:      make(PreparedClaims),
+		allocatedUtil: make(AllocatedUtil),
 	}
 
 	err = state.syncPreparedCpusetFromCRDSpec(&config.nascr.Spec)
@@ -164,19 +167,14 @@ func (s *DeviceState) GetUpdatedSpec(inspec *nascrd.NodeAllocationStateSpec) (*n
 
 func (s *DeviceState) prepareRtCpus(claimUID string, allocated *nascrd.AllocatedRtCpu) (*PreparedRtCpu, error) {
 	prepared := &PreparedRtCpu{}
-	util := make(map[int]int)
-	for _, device := range allocated.Cpuset {
-		util[device.ID] = s.allocatable[device.ID].RtCpuInfo.util
-	}
-	fmt.Println("Utilization:", util)
+
 	fmt.Println("Allocated CPUs:", allocated.Cpuset)
 	for _, device := range allocated.Cpuset {
 		cpuInfo := &PreparedRtCpuInfo{
 			id:      s.allocatable[device.ID].RtCpuInfo.id,
-			util:    int(device.Runtime*1000/device.Period) + util[device.ID],
+			util:    int(device.Runtime * 1000 / device.Period),
 			runtime: device.Runtime,
 		}
-		util[device.ID] = cpuInfo.util
 
 		if _, exists := s.allocatable[device.ID]; !exists {
 			return nil, fmt.Errorf("requested CPU does not exist: %v", device.ID)
@@ -257,8 +255,31 @@ func (s *DeviceState) syncPreparedRtCpuToCRDSpec(spec *nascrd.NodeAllocationStat
 		}
 		outcas[claim] = prepared
 	}
-
 	spec.PreparedClaims = outcas
+
+	return nil
+}
+
+func (s *DeviceState) syncAllocatedUtilFromCRDSpec(spec *nascrd.NodeAllocationStateSpec) error {
+	allocatedUtil := make(AllocatedUtil)
+	for _, devices := range spec.AllocatedClaims {
+		for _, device := range devices.RtCpu.Cpuset {
+			allocatedUtil[device.ID] = spec.AllocatedUtil[device.ID]
+		}
+
+		s.allocatedUtil = allocatedUtil
+
+	}
+	return nil
+}
+
+func (s *DeviceState) syncAllocatedUtilToCRDSpec(spec *nascrd.NodeAllocationStateSpec) error {
+	oututil := make(map[int]int)
+	for id, util := range s.allocatedUtil {
+		oututil[id] = util
+	}
+
+	spec.AllocatedUtil = oututil
 
 	return nil
 }

@@ -94,6 +94,7 @@ type NodeAllocationStateSpec struct {
 	AllocatableCpuset []AllocatableCpuset        `json:"allocatableCpuset,omitempty"`
 	AllocatedClaims   map[string]AllocatedCpuset `json:"allocatedClaims,omitempty"`
 	PreparedClaims    map[string]PreparedCpuset  `json:"preparedClaims,omitempty"`
+	AllocatedUtil     map[int]int                `json:"allocatedUtil,omitempty"`
 }
 
 // +genclient

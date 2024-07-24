@@ -132,6 +132,10 @@ func (d driver) allocate(ctx context.Context, claim *resourcev1.ResourceClaim, c
 		crd.Spec.AllocatedClaims = make(map[string]nascrd.AllocatedCpuset)
 	}
 
+	if crd.Spec.AllocatedUtil == nil {
+		crd.Spec.AllocatedUtil = make(map[int]int)
+	}
+
 	if _, exists := crd.Spec.AllocatedClaims[string(claim.UID)]; exists {
 		return buildAllocationResult(selectedNode, true), nil
 	}

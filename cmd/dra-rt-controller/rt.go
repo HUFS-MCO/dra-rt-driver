@@ -88,8 +88,8 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 		}
 
 		var devices []nascrd.AllocatedCpu
-		for _, gpu := range allocated[claimUID] {
-			device := gpu
+		for _, cpu := range allocated[claimUID] {
+			device := cpu
 			devices = append(devices, device)
 		}
 
@@ -105,7 +105,7 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 	return nil
 }
 
-func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, gpucas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, node string) map[string][]nascrd.AllocatedCpu {
+func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cpucas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, node string) map[string][]nascrd.AllocatedCpu {
 	available := make(map[int]*nascrd.AllocatableCpu)
 
 	for _, device := range crd.Spec.AllocatableCpuset {
@@ -129,7 +129,7 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, gp
 	// }
 
 	allocated := make(map[string][]nascrd.AllocatedCpu)
-	for _, ca := range gpucas {
+	for _, ca := range cpucas {
 		claimUID := string(ca.Claim.UID)
 		if _, exists := crd.Spec.AllocatedClaims[claimUID]; exists {
 			devices := crd.Spec.AllocatedClaims[claimUID].RtCpu.Cpuset
@@ -147,14 +147,15 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, gp
 			bestFitCpus := bestFit(available, (claimParams.Runtime/claimParams.Period)*1000, claimParams.Count)
 			fmt.Println("Best fit CPUs:", bestFitCpus)
 			claimUtil := (claimParams.Runtime / claimParams.Period) * 1000
-			if claimUtil+available[bestFitCpus[0]].Util <= 1000 {
+			if claimUtil+crd.Spec.AllocatedUtil[bestFitCpus[0]] <= 1000 {
 				d := nascrd.AllocatedCpu{
 					ID:      bestFitCpus[0],
 					Runtime: claimParams.Runtime,
 					Period:  claimParams.Period,
 				}
 				devices = append(devices, d)
-				if available[bestFitCpus[0]].Util+claimUtil >= 1000 {
+				crd.Spec.AllocatedUtil[d.ID] += claimUtil
+				if crd.Spec.AllocatedUtil[d.ID] >= 1000 {
 					delete(available, d.ID)
 				}
 				break
