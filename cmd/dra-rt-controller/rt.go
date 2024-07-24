@@ -155,7 +155,7 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 			if _, exist := util[bestFitCpus[0]]; !exist {
 				fmt.Println("AllocatedUtilToCpu is nil (function:allocate)")
 			} else {
-				currUtil = crd.Spec.AllocatedUtilToCpu[bestFitCpus[0]].RtUtil.Util
+				currUtil = util[bestFitCpus[0]].Util
 			}
 
 			if claimUtil+currUtil <= 1000 {
