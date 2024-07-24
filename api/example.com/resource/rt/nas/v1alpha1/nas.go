@@ -89,7 +89,7 @@ type AllocatedUtil struct {
 
 // AllocatableDevice represents an allocatable device on a node.
 type AllocatedUtilset struct {
-	RtUtil *AllocatedUtil `json:"rtcpu,omitempty"`
+	RtUtil *AllocatedUtil `json:"rtutil,omitempty"`
 }
 
 // type AllocatedUtilset struct {
