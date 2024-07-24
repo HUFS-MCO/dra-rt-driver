@@ -84,19 +84,7 @@ spec:
                       type: object
                   type: object
                 type: object
-              allocatedUtilToCpu:
-                additionalProperties:
-                  description: AllocatedUtil represents Utilisation to CPU map.
-                  properties:
-                    id:
-                      type: integer
-                    util:
-                      type: integer
-                  required:
-                      - id
-                      - util
-                  type: object
-                type: object
+              allocatedUtilToCpu: {}
               preparedClaims:
                 additionalProperties:
                   description: PreparedDevices represents a set of prepared devices
