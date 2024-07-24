@@ -151,7 +151,7 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 			fmt.Println("Available CPUs:", available)
 			bestFitCpus := bestFit(available, (claimParams.Runtime/claimParams.Period)*1000, claimParams.Count)
 			fmt.Println("Best fit CPUs:", bestFitCpus)
-			claimUtil := (claimParams.Runtime / claimParams.Period) * 1000
+			claimUtil := (claimParams.Runtime * 1000 / claimParams.Period)
 			if _, exist := util[bestFitCpus[0]]; !exist {
 				fmt.Println("AllocatedUtilToCpu is nil (function:allocate)")
 			} else {
@@ -165,7 +165,9 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 					Period:  claimParams.Period,
 				}
 				devices = append(devices, d)
+				fmt.Println("let's see if util changes,before:", util[d.ID].Util)
 				util[d.ID].Util = util[d.ID].Util + claimUtil
+				fmt.Println("let's see if util changes,after:", util[d.ID].Util)
 				if util[d.ID].Util >= 1000 {
 					delete(available, d.ID)
 				}
