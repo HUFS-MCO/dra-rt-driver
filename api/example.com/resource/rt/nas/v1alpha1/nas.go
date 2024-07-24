@@ -81,6 +81,15 @@ type PreparedCpuset struct {
 	RtCpu *PreparedRtCpu `json:"rtcpu,omitempty"`
 }
 
+type AllocatedUtil struct {
+	Util int `json:"util"`
+	ID   int `json:"id"`
+}
+
+// type AllocatedUtilset struct {
+// 	Mapped *AllocatedUtil `json:"mapped,omitempty"`
+// }
+
 // Type returns the type of PreparedDevices this represents.
 func (d PreparedCpuset) Type() string {
 	if d.RtCpu != nil {
@@ -91,10 +100,10 @@ func (d PreparedCpuset) Type() string {
 
 // NodeAllocationStateSpec is the spec for the NodeAllocationState CRD.
 type NodeAllocationStateSpec struct {
-	AllocatableCpuset []AllocatableCpuset        `json:"allocatableCpuset,omitempty"`
-	AllocatedClaims   map[string]AllocatedCpuset `json:"allocatedClaims,omitempty"`
-	PreparedClaims    map[string]PreparedCpuset  `json:"preparedClaims,omitempty"`
-	AllocatedUtil     map[int]int                `json:"allocatedUtil,omitempty"`
+	AllocatableCpuset  []AllocatableCpuset        `json:"allocatableCpuset,omitempty"`
+	AllocatedClaims    map[string]AllocatedCpuset `json:"allocatedClaims,omitempty"`
+	PreparedClaims     map[string]PreparedCpuset  `json:"preparedClaims,omitempty"`
+	AllocatedUtilToCpu map[int]AllocatedUtil      `json:"allocatedUtilToCpu,omitempty"`
 }
 
 // +genclient

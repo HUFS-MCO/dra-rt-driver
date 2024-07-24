@@ -147,15 +147,19 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 			bestFitCpus := bestFit(available, (claimParams.Runtime/claimParams.Period)*1000, claimParams.Count)
 			fmt.Println("Best fit CPUs:", bestFitCpus)
 			claimUtil := (claimParams.Runtime / claimParams.Period) * 1000
-			if claimUtil+crd.Spec.AllocatedUtil[bestFitCpus[0]] <= 1000 {
+			if claimUtil+crd.Spec.AllocatedUtilToCpu[bestFitCpus[0]].Util <= 1000 {
 				d := nascrd.AllocatedCpu{
 					ID:      bestFitCpus[0],
 					Runtime: claimParams.Runtime,
 					Period:  claimParams.Period,
 				}
 				devices = append(devices, d)
-				crd.Spec.AllocatedUtil[d.ID] += claimUtil
-				if crd.Spec.AllocatedUtil[d.ID] >= 1000 {
+				currentUtilInfo := nascrd.AllocatedUtil{
+					Util: crd.Spec.AllocatedUtilToCpu[d.ID].Util + claimUtil,
+					ID:   d.ID,
+				}
+				crd.Spec.AllocatedUtilToCpu[d.ID] = currentUtilInfo
+				if crd.Spec.AllocatedUtilToCpu[d.ID].Util >= 1000 {
 					delete(available, d.ID)
 				}
 				break

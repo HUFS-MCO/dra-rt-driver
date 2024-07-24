@@ -77,6 +77,11 @@ func NewDeviceState(config *Config) (*DeviceState, error) {
 		return nil, fmt.Errorf("unable to sync prepared devices from CRD: %v", err)
 	}
 
+	err = state.syncAllocatedUtilFromCRDSpec(&config.nascr.Spec)
+	if err != nil {
+		return nil, fmt.Errorf("unable to sync allocated util from CRD: %v", err)
+	}
+
 	return state, nil
 }
 
@@ -160,6 +165,11 @@ func (s *DeviceState) GetUpdatedSpec(inspec *nascrd.NodeAllocationStateSpec) (*n
 	err = s.syncPreparedRtCpuToCRDSpec(outspec)
 	if err != nil {
 		return nil, fmt.Errorf("synching prepared devices to CRD spec: %v", err)
+	}
+
+	err = s.syncAllocatedUtilToCRDSpec(outspec)
+	if err != nil {
+		return nil, fmt.Errorf("synching allocated util to CRD spec: %v", err)
 	}
 
 	return outspec, nil
@@ -264,7 +274,7 @@ func (s *DeviceState) syncAllocatedUtilFromCRDSpec(spec *nascrd.NodeAllocationSt
 	allocatedUtil := make(AllocatedUtil)
 	for _, devices := range spec.AllocatedClaims {
 		for _, device := range devices.RtCpu.Cpuset {
-			allocatedUtil[device.ID] = spec.AllocatedUtil[device.ID]
+			allocatedUtil[device.ID] = spec.AllocatedUtilToCpu[device.ID].Util
 		}
 
 		s.allocatedUtil = allocatedUtil
@@ -277,9 +287,11 @@ func (s *DeviceState) syncAllocatedUtilToCRDSpec(spec *nascrd.NodeAllocationStat
 	oututil := make(map[int]int)
 	for id, util := range s.allocatedUtil {
 		oututil[id] = util
+		spec.AllocatedUtilToCpu[id] = nascrd.AllocatedUtil{
+			Util: oututil[id],
+			ID:   id,
+		}
 	}
-
-	spec.AllocatedUtil = oututil
 
 	return nil
 }
