@@ -77,10 +77,11 @@ func NewDeviceState(config *Config) (*DeviceState, error) {
 		return nil, fmt.Errorf("unable to sync prepared devices from CRD: %v", err)
 	}
 
-	err = state.syncAllocatedUtilFromCRDSpec(&config.nascr.Spec)
+	err = state.syncAllocatedUtilFromAllocatableRtCpu()
 	if err != nil {
-		return nil, fmt.Errorf("unable to sync allocated util from CRD: %v", err)
+		return nil, fmt.Errorf("unable to sync allocated util from allocatable: %v", err)
 	}
+	fmt.Println("how many times the allocatable is synced to allocated util?")
 
 	return state, nil
 }
@@ -293,5 +294,14 @@ func (s *DeviceState) syncAllocatedUtilToCRDSpec(spec *nascrd.NodeAllocationStat
 		}
 	}
 
+	return nil
+}
+
+func (s *DeviceState) syncAllocatedUtilFromAllocatableRtCpu() error {
+	allocatedUtilmap := make(map[int]int)
+	for _, device := range s.allocatable {
+		allocatedUtilmap[device.id] = device.util
+	}
+	s.allocatedUtil = allocatedUtilmap
 	return nil
 }

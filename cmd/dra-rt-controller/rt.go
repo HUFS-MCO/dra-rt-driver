@@ -107,6 +107,7 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 
 func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cpucas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, node string) map[string][]nascrd.AllocatedCpu {
 	available := make(map[int]*nascrd.AllocatableCpu)
+	currUtil := 0
 
 	for _, device := range crd.Spec.AllocatableCpuset {
 		switch device.Type() {
@@ -147,7 +148,13 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 			bestFitCpus := bestFit(available, (claimParams.Runtime/claimParams.Period)*1000, claimParams.Count)
 			fmt.Println("Best fit CPUs:", bestFitCpus)
 			claimUtil := (claimParams.Runtime / claimParams.Period) * 1000
-			if claimUtil+crd.Spec.AllocatedUtilToCpu[bestFitCpus[0]].Util <= 1000 {
+			if _, exist := crd.Spec.AllocatedUtilToCpu[bestFitCpus[0]]; !exist {
+				fmt.Println("AllocatedUtilToCpu is nil (function:allocate)")
+			} else {
+				currUtil = crd.Spec.AllocatedUtilToCpu[bestFitCpus[0]].Util
+			}
+
+			if claimUtil+currUtil <= 1000 {
 				d := nascrd.AllocatedCpu{
 					ID:      bestFitCpus[0],
 					Runtime: claimParams.Runtime,
