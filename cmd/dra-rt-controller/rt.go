@@ -107,6 +107,7 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 
 func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cpucas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, node string) map[string][]nascrd.AllocatedCpu {
 	available := make(map[int]*nascrd.AllocatableCpu)
+	util := make(map[int]*nascrd.AllocatedUtil)
 	currUtil := 0
 
 	for _, device := range crd.Spec.AllocatableCpuset {
@@ -116,6 +117,9 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 		default:
 			// skip other devices
 		}
+	}
+	for _, device := range crd.Spec.AllocatedUtilToCpu {
+		util[device.RtUtil.ID] = device.RtUtil
 	}
 
 	// for _, allocation := range crd.Spec.AllocatedClaims {
@@ -148,10 +152,10 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 			bestFitCpus := bestFit(available, (claimParams.Runtime/claimParams.Period)*1000, claimParams.Count)
 			fmt.Println("Best fit CPUs:", bestFitCpus)
 			claimUtil := (claimParams.Runtime / claimParams.Period) * 1000
-			if _, exist := crd.Spec.AllocatedUtilToCpu[bestFitCpus[0]]; !exist {
+			if _, exist := util[bestFitCpus[0]]; !exist {
 				fmt.Println("AllocatedUtilToCpu is nil (function:allocate)")
 			} else {
-				currUtil = crd.Spec.AllocatedUtilToCpu[bestFitCpus[0]].Util
+				currUtil = crd.Spec.AllocatedUtilToCpu[bestFitCpus[0]].RtUtil.Util
 			}
 
 			if claimUtil+currUtil <= 1000 {
@@ -161,12 +165,8 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 					Period:  claimParams.Period,
 				}
 				devices = append(devices, d)
-				currentUtilInfo := nascrd.AllocatedUtil{
-					Util: crd.Spec.AllocatedUtilToCpu[d.ID].Util + claimUtil,
-					ID:   d.ID,
-				}
-				crd.Spec.AllocatedUtilToCpu[d.ID] = currentUtilInfo
-				if crd.Spec.AllocatedUtilToCpu[d.ID].Util >= 1000 {
+				util[d.ID].Util = util[d.ID].Util + claimUtil
+				if util[d.ID].Util >= 1000 {
 					delete(available, d.ID)
 				}
 				break
@@ -175,6 +175,18 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 		}
 		allocated[claimUID] = devices
 	}
+	fmt.Println("let's see the allocated utils:", crd.Spec.AllocatedUtilToCpu)
+
+	var utilisations []nascrd.AllocatedUtilset
+	for _, device := range util {
+		utilslice := nascrd.AllocatedUtilset{
+			RtUtil: device,
+		}
+		fmt.Println("let's see the utils that are computed:", device)
+		utilisations = append(utilisations, utilslice)
+	}
+	crd.Spec.AllocatedUtilToCpu = utilisations
+	fmt.Println("let's see the allocated utils at the end:", crd.Spec.AllocatedUtilToCpu)
 
 	return allocated
 }

@@ -85,19 +85,24 @@ spec:
                   type: object
                 type: object
               AllocatedUtilToCpu:
-                additionalProperties:
-                  description: PreparedDevices represents a set of prepared devices
+                items:
+                  description: AllocatableDevice represents an allocatable device
                     on a node.
                   properties:
-                    id:
-                      type: integer
-                    util:
-                      type: integer
-                  required:
-                  - id
-                  - util
+                    rtcpu:
+                      description: AllocatableGpu represents an allocatable GPU on
+                        a node.
+                      properties:
+                        id:
+                          type: integer
+                        util:
+                          type: integer
+                      required:
+                      - id
+                      - util
+                      type: object
                   type: object
-                type: object
+                type: array
               preparedClaims:
                 additionalProperties:
                   description: PreparedDevices represents a set of prepared devices

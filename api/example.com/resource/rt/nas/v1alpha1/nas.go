@@ -82,8 +82,14 @@ type PreparedCpuset struct {
 }
 
 type AllocatedUtil struct {
-	Util int `json:"util"`
 	ID   int `json:"id"`
+	Util int `json:"util"`
+	// ProductName string `json:"productName"` // let's assume that the UUID is enough for now
+}
+
+// AllocatableDevice represents an allocatable device on a node.
+type AllocatedUtilset struct {
+	RtUtil *AllocatedUtil `json:"rtcpu,omitempty"`
 }
 
 // type AllocatedUtilset struct {
@@ -103,7 +109,7 @@ type NodeAllocationStateSpec struct {
 	AllocatableCpuset  []AllocatableCpuset        `json:"allocatableCpuset,omitempty"`
 	AllocatedClaims    map[string]AllocatedCpuset `json:"allocatedClaims,omitempty"`
 	PreparedClaims     map[string]PreparedCpuset  `json:"preparedClaims,omitempty"`
-	AllocatedUtilToCpu map[int]AllocatedUtil      `json:"allocatedUtilToCpu,omitempty"`
+	AllocatedUtilToCpu []AllocatedUtilset         `json:"allocatedUtilToCpu,omitempty"`
 }
 
 // +genclient

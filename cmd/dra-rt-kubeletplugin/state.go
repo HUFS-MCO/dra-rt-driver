@@ -273,24 +273,23 @@ func (s *DeviceState) syncPreparedRtCpuToCRDSpec(spec *nascrd.NodeAllocationStat
 
 func (s *DeviceState) syncAllocatedUtilFromCRDSpec(spec *nascrd.NodeAllocationStateSpec) error {
 	allocatedUtil := make(AllocatedUtil)
-	for _, devices := range spec.AllocatedClaims {
-		for _, device := range devices.RtCpu.Cpuset {
-			allocatedUtil[device.ID] = spec.AllocatedUtilToCpu[device.ID].Util
-		}
-
-		s.allocatedUtil = allocatedUtil
-
+	for _, device := range spec.AllocatedUtilToCpu {
+		allocatedUtil[device.RtUtil.ID] = device.RtUtil.Util
 	}
+	s.allocatedUtil = allocatedUtil
 	return nil
 }
 
 func (s *DeviceState) syncAllocatedUtilToCRDSpec(spec *nascrd.NodeAllocationStateSpec) error {
-	allocatedUtilToCpu := make(map[int]nascrd.AllocatedUtil)
+	allocatedUtilToCpu := []nascrd.AllocatedUtilset{}
 	for id, util := range s.allocatedUtil {
-		allocatedUtilToCpu[id] = nascrd.AllocatedUtil{
-			Util: util,
-			ID:   id,
+		allocatedUtil := nascrd.AllocatedUtilset{
+			RtUtil: &nascrd.AllocatedUtil{
+				Util: util,
+				ID:   id,
+			},
 		}
+		allocatedUtilToCpu = append(allocatedUtilToCpu, allocatedUtil)
 	}
 	spec.AllocatedUtilToCpu = allocatedUtilToCpu
 
