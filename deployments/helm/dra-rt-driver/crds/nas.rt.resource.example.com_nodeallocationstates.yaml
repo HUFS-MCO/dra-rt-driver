@@ -92,6 +92,9 @@ spec:
                       type: integer
                     util:
                       type: integer
+                  required:
+                      - id
+                      - util
                   type: object
                 type: object
               preparedClaims:
