@@ -97,6 +97,7 @@ spec:
                   - id
                   - util
                   type: object
+                type: object
               preparedClaims:
                 additionalProperties:
                   description: PreparedDevices represents a set of prepared devices
