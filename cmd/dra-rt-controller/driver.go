@@ -258,6 +258,10 @@ func (d driver) unsuitableNode(ctx context.Context, pod *corev1.Pod, allcas []*c
 		crd.Spec.AllocatedClaims = make(map[string]nascrd.AllocatedCpuset)
 	}
 
+	if crd.Spec.AllocatedUtilToCpu == nil {
+		crd.Spec.AllocatedUtilToCpu = make(map[int]nascrd.AllocatedUtil)
+	}
+
 	perKindCas := make(map[string][]*controller.ClaimAllocation)
 	for _, ca := range allcas {
 		switch ca.ClaimParameters.(type) {
