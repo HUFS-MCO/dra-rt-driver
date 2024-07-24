@@ -168,10 +168,10 @@ func (s *DeviceState) GetUpdatedSpec(inspec *nascrd.NodeAllocationStateSpec) (*n
 		return nil, fmt.Errorf("synching prepared devices to CRD spec: %v", err)
 	}
 
-	// err = s.syncAllocatedUtilToCRDSpec(outspec)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("synching allocated util to CRD spec: %v", err)
-	// }
+	err = s.syncAllocatedUtilToCRDSpec(outspec)
+	if err != nil {
+		return nil, fmt.Errorf("synching allocated util to CRD spec: %v", err)
+	}
 
 	return outspec, nil
 }
@@ -285,12 +285,14 @@ func (s *DeviceState) syncAllocatedUtilFromCRDSpec(spec *nascrd.NodeAllocationSt
 }
 
 func (s *DeviceState) syncAllocatedUtilToCRDSpec(spec *nascrd.NodeAllocationStateSpec) error {
+	allocatedUtilToCpu := make(map[int]nascrd.AllocatedUtil)
 	for id, util := range s.allocatedUtil {
-		spec.AllocatedUtilToCpu[id] = nascrd.AllocatedUtil{
+		allocatedUtilToCpu[id] = nascrd.AllocatedUtil{
 			Util: util,
 			ID:   id,
 		}
 	}
+	spec.AllocatedUtilToCpu = allocatedUtilToCpu
 
 	return nil
 }
