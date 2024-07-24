@@ -236,7 +236,7 @@ func (in *NodeAllocationStateSpec) DeepCopyInto(out *NodeAllocationStateSpec) {
 		in, out := &in.AllocatedUtilToCpu, &out.AllocatedUtilToCpu
 		*out = make(map[int]AllocatedUtil, len(*in))
 		for key, val := range *in {
-			(*out)[key] = val
+			(*out)[key] = *val.DeepCopy()
 		}
 	}
 }

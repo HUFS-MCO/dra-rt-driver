@@ -84,7 +84,15 @@ spec:
                       type: object
                   type: object
                 type: object
-              allocatedUtilToCpu: {}
+              AllocatedUtilToCpu:
+                type: object
+                additionalProperties:
+                  type: object
+                  properties:
+                    Util:
+                      type: integer
+                    ID:
+                      type: integer
               preparedClaims:
                 additionalProperties:
                   description: PreparedDevices represents a set of prepared devices
