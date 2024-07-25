@@ -81,6 +81,18 @@ func NewDeviceState(config *Config) (*DeviceState, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to sync allocated util from allocatable: %v", err)
 	}
+
+	// for _, u := range inspec.AllocatedUtilToCpu {
+	// 	fmt.Println("let's see the utils that are computed before get update:", u.RtUtil.Util)
+	// }
+	// err = s.syncAllocatedUtilToCRDSpec(outspec)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("synching allocated util to CRD spec: %v", err)
+	// }
+	// for _, u := range outspec.AllocatedUtilToCpu {
+	// 	fmt.Println("let's see the utils that are computed after get update:", u.RtUtil.Util)
+	// }
+
 	fmt.Println("how many times the allocatable is synced to allocated util?")
 
 	return state, nil
@@ -167,16 +179,6 @@ func (s *DeviceState) GetUpdatedSpec(inspec *nascrd.NodeAllocationStateSpec) (*n
 	if err != nil {
 		return nil, fmt.Errorf("synching prepared devices to CRD spec: %v", err)
 	}
-	// for _, u := range inspec.AllocatedUtilToCpu {
-	// 	fmt.Println("let's see the utils that are computed before get update:", u.RtUtil.Util)
-	// }
-	// err = s.syncAllocatedUtilToCRDSpec(outspec)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("synching allocated util to CRD spec: %v", err)
-	// }
-	// for _, u := range outspec.AllocatedUtilToCpu {
-	// 	fmt.Println("let's see the utils that are computed after get update:", u.RtUtil.Util)
-	// }
 
 	return outspec, nil
 }

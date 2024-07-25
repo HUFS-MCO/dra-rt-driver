@@ -186,7 +186,7 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 	}
 	crd.Spec.AllocatedUtilToCpu = utilisations
 	for _, ut := range crd.Spec.AllocatedUtilToCpu {
-		fmt.Println("let's see the utils that are computed:", ut.RtUtil.Util)
+		fmt.Println("let's see the spec utils that are computed:", ut.RtUtil.Util)
 	}
 
 	return allocated
