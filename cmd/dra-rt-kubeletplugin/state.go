@@ -77,20 +77,9 @@ func NewDeviceState(config *Config) (*DeviceState, error) {
 		return nil, fmt.Errorf("unable to sync prepared devices from CRD: %v", err)
 	}
 
-	err = state.syncAllocatedUtilFromAllocatableRtCpu()
-	if err != nil {
-		return nil, fmt.Errorf("unable to sync allocated util from allocatable: %v", err)
-	}
-
-	// for _, u := range inspec.AllocatedUtilToCpu {
-	// 	fmt.Println("let's see the utils that are computed before get update:", u.RtUtil.Util)
-	// }
-	// err = s.syncAllocatedUtilToCRDSpec(outspec)
+	// err = state.syncAllocatedUtilFromAllocatableRtCpu()
 	// if err != nil {
-	// 	return nil, fmt.Errorf("synching allocated util to CRD spec: %v", err)
-	// }
-	// for _, u := range outspec.AllocatedUtilToCpu {
-	// 	fmt.Println("let's see the utils that are computed after get update:", u.RtUtil.Util)
+	// 	return nil, fmt.Errorf("unable to sync allocated util from allocatable: %v", err)
 	// }
 
 	fmt.Println("how many times the allocatable is synced to allocated util?")

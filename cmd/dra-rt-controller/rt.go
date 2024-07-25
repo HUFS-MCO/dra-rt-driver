@@ -118,8 +118,18 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 			// skip other devices
 		}
 	}
-	for _, device := range crd.Spec.AllocatedUtilToCpu {
-		util[device.RtUtil.ID] = device.RtUtil
+	if crd.Spec.AllocatedUtilToCpu == nil {
+		for _, device := range crd.Spec.AllocatableCpuset {
+			util[device.RtCpu.ID] = &nascrd.AllocatedUtil{
+				ID:   device.RtCpu.ID,
+				Util: device.RtCpu.Util,
+			}
+
+		}
+	} else {
+		for _, device := range crd.Spec.AllocatedUtilToCpu {
+			util[device.RtUtil.ID] = device.RtUtil
+		}
 	}
 
 	// for _, allocation := range crd.Spec.AllocatedClaims {
