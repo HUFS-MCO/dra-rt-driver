@@ -132,9 +132,9 @@ func (d driver) allocate(ctx context.Context, claim *resourcev1.ResourceClaim, c
 		crd.Spec.AllocatedClaims = make(map[string]nascrd.AllocatedCpuset)
 	}
 
-	if crd.Spec.AllocatedUtilToCpu == nil {
-		crd.Spec.AllocatedUtilToCpu = []nascrd.AllocatedUtilset{}
-	}
+	// if crd.Spec.AllocatedUtilToCpu == nil {
+	// 	crd.Spec.AllocatedUtilToCpu = []nascrd.AllocatedUtilset{}
+	// }
 
 	if _, exists := crd.Spec.AllocatedClaims[string(claim.UID)]; exists {
 		return buildAllocationResult(selectedNode, true), nil
@@ -258,9 +258,9 @@ func (d driver) unsuitableNode(ctx context.Context, pod *corev1.Pod, allcas []*c
 		crd.Spec.AllocatedClaims = make(map[string]nascrd.AllocatedCpuset)
 	}
 
-	if crd.Spec.AllocatedUtilToCpu == nil {
-		crd.Spec.AllocatedUtilToCpu = []nascrd.AllocatedUtilset{}
-	}
+	// if crd.Spec.AllocatedUtilToCpu == nil {
+	// 	crd.Spec.AllocatedUtilToCpu = []nascrd.AllocatedUtilset{}
+	// }
 
 	perKindCas := make(map[string][]*controller.ClaimAllocation)
 	for _, ca := range allcas {

@@ -98,7 +98,9 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 				Cpuset: devices,
 			},
 		}
-
+		for _, ut := range crd.Spec.AllocatedUtilToCpu {
+			fmt.Println("in unsuitable nodes, print utils", ut.RtUtil.Util)
+		}
 		rt.PendingAllocatedClaims.Set(claimUID, potentialNode, allocatedDevices)
 	}
 
@@ -122,7 +124,7 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 		for _, device := range crd.Spec.AllocatableCpuset {
 			util[device.RtCpu.ID] = &nascrd.AllocatedUtil{
 				ID:   device.RtCpu.ID,
-				Util: device.RtCpu.Util,
+				Util: 0,
 			}
 
 		}

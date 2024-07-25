@@ -48,7 +48,7 @@ func enumeratecpusets(machineInfo *cadvisorapiv1.MachineInfo) (AllocatableRtCpus
 }
 
 func enumerateAllPossibleDevices() (AllocatableRtCpus, error) {
-	numGPUs := 8
+	numGPUs := 4
 	seed := os.Getenv("NODE_NAME")
 	ids := generateIDs(seed, numGPUs)
 
