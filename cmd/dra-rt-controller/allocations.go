@@ -113,6 +113,18 @@ func (p *PerNodeAllocatedClaims) Set(claimUID, node string, devices nascrd.Alloc
 	p.allocations[claimUID][node] = devices
 }
 
+func (p *PerNodeAllocatedClaims) SetUtil(node string, devices []nascrd.AllocatedUtilset) {
+	p.Lock()
+	defer p.Unlock()
+
+	_, exists := p.utilisation[node]
+	if !exists {
+		p.utilisation[node] = []nascrd.AllocatedUtilset{}
+	}
+
+	p.utilisation[node] = devices
+}
+
 func (p *PerNodeAllocatedClaims) RemoveNode(claimUID, node string) {
 	p.Lock()
 	defer p.Unlock()

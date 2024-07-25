@@ -76,19 +76,9 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 			crd.Spec.AllocatedUtilToCpu = utilisation
 		}
 	})
-	for _, ut := range crd.Spec.AllocatedUtilToCpu {
-		fmt.Println("in suitable nodes before allocate:", ut.RtUtil.Util)
-	}
-	for _, ut := range crd.Spec.AllocatedClaims {
-		fmt.Println("in suitable nodes before allocate:", ut.RtCpu.Cpuset)
-	}
-	allocated := rt.allocate(crd, pod, rtcas, allcas, potentialNode)
-	for _, ut := range crd.Spec.AllocatedUtilToCpu {
-		fmt.Println("in suitable nodes after allocate:", ut.RtUtil.Util)
-	}
-	for _, ut := range crd.Spec.AllocatedClaims {
-		fmt.Println("in suitable nodes after allocate:", ut.RtCpu.Cpuset)
-	}
+
+	allocated, allocatedUtil := rt.allocate(crd, pod, rtcas, allcas, potentialNode)
+
 	for _, ca := range rtcas {
 		claimUID := string(ca.Claim.UID)
 		claimParams, _ := ca.ClaimParameters.(*rtcrd.RtClaimParametersSpec)
@@ -101,6 +91,7 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 		}
 
 		var devices []nascrd.AllocatedCpu
+		var allocatedUtilisations []nascrd.AllocatedUtilset
 		for _, cpu := range allocated[claimUID] {
 			device := cpu
 			devices = append(devices, device)
@@ -111,13 +102,20 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 				Cpuset: devices,
 			},
 		}
+
+		for _, ut := range allocatedUtil {
+			allocatedUtilisations = append(allocatedUtilisations, nascrd.AllocatedUtilset{
+				RtUtil: ut,
+			})
+		}
 		rt.PendingAllocatedClaims.Set(claimUID, potentialNode, allocatedDevices)
+		rt.PendingAllocatedClaims.SetUtil(potentialNode, allocatedUtilisations)
 	}
 
 	return nil
 }
 
-func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cpucas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, node string) map[string][]nascrd.AllocatedCpu {
+func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cpucas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, node string) (map[string][]nascrd.AllocatedCpu, map[int]*nascrd.AllocatedUtil) {
 	available := make(map[int]*nascrd.AllocatableCpu)
 	util := make(map[int]*nascrd.AllocatedUtil)
 	currUtil := 0
@@ -139,6 +137,7 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 
 		}
 	} else {
+		fmt.Println("crd.Spec.AllocatedUtilToCpu not nil in allocate")
 		for _, device := range crd.Spec.AllocatedUtilToCpu {
 			util[device.RtUtil.ID] = device.RtUtil
 			fmt.Println("util from spec:", device.RtUtil.Util)
@@ -217,7 +216,7 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 		fmt.Println("let's see the spec utils that are computed:", ut.RtUtil.Util)
 	}
 
-	return allocated
+	return allocated, util
 }
 
 func worstFit(spec map[int]*nascrd.AllocatedUtil, reqUtil int, reqCpus int) []int {
