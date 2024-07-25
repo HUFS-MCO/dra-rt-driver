@@ -39,7 +39,6 @@ type driver struct {
 func NewDriver(ctx context.Context, config *Config) (*driver, error) {
 	var d *driver
 	client := nasclient.New(config.nascr, config.exampleclient.NasV1alpha1())
-	fmt.Println("is this function repeated?")
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		err := client.GetOrCreate(ctx)
 		if err != nil {
