@@ -135,7 +135,9 @@ func (d driver) allocate(ctx context.Context, claim *resourcev1.ResourceClaim, c
 	// if crd.Spec.AllocatedUtilToCpu == nil {
 	// 	crd.Spec.AllocatedUtilToCpu = []nascrd.AllocatedUtilset{}
 	// }
-
+	for _, ut := range crd.Spec.AllocatedUtilToCpu {
+		fmt.Println("util to cpu: ", ut.RtUtil)
+	}
 	if _, exists := crd.Spec.AllocatedClaims[string(claim.UID)]; exists {
 		return buildAllocationResult(selectedNode, true), nil
 	}
