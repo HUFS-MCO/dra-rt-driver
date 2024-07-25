@@ -144,6 +144,16 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 			fmt.Println("util from spec:", device.RtUtil.Util)
 		}
 	}
+	if util == nil {
+		fmt.Println("util is nil (function:allocate)")
+		for _, device := range crd.Spec.AllocatableCpuset {
+			util[device.RtCpu.ID] = &nascrd.AllocatedUtil{
+				ID:   device.RtCpu.ID,
+				Util: 0,
+			}
+
+		}
+	}
 
 	// for _, allocation := range crd.Spec.AllocatedClaims {
 	// 	switch allocation.Type() {
