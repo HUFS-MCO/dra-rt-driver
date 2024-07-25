@@ -137,10 +137,8 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 
 		}
 	} else {
-		fmt.Println("crd.Spec.AllocatedUtilToCpu not nil in allocate")
 		for _, device := range crd.Spec.AllocatedUtilToCpu {
 			util[device.RtUtil.ID] = device.RtUtil
-			fmt.Println("util from spec:", device.RtUtil.Util)
 		}
 	}
 
@@ -170,14 +168,8 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 		var devices []nascrd.AllocatedCpu
 		for i := 0; i < claimParams.Count; i++ {
 			// for _, device := range available {
-			fmt.Println("Available CPUs:", util)
 			bestFitCpus := bestFit(util, (claimParams.Runtime * 1000 / claimParams.Period), claimParams.Count)
-			fmt.Println("Best fit CPUs:", bestFitCpus)
 			claimUtil := (claimParams.Runtime * 1000 / claimParams.Period)
-			for id, ut := range util {
-				fmt.Println("util:", ut.Util)
-				fmt.Println("util:", id)
-			}
 
 			if _, exist := util[bestFitCpus[0]]; !exist {
 				fmt.Println("AllocatedUtilToCpu is nil (function:allocate)")
@@ -198,7 +190,6 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 				}
 				break
 			}
-			// }
 		}
 		allocated[claimUID] = devices
 	}
@@ -208,13 +199,9 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 		utilslice := nascrd.AllocatedUtilset{
 			RtUtil: device,
 		}
-		fmt.Println("let's see the utils that are computed:", device)
 		utilisations = append(utilisations, utilslice)
 	}
 	crd.Spec.AllocatedUtilToCpu = utilisations
-	for _, ut := range crd.Spec.AllocatedUtilToCpu {
-		fmt.Println("let's see the spec utils that are computed:", ut.RtUtil.Util)
-	}
 
 	return allocated, util
 }

@@ -17,7 +17,6 @@
 package main
 
 import (
-	"fmt"
 	"sync"
 
 	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
@@ -80,7 +79,6 @@ func (p *PerNodeAllocatedClaims) VisitNode(node string, visitor func(claimUID st
 	for claimUID := range p.allocations {
 		if allocation, exists := p.allocations[claimUID][node]; exists {
 			utilisation := p.utilisation[node]
-			fmt.Println("utilisation from visitnode", utilisation)
 			p.RUnlock()
 			visitor(claimUID, allocation, utilisation)
 			p.RLock()

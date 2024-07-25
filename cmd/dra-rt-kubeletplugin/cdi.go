@@ -86,7 +86,6 @@ func (cdi *CDIHandler) CreateCommonSpecFile() error {
 	if err != nil {
 		return fmt.Errorf("failed to generate Spec name: %w", err)
 	}
-	fmt.Println("IN THE CREATE COMMON SPEC FILE", "spec: ", spec, "specName: ", specName)
 	return cdi.registry.SpecDB().WriteSpec(spec, specName)
 }
 
@@ -97,7 +96,6 @@ func (cdi *CDIHandler) CreateClaimSpecFile(claimUID string, devices *PreparedCpu
 		Kind:    cdiKind,
 		Devices: []cdispec.Device{},
 	}
-	fmt.Println("spec: ", spec, "specName: ", specName)
 	cpuIdx := 0
 	switch devices.Type() {
 	case nascrd.RtCpuType:
@@ -110,7 +108,6 @@ func (cdi *CDIHandler) CreateClaimSpecFile(claimUID string, devices *PreparedCpu
 					},
 				},
 			}
-			fmt.Println("after creating each cdidevice,", "cdiDevice: ", cdiDevice)
 			spec.Devices = append(spec.Devices, cdiDevice)
 			cpuIdx++
 		}
@@ -123,7 +120,6 @@ func (cdi *CDIHandler) CreateClaimSpecFile(claimUID string, devices *PreparedCpu
 		return fmt.Errorf("failed to get minimum required CDI spec version: %v", err)
 	}
 	spec.Version = minVersion
-	fmt.Println("spec: ", spec, "specName: ", specName)
 	return cdi.registry.SpecDB().WriteSpec(spec, specName)
 }
 
@@ -141,7 +137,6 @@ func (cdi *CDIHandler) GetClaimDevices(claimUID string, devices *PreparedCpuset)
 	case nascrd.RtCpuType:
 		for _, device := range devices.RtCpu.Cpuset {
 			cdiDevice := cdiapi.QualifiedName(cdiVendor, cdiClass, strconv.Itoa(device.id))
-			fmt.Println("cdiDevice: ", cdiDevice)
 			cdiDevices = append(cdiDevices, cdiDevice)
 		}
 	default:
