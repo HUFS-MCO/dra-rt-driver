@@ -17,6 +17,7 @@
 package main
 
 import (
+	"fmt"
 	"sync"
 
 	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
@@ -25,13 +26,13 @@ import (
 type PerNodeAllocatedClaims struct {
 	sync.RWMutex
 	allocations map[string]map[string]nascrd.AllocatedCpuset
-	utilisation map[string]map[int]nascrd.AllocatedUtil
+	utilisation map[string][]nascrd.AllocatedUtilset
 }
 
 func NewPerNodeAllocatedClaims() *PerNodeAllocatedClaims {
 	return &PerNodeAllocatedClaims{
 		allocations: make(map[string]map[string]nascrd.AllocatedCpuset),
-		utilisation: make(map[string]map[int]nascrd.AllocatedUtil),
+		utilisation: make(map[string][]nascrd.AllocatedUtilset),
 	}
 }
 
@@ -47,6 +48,13 @@ func (p *PerNodeAllocatedClaims) Exists(claimUID, node string) bool {
 	_, exists = p.allocations[claimUID][node]
 	return exists
 }
+func (p *PerNodeAllocatedClaims) ExistsUtil(node string) bool {
+	p.RLock()
+	defer p.RUnlock()
+
+	_, exists := p.utilisation[node]
+	return exists
+}
 
 func (p *PerNodeAllocatedClaims) Get(claimUID, node string) nascrd.AllocatedCpuset {
 	p.RLock()
@@ -57,13 +65,24 @@ func (p *PerNodeAllocatedClaims) Get(claimUID, node string) nascrd.AllocatedCpus
 	}
 	return p.allocations[claimUID][node]
 }
+func (p *PerNodeAllocatedClaims) GetUtil(node string) []nascrd.AllocatedUtilset {
+	p.RLock()
+	defer p.RUnlock()
 
-func (p *PerNodeAllocatedClaims) VisitNode(node string, visitor func(claimUID string, allocation nascrd.AllocatedCpuset)) {
+	if !p.ExistsUtil(node) {
+		return []nascrd.AllocatedUtilset{}
+	}
+	return p.utilisation[node]
+}
+
+func (p *PerNodeAllocatedClaims) VisitNode(node string, visitor func(claimUID string, allocation nascrd.AllocatedCpuset, utilisation []nascrd.AllocatedUtilset)) {
 	p.RLock()
 	for claimUID := range p.allocations {
 		if allocation, exists := p.allocations[claimUID][node]; exists {
+			utilisation := p.utilisation[node]
+			fmt.Println("utilisation from visitnode", utilisation)
 			p.RUnlock()
-			visitor(claimUID, allocation)
+			visitor(claimUID, allocation, utilisation)
 			p.RLock()
 		}
 	}

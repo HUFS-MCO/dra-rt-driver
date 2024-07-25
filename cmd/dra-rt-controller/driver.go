@@ -132,9 +132,9 @@ func (d driver) allocate(ctx context.Context, claim *resourcev1.ResourceClaim, c
 		crd.Spec.AllocatedClaims = make(map[string]nascrd.AllocatedCpuset)
 	}
 
-	// if crd.Spec.AllocatedUtilToCpu == nil {
-	// 	crd.Spec.AllocatedUtilToCpu = []nascrd.AllocatedUtilset{}
-	// }
+	if crd.Spec.AllocatedUtilToCpu == nil {
+		crd.Spec.AllocatedUtilToCpu = []nascrd.AllocatedUtilset{}
+	}
 	for _, ut := range crd.Spec.AllocatedUtilToCpu {
 		fmt.Println("util to cpu: ", ut.RtUtil)
 	}
@@ -266,9 +266,9 @@ func (d driver) unsuitableNode(ctx context.Context, pod *corev1.Pod, allcas []*c
 		crd.Spec.AllocatedClaims = make(map[string]nascrd.AllocatedCpuset)
 	}
 
-	// if crd.Spec.AllocatedUtilToCpu == nil {
-	// 	crd.Spec.AllocatedUtilToCpu = []nascrd.AllocatedUtilset{}
-	// }
+	if crd.Spec.AllocatedUtilToCpu == nil {
+		crd.Spec.AllocatedUtilToCpu = []nascrd.AllocatedUtilset{}
+	}
 
 	for _, ut := range crd.Spec.AllocatedUtilToCpu {
 		fmt.Println("in suitable nodes after allocate:", ut.RtUtil.Util)
