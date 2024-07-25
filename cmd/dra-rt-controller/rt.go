@@ -148,7 +148,7 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 		var devices []nascrd.AllocatedCpu
 		for i := 0; i < claimParams.Count; i++ {
 			// for _, device := range available {
-			fmt.Println("Available CPUs:", available)
+			fmt.Println("Available CPUs:", util)
 			bestFitCpus := bestFit(util, (claimParams.Runtime * 1000 / claimParams.Period), claimParams.Count)
 			fmt.Println("Best fit CPUs:", bestFitCpus)
 			claimUtil := (claimParams.Runtime * 1000 / claimParams.Period)
@@ -185,25 +185,25 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 		utilisations = append(utilisations, utilslice)
 	}
 	crd.Spec.AllocatedUtilToCpu = utilisations
-	for _, u := range crd.Spec.AllocatedUtilToCpu {
-		fmt.Println("let's see the utils that are computed:", u)
+	for _, ut := range crd.Spec.AllocatedUtilToCpu {
+		fmt.Println("let's see the utils that are computed:", ut.RtUtil.Util)
 	}
 
 	return allocated
 }
 
-func worstFit(spec *nascrd.NodeAllocationState, reqUtil int, reqCpus int) []int {
+func worstFit(spec map[int]*nascrd.AllocatedUtil, reqUtil int, reqCpus int) []int {
 	type scoredCpu struct {
 		cpu   int
 		score int
 	}
 
 	var scoredCpus []scoredCpu
-	for _, cpuinfo := range spec.Spec.AllocatableCpuset {
-		score := cpuinfo.RtCpu.Util - reqUtil
+	for _, cpuinfo := range spec {
+		score := cpuinfo.Util - reqUtil
 		if score > 0 {
 			scoredCpus = append(scoredCpus, scoredCpu{
-				cpu:   cpuinfo.RtCpu.ID,
+				cpu:   cpuinfo.ID,
 				score: score,
 			})
 		}
