@@ -43,10 +43,9 @@ type AllocatableCpusetInfo struct {
 
 type DeviceState struct {
 	sync.Mutex
-	cdi           *CDIHandler
-	allocatable   AllocatableRtCpus
-	prepared      PreparedClaims
-	allocatedUtil AllocatedUtil
+	cdi         *CDIHandler
+	allocatable AllocatableRtCpus
+	prepared    PreparedClaims
 }
 
 func NewDeviceState(config *Config) (*DeviceState, error) {
@@ -66,10 +65,9 @@ func NewDeviceState(config *Config) (*DeviceState, error) {
 	}
 
 	state := &DeviceState{
-		cdi:           cdi,
-		allocatable:   allocatable,
-		prepared:      make(PreparedClaims),
-		allocatedUtil: make(AllocatedUtil),
+		cdi:         cdi,
+		allocatable: allocatable,
+		prepared:    make(PreparedClaims),
 	}
 
 	err = state.syncPreparedCpusetFromCRDSpec(&config.nascr.Spec)
@@ -267,36 +265,36 @@ func (s *DeviceState) syncPreparedRtCpuToCRDSpec(spec *nascrd.NodeAllocationStat
 	return nil
 }
 
-func (s *DeviceState) syncAllocatedUtilFromCRDSpec(spec *nascrd.NodeAllocationStateSpec) error {
-	allocatedUtil := make(AllocatedUtil)
-	for _, device := range spec.AllocatedUtilToCpu {
-		allocatedUtil[device.RtUtil.ID] = device.RtUtil.Util
-	}
-	s.allocatedUtil = allocatedUtil
-	return nil
-}
+// func (s *DeviceState) syncAllocatedUtilFromCRDSpec(spec *nascrd.NodeAllocationStateSpec) error {
+// 	allocatedUtil := make(AllocatedUtil)
+// 	for _, device := range spec.AllocatedUtilToCpu {
+// 		allocatedUtil[device.RtUtil.ID] = device.RtUtil.Util
+// 	}
+// 	s.allocatedUtil = allocatedUtil
+// 	return nil
+// }
 
-func (s *DeviceState) syncAllocatedUtilToCRDSpec(spec *nascrd.NodeAllocationStateSpec) error {
-	allocatedUtilToCpu := []nascrd.AllocatedUtilset{}
-	for id, util := range s.allocatedUtil {
-		allocatedUtil := nascrd.AllocatedUtilset{
-			RtUtil: &nascrd.AllocatedUtil{
-				Util: util,
-				ID:   id,
-			},
-		}
-		allocatedUtilToCpu = append(allocatedUtilToCpu, allocatedUtil)
-	}
-	spec.AllocatedUtilToCpu = allocatedUtilToCpu
+// func (s *DeviceState) syncAllocatedUtilToCRDSpec(spec *nascrd.NodeAllocationStateSpec) error {
+// 	allocatedUtilToCpu := []nascrd.AllocatedUtilset{}
+// 	for id, util := range s.allocatedUtil {
+// 		allocatedUtil := nascrd.AllocatedUtilset{
+// 			RtUtil: &nascrd.AllocatedUtil{
+// 				Util: util,
+// 				ID:   id,
+// 			},
+// 		}
+// 		allocatedUtilToCpu = append(allocatedUtilToCpu, allocatedUtil)
+// 	}
+// 	spec.AllocatedUtilToCpu = allocatedUtilToCpu
 
-	return nil
-}
+// 	return nil
+// }
 
-func (s *DeviceState) syncAllocatedUtilFromAllocatableRtCpu() error {
-	allocatedUtilmap := make(map[int]int)
-	for _, device := range s.allocatable {
-		allocatedUtilmap[device.id] = device.util
-	}
-	s.allocatedUtil = allocatedUtilmap
-	return nil
-}
+// func (s *DeviceState) syncAllocatedUtilFromAllocatableRtCpu() error {
+// 	allocatedUtilmap := make(map[int]int)
+// 	for _, device := range s.allocatable {
+// 		allocatedUtilmap[device.id] = device.util
+// 	}
+// 	s.allocatedUtil = allocatedUtilmap
+// 	return nil
+// }

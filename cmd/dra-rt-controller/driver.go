@@ -239,6 +239,12 @@ func (d driver) unsuitableNode(ctx context.Context, pod *corev1.Pod, allcas []*c
 		Namespace: d.namespace,
 	}
 	crd := nascrd.NewNodeAllocationState(crdconfig)
+	for _, ut := range crd.Spec.AllocatedUtilToCpu {
+		fmt.Println("after new node allocation:", ut.RtUtil.Util)
+	}
+	for _, ut := range crd.Spec.AllocatedClaims {
+		fmt.Println("after new node allocation:", ut.RtCpu.Cpuset)
+	}
 
 	client := nasclient.New(crd, d.clientset.NasV1alpha1())
 	err := client.Get(ctx)
@@ -263,6 +269,13 @@ func (d driver) unsuitableNode(ctx context.Context, pod *corev1.Pod, allcas []*c
 	// if crd.Spec.AllocatedUtilToCpu == nil {
 	// 	crd.Spec.AllocatedUtilToCpu = []nascrd.AllocatedUtilset{}
 	// }
+
+	for _, ut := range crd.Spec.AllocatedUtilToCpu {
+		fmt.Println("in suitable nodes after allocate:", ut.RtUtil.Util)
+	}
+	for _, ut := range crd.Spec.AllocatedClaims {
+		fmt.Println("in suitable nodes after allocate:", ut.RtCpu.Cpuset)
+	}
 
 	perKindCas := make(map[string][]*controller.ClaimAllocation)
 	for _, ca := range allcas {
