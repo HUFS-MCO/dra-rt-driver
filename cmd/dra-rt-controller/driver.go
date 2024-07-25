@@ -134,6 +134,17 @@ func (d driver) allocate(ctx context.Context, claim *resourcev1.ResourceClaim, c
 
 	if crd.Spec.AllocatedUtilToCpu == nil {
 		crd.Spec.AllocatedUtilToCpu = []nascrd.AllocatedUtilset{}
+		utils := []nascrd.AllocatedUtilset{}
+		for _, cpu := range crd.Spec.AllocatableCpuset {
+			util := nascrd.AllocatedUtilset{
+				RtUtil: &nascrd.AllocatedUtil{
+					ID:   cpu.RtCpu.ID,
+					Util: cpu.RtCpu.Util,
+				},
+			}
+			utils = append(utils, util)
+		}
+		crd.Spec.AllocatedUtilToCpu = utils
 	}
 	for _, ut := range crd.Spec.AllocatedUtilToCpu {
 		fmt.Println("util to cpu: ", ut.RtUtil)
@@ -268,6 +279,17 @@ func (d driver) unsuitableNode(ctx context.Context, pod *corev1.Pod, allcas []*c
 
 	if crd.Spec.AllocatedUtilToCpu == nil {
 		crd.Spec.AllocatedUtilToCpu = []nascrd.AllocatedUtilset{}
+		utils := []nascrd.AllocatedUtilset{}
+		for _, cpu := range crd.Spec.AllocatableCpuset {
+			util := nascrd.AllocatedUtilset{
+				RtUtil: &nascrd.AllocatedUtil{
+					ID:   cpu.RtCpu.ID,
+					Util: cpu.RtCpu.Util,
+				},
+			}
+			utils = append(utils, util)
+		}
+		crd.Spec.AllocatedUtilToCpu = utils
 	}
 
 	for _, ut := range crd.Spec.AllocatedUtilToCpu {
