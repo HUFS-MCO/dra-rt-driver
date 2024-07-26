@@ -169,7 +169,7 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 		var devices []nascrd.AllocatedCpu
 		for i := 0; i < claimParams.Count; i++ {
 			// for _, device := range available {
-			bestFitCpus := bestFit(util, (claimParams.Runtime * 1000 / claimParams.Period), claimParams.Count)
+			bestFitCpus := worstFit(util, (claimParams.Runtime * 1000 / claimParams.Period), claimParams.Count)
 			claimUtil := (claimParams.Runtime * 1000 / claimParams.Period)
 
 			if _, exist := util[bestFitCpus[0]]; !exist {
@@ -215,7 +215,7 @@ func worstFit(spec map[int]*nascrd.AllocatedUtil, reqUtil int, reqCpus int) []in
 
 	var scoredCpus []scoredCpu
 	for _, cpuinfo := range spec {
-		score := cpuinfo.Util - reqUtil
+		score := 1000 - cpuinfo.Util - reqUtil
 		if score > 0 {
 			scoredCpus = append(scoredCpus, scoredCpu{
 				cpu:   cpuinfo.ID,
