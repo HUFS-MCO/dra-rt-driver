@@ -141,3 +141,28 @@ func (p *PerNodeAllocatedClaims) Remove(claimUID string) {
 
 	delete(p.allocations, claimUID)
 }
+
+func (p *PerNodeAllocatedClaims) RemoveUtil(claimUID string) {
+	p.Lock()
+	defer p.Unlock()
+	for node, allocated := range p.allocations[string(claimUID)] {
+		util := make(map[int]nascrd.AllocatedUtil)
+		for _, u := range p.utilisation[node] {
+			util[u.RtUtil.ID] = *u.RtUtil
+		}
+		remainedUtil := []nascrd.AllocatedUtilset{}
+		for _, allocatedCpu := range allocated.RtCpu.Cpuset {
+			runtime := allocatedCpu.Runtime
+			period := allocatedCpu.Period
+			deletedUtil := runtime * 1000 / period
+			id := allocatedCpu.ID
+			remainedUtil = append(remainedUtil, nascrd.AllocatedUtilset{
+				RtUtil: &nascrd.AllocatedUtil{
+					ID:   id,
+					Util: util[id].Util - deletedUtil,
+				},
+			})
+		}
+		p.utilisation[node] = remainedUtil
+	}
+}

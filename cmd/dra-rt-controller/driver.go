@@ -214,6 +214,7 @@ func (d driver) Deallocate(ctx context.Context, claim *resourcev1.ResourceClaim)
 	}
 
 	delete(crd.Spec.AllocatedClaims, string(claim.UID))
+	//TODO: remove utilisation from AllocatedUtilToCpu
 
 	err = client.Update(ctx, &crd.Spec)
 	if err != nil {
