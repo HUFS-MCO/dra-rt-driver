@@ -20,6 +20,7 @@ type PreparedRtCpuInfo struct {
 	id      int
 	util    int
 	runtime int
+	period  int
 }
 
 type PreparedRtCpu struct {
