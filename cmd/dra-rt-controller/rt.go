@@ -164,7 +164,7 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 	}
 	for _, ca := range cpucas {
 		fmt.Println("claimnames from rtcas:", ca.Claim.Name)
-		fmt.Println("claimnames from rtcas:", ca.Claim.UID)
+		fmt.Println("claimnames from rtcas:", ca.PodClaimName)
 	}
 
 	allocated := make(map[string][]nascrd.AllocatedCpu)
