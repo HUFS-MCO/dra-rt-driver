@@ -153,8 +153,8 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 	// 		// skip other devices
 	// 	}
 	// }
-	for c, _ := range pod.Spec.Containers {
-		fmt.Println("container names", c)
+	for _, c := range pod.Spec.Containers {
+		fmt.Println("container names", c.Name)
 	}
 
 	allocated := make(map[string][]nascrd.AllocatedCpu)
