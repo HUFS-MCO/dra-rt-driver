@@ -160,7 +160,7 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 		}
 	}
 	for _, n := range pod.Spec.ResourceClaims {
-		fmt.Println("claim names from pod:", n.Source.ResourceClaimName)
+		fmt.Println("claim names from pod:", *n.Source.ResourceClaimName)
 	}
 	for _, ca := range cpucas {
 		fmt.Println("claimnames from rtcas:", ca.Claim.Name)
