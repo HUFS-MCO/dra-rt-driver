@@ -153,6 +153,9 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 	// 		// skip other devices
 	// 	}
 	// }
+	for c, _ := range pod.Spec.Containers {
+		fmt.Println("container names", c)
+	}
 
 	allocated := make(map[string][]nascrd.AllocatedCpu)
 	for _, ca := range cpucas {
@@ -180,9 +183,11 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 
 			if claimUtil+currUtil <= 1000 {
 				d := nascrd.AllocatedCpu{
-					ID:      bestFitCpus[0],
-					Runtime: claimParams.Runtime,
-					Period:  claimParams.Period,
+					ID:            bestFitCpus[0],
+					Runtime:       claimParams.Runtime,
+					Period:        claimParams.Period,
+					PodUID:        pod.Name,
+					ContainerName: pod.Spec.Containers[0].Name,
 				}
 				devices = append(devices, d)
 				util[d.ID].Util = util[d.ID].Util + claimUtil

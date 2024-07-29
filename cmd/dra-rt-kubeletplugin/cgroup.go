@@ -26,7 +26,13 @@ import (
 	"k8s.io/utils/cpuset"
 )
 
-const ()
+type ContainerInfo struct {
+	Name string
+}
+type PodInfo struct {
+	UID            string
+	ContainerNames []ContainerInfo
+}
 
 type CgroupName []string
 

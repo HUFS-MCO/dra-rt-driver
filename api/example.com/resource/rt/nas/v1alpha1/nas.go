@@ -42,9 +42,11 @@ func (d AllocatableCpuset) Type() string {
 
 // AllocatedGpu represents an allocated GPU.
 type AllocatedCpu struct {
-	ID      int `json:"id,omitempty"`
-	Runtime int `json:"runtime,omitempty"`
-	Period  int `json:"period,omitempty"`
+	ID            int    `json:"id,omitempty"`
+	Runtime       int    `json:"runtime,omitempty"`
+	Period        int    `json:"period,omitempty"`
+	PodUID        string `json:"podUID,omitempty"`
+	ContainerName string `json:"containerName,omitempty"`
 }
 
 // AllocatedCpuset represents a set of allocated CPUs.
