@@ -77,6 +77,10 @@ spec:
                                 type: integer
                               runtime:
                                 type: integer
+                              podUID:
+                                type: string
+                              containerName:
+                                type: string
                             type: object
                           type: array
                       required:
