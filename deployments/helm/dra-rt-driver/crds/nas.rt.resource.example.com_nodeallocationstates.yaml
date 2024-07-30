@@ -107,6 +107,8 @@ spec:
               allocatedUtilToCpu:
                 properties:
                   cpus: {}
+                required:
+                - cpus
                 type: object
               preparedClaims:
                 additionalProperties:

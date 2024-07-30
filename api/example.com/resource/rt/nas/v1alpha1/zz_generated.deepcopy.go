@@ -171,13 +171,9 @@ func (in *AllocatedUtilset) DeepCopyInto(out *AllocatedUtilset) {
 	*out = *in
 	if in.Cpus != nil {
 		in, out := &in.Cpus, &out.Cpus
-		*out = new(map[int]AllocatedUtil)
-		if **in != nil {
-			in, out := *in, *out
-			*out = make(map[int]AllocatedUtil, len(*in))
-			for key, val := range *in {
-				(*out)[key] = val
-			}
+		*out = make(map[int]AllocatedUtil, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
 		}
 	}
 }

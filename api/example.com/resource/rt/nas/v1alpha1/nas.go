@@ -87,7 +87,7 @@ type AllocatedUtil struct {
 	// ProductName string `json:"productName"` // let's assume that the UUID is enough for now
 }
 type AllocatedUtilset struct {
-	Cpus map[int]AllocatedUtil `json:"cpus,omitempty"`
+	Cpus map[int]AllocatedUtil `json:"cpus"`
 }
 type ContainerCgroup struct {
 	ContainerName    string      `json:"containerName,omitempty"`
@@ -96,7 +96,7 @@ type ContainerCgroup struct {
 }
 
 type AllocatedPodCgroup struct {
-	PodUID     string                     `json:"podName,omitempty"`
+	PodName    string                     `json:"podName,omitempty"`
 	PodRuntime map[int]int                `json:"podRuntime,omitempty"`
 	PodPeriod  map[int]int                `json:"podPeriod,omitempty"`
 	Containers map[string]ContainerCgroup `json:"containers,omitempty"` // key is the container Name
