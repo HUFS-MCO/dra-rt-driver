@@ -67,6 +67,8 @@ spec:
                     rtcpu:
                       description: AllocatedCpuset represents a set of allocated CPUs.
                       properties:
+                        cgroupUID:
+                          type: string
                         cpuset:
                           items:
                             description: AllocatedGpu represents an allocated GPU.
@@ -77,10 +79,6 @@ spec:
                                 type: integer
                               runtime:
                                 type: integer
-                              podUID:
-                                type: string
-                              containerName:
-                                type: string
                             type: object
                           type: array
                       required:
@@ -88,23 +86,28 @@ spec:
                       type: object
                   type: object
                 type: object
-              allocatedUtilToCpu:
-                items:
-                  description: AllocatableDevice represents an allocatable device
-                    on a node.
+              allocatedPodCgroups:
+                additionalProperties:
                   properties:
-                    rtutil:
-                      properties:
-                        id:
-                          type: integer
-                        util:
-                          type: integer
-                      required:
-                      - id
-                      - util
+                    containers:
+                      additionalProperties:
+                        properties:
+                          containerName:
+                            type: string
+                          containerPeriod: {}
+                          containerRuntime: {}
+                        type: object
                       type: object
+                    podName:
+                      type: string
+                    podPeriod: {}
+                    podRuntime: {}
                   type: object
-                type: array
+                type: object
+              allocatedUtilToCpu:
+                properties:
+                  cpus: {}
+                type: object
               preparedClaims:
                 additionalProperties:
                   description: PreparedDevices represents a set of prepared devices
