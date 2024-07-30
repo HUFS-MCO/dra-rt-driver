@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"sync"
 
 	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
@@ -308,9 +309,9 @@ func (s *DeviceState) syncPreparedRtCpuToCRDSpec(spec *nascrd.NodeAllocationStat
 // }
 
 func (s *DeviceState) syncAllocatedUtilToCRDSpec(spec *nascrd.NodeAllocationStateSpec) error {
-	allocatedUtil := make(map[int]nascrd.AllocatedUtil)
+	allocatedUtil := make(nascrd.MappedUtil)
 	for id, util := range s.allocatedUtil {
-		allocatedUtil[id] = nascrd.AllocatedUtil{
+		allocatedUtil[strconv.Itoa(id)] = nascrd.AllocatedUtil{
 			Util: util,
 		}
 

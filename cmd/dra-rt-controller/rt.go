@@ -19,6 +19,7 @@ package main
 import (
 	"fmt"
 	"sort"
+	"strconv"
 
 	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
 
@@ -118,10 +119,10 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 	return nil
 }
 
-func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cpucas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, node string) (map[string][]nascrd.AllocatedCpu, map[int]nascrd.AllocatedUtil, nascrd.AllocatedPodCgroup) {
+func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cpucas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, node string) (map[string][]nascrd.AllocatedCpu, map[string]nascrd.AllocatedUtil, nascrd.AllocatedPodCgroup) {
 	available := make(map[int]*nascrd.AllocatableCpu)
 	// util := crd.Spec.AllocatedUtilToCpu.Cpus
-	util := make(map[int]nascrd.AllocatedUtil)
+	util := make(map[string]nascrd.AllocatedUtil)
 	allocated := make(map[string][]nascrd.AllocatedCpu)
 	containerCG := make(claimCgroup)
 
@@ -135,7 +136,7 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 	}
 	if crd.Spec.AllocatedUtilToCpu.Cpus == nil {
 		for _, device := range crd.Spec.AllocatableCpuset {
-			util[device.RtCpu.ID] = nascrd.AllocatedUtil{
+			util[strconv.Itoa(device.RtCpu.ID)] = nascrd.AllocatedUtil{
 				Util: device.RtCpu.Util,
 			}
 
@@ -163,15 +164,16 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 			if worstFitCpus == nil {
 				return nil, nil, nascrd.AllocatedPodCgroup{}
 			}
+			worstFitCpusStr, _ := strconv.Atoi(worstFitCpus[0])
 			d := nascrd.AllocatedCpu{
-				ID:      worstFitCpus[0],
+				ID:      worstFitCpusStr,
 				Runtime: claimParams.Runtime,
 				Period:  claimParams.Period,
 			}
-			util[d.ID] = nascrd.AllocatedUtil{
-				Util: util[d.ID].Util + claimUtil,
+			util[strconv.Itoa(d.ID)] = nascrd.AllocatedUtil{
+				Util: util[strconv.Itoa(d.ID)].Util + claimUtil,
 			}
-			if util[d.ID].Util >= 1000 {
+			if util[strconv.Itoa(d.ID)].Util >= 1000 {
 				delete(available, d.ID)
 			}
 			devices = append(devices, d)
@@ -198,9 +200,9 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 	return allocated, util, nascrd.AllocatedPodCgroup{}
 }
 
-func cpuPartitioning(spec map[int]nascrd.AllocatedUtil, reqUtil int, reqCpus int, policy string) []int {
+func cpuPartitioning(spec map[string]nascrd.AllocatedUtil, reqUtil int, reqCpus int, policy string) []string {
 	type scoredCpu struct {
-		cpu   int
+		cpu   string
 		score int
 	}
 	var scoredCpus []scoredCpu
@@ -241,7 +243,7 @@ func cpuPartitioning(spec map[int]nascrd.AllocatedUtil, reqUtil int, reqCpus int
 		}) //default is worstFit
 	}
 
-	var fittingCpus []int
+	var fittingCpus []string
 	for i := int(0); i < reqCpus; i++ {
 		fittingCpus = append(fittingCpus, scoredCpus[i].cpu)
 	}

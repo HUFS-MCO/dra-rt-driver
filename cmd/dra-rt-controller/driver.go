@@ -19,6 +19,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	corev1 "k8s.io/api/core/v1"
 	resourcev1 "k8s.io/api/resource/v1alpha2"
@@ -137,9 +138,9 @@ func (d driver) allocate(ctx context.Context, claim *resourcev1.ResourceClaim, c
 	}
 
 	if crd.Spec.AllocatedUtilToCpu.Cpus == nil {
-		utils := make(map[int]nascrd.AllocatedUtil)
+		utils := make(map[string]nascrd.AllocatedUtil)
 		for _, cpu := range crd.Spec.AllocatableCpuset {
-			utils[cpu.RtCpu.ID] = nascrd.AllocatedUtil{
+			utils[strconv.Itoa(cpu.RtCpu.ID)] = nascrd.AllocatedUtil{
 				Util: cpu.RtCpu.Util,
 			}
 		}
@@ -275,9 +276,9 @@ func (d driver) unsuitableNode(ctx context.Context, pod *corev1.Pod, allcas []*c
 	}
 
 	if crd.Spec.AllocatedUtilToCpu.Cpus == nil {
-		utils := make(map[int]nascrd.AllocatedUtil)
+		utils := make(nascrd.MappedUtil)
 		for _, cpu := range crd.Spec.AllocatableCpuset {
-			utils[cpu.RtCpu.ID] = nascrd.AllocatedUtil{
+			utils[strconv.Itoa(cpu.RtCpu.ID)] = nascrd.AllocatedUtil{
 				Util: cpu.RtCpu.Util,
 			}
 		}

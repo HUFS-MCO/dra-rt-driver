@@ -82,23 +82,32 @@ type PreparedCpuset struct {
 	RtCpu *PreparedRtCpu `json:"rtcpu,omitempty"`
 }
 
+// AllocatedUtil represents an allocated utilisation to a CPU.
 type AllocatedUtil struct {
 	Util int `json:"util"`
-	// ProductName string `json:"productName"` // let's assume that the UUID is enough for now
 }
+
+type MappedUtil map[string]AllocatedUtil
+
+// AllocatedUtilset represents a set of allocated utilisations to CPUs.
 type AllocatedUtilset struct {
-	Cpus map[int]AllocatedUtil `json:"cpus"`
+	// +kubebuilder:validation:Type=object
+	Cpus MappedUtil `json:"cpus"`
 }
+
+type MappedCgroup map[string]int
 type ContainerCgroup struct {
-	ContainerName    string      `json:"containerName,omitempty"`
-	ContainerRuntime map[int]int `json:"containerRuntime,omitempty"`
-	ContainerPeriod  map[int]int `json:"containerPeriod,omitempty"`
+	// +kubebuilder:validation:Type=object
+	ContainerName    string       `json:"containerName,omitempty"`
+	ContainerRuntime MappedCgroup `json:"containerRuntime,omitempty"`
+	ContainerPeriod  MappedCgroup `json:"containerPeriod,omitempty"`
 }
 
 type AllocatedPodCgroup struct {
+	// +kubebuilder:validation:Type=object
 	PodName    string                     `json:"podName,omitempty"`
-	PodRuntime map[int]int                `json:"podRuntime,omitempty"`
-	PodPeriod  map[int]int                `json:"podPeriod,omitempty"`
+	PodRuntime MappedCgroup               `json:"podRuntime,omitempty"`
+	PodPeriod  MappedCgroup               `json:"podPeriod,omitempty"`
 	Containers map[string]ContainerCgroup `json:"containers,omitempty"` // key is the container Name
 }
 

@@ -17,6 +17,7 @@
 package main
 
 import (
+	"strconv"
 	"sync"
 
 	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
@@ -155,7 +156,7 @@ func (p *PerNodeAllocatedClaims) RemoveUtil(claimUID string) {
 			runtime := allocatedCpu.Runtime
 			period := allocatedCpu.Period
 			deletedUtil := runtime * 1000 / period
-			id := allocatedCpu.ID
+			id := strconv.Itoa(allocatedCpu.ID)
 			util[id] = nascrd.AllocatedUtil{
 				Util: util[id].Util - deletedUtil,
 			}

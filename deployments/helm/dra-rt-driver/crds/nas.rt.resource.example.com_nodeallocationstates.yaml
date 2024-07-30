@@ -93,20 +93,45 @@ spec:
                       additionalProperties:
                         properties:
                           containerName:
-                            type: string
-                          containerPeriod: {}
-                          containerRuntime: {}
+                            type: object
+                          containerPeriod:
+                            additionalProperties:
+                              type: integer
+                            type: object
+                          containerRuntime:
+                            additionalProperties:
+                              type: integer
+                            type: object
                         type: object
                       type: object
                     podName:
-                      type: string
-                    podPeriod: {}
-                    podRuntime: {}
+                      type: object
+                    podPeriod:
+                      additionalProperties:
+                        type: integer
+                      type: object
+                    podRuntime:
+                      additionalProperties:
+                        type: integer
+                      type: object
                   type: object
                 type: object
               allocatedUtilToCpu:
+                description: AllocatedUtilset represents a set of allocated utilisations
+                  to CPUs.
                 properties:
-                  cpus: {}
+                  cpus:
+                    additionalProperties:
+                      description: AllocatedUtil represents an allocated utilisation
+                        to a CPU.
+                      properties:
+                        util:
+                          minimum: 0
+                          type: integer
+                      required:
+                      - util
+                      type: object
+                    type: object
                 required:
                 - cpus
                 type: object
