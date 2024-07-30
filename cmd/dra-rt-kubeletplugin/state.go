@@ -53,7 +53,6 @@ type DeviceState struct {
 	allocatable     AllocatableRtCpus
 	prepared        PreparedClaims
 	allocatedUtil   AllocatedUtil
-	cgroup          *CgroupManager
 	preparedCgroups map[string]preparedCgroup
 }
 
@@ -81,7 +80,7 @@ func NewDeviceState(config *Config) (*DeviceState, error) {
 		cdi:             cdi,
 		allocatable:     allocatable,
 		prepared:        make(PreparedClaims),
-		cgroup:          &CgroupManager{},
+		allocatedUtil:   make(AllocatedUtil),
 		preparedCgroups: make(map[string]preparedCgroup),
 	}
 	err = state.syncAllocatedUtilFromAllocatableRtCpu()

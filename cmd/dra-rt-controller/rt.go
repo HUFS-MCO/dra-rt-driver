@@ -121,8 +121,8 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 
 func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cpucas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, node string) (map[string][]nascrd.AllocatedCpu, map[string]nascrd.AllocatedUtil, nascrd.AllocatedPodCgroup) {
 	available := make(map[int]*nascrd.AllocatableCpu)
-	// util := crd.Spec.AllocatedUtilToCpu.Cpus
-	util := make(map[string]nascrd.AllocatedUtil)
+	util := crd.Spec.AllocatedUtilToCpu.Cpus
+	// util := make(map[string]nascrd.AllocatedUtil)
 	allocated := make(map[string][]nascrd.AllocatedCpu)
 	containerCG := make(claimCgroup)
 
@@ -134,16 +134,16 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 			// skip other devices
 		}
 	}
-	if crd.Spec.AllocatedUtilToCpu.Cpus == nil {
-		for _, device := range crd.Spec.AllocatableCpuset {
-			util[strconv.Itoa(device.RtCpu.ID)] = nascrd.AllocatedUtil{
-				Util: device.RtCpu.Util,
-			}
+	// if crd.Spec.AllocatedUtilToCpu.Cpus == nil {
+	// 	for _, device := range crd.Spec.AllocatableCpuset {
+	// 		util[strconv.Itoa(device.RtCpu.ID)] = nascrd.AllocatedUtil{
+	// 			Util: device.RtCpu.Util,
+	// 		}
 
-		}
-	} else {
-		util = crd.Spec.AllocatedUtilToCpu.Cpus
-	}
+	// 	}
+	// } else {
+	// 	util = crd.Spec.AllocatedUtilToCpu.Cpus
+	// }
 
 	for _, ca := range cpucas {
 		claimUID := string(ca.Claim.UID)
