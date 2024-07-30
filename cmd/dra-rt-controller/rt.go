@@ -41,7 +41,7 @@ func NewRtDriver() *rtdriver {
 
 func (g *rtdriver) ValidateClaimParameters(claimParams *rtcrd.RtClaimParametersSpec) error {
 	if claimParams.Count < 1 {
-		return fmt.Errorf("invalid number of GPUs requested: %v", claimParams.Count)
+		return fmt.Errorf("invalid number of HCBS requested: %v", claimParams.Count)
 	}
 	return nil
 }
@@ -69,16 +69,19 @@ func (g *rtdriver) Deallocate(crd *nascrd.NodeAllocationState, claim *resourcev1
 }
 
 func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.Pod, rtcas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, potentialNode string) error {
-	rt.PendingAllocatedClaims.VisitNode(potentialNode, func(claimUID string, allocation nascrd.AllocatedCpuset, utilisation []nascrd.AllocatedUtilset) {
+	rt.PendingAllocatedClaims.VisitNode(potentialNode, func(claimUID string, allocation nascrd.AllocatedCpuset, utilisation nascrd.AllocatedUtilset, cgroups nascrd.AllocatedPodCgroup) {
 		if _, exists := crd.Spec.AllocatedClaims[claimUID]; exists {
 			rt.PendingAllocatedClaims.Remove(claimUID)
 		} else {
 			crd.Spec.AllocatedClaims[claimUID] = allocation
 			crd.Spec.AllocatedUtilToCpu = utilisation
+			crd.Spec.AllocatedPodCgroups[claimUID] = cgroups
 		}
 	})
 
-	allocated, allocatedUtil := rt.allocate(crd, pod, rtcas, allcas, potentialNode)
+	allocated, allocatedUtil, allocatedCgroup := rt.allocate(crd, pod, rtcas, allcas, potentialNode)
+	fmt.Println("Allocated: ", allocatedCgroup)
+	cgroupUID := cgroupUIDGenerator()
 
 	for _, ca := range rtcas {
 		claimUID := string(ca.Claim.UID)
@@ -89,10 +92,9 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 				ca.UnsuitableNodes = append(ca.UnsuitableNodes, potentialNode)
 			}
 			return nil
-		}
+		} // it puts everything on only one node
 
 		var devices []nascrd.AllocatedCpu
-		var allocatedUtilisations []nascrd.AllocatedUtilset
 		for _, cpu := range allocated[claimUID] {
 			device := cpu
 			devices = append(devices, device)
@@ -100,15 +102,15 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 
 		allocatedDevices := nascrd.AllocatedCpuset{
 			RtCpu: &nascrd.AllocatedRtCpu{
-				Cpuset: devices,
+				Cpuset:   devices,
+				CgoupUID: cgroupUID,
 			},
 		}
 
-		for _, ut := range allocatedUtil {
-			allocatedUtilisations = append(allocatedUtilisations, nascrd.AllocatedUtilset{
-				RtUtil: ut,
-			})
+		allocatedUtilisations := nascrd.AllocatedUtilset{
+			Cpus: &allocatedUtil,
 		}
+
 		rt.PendingAllocatedClaims.Set(claimUID, potentialNode, allocatedDevices)
 		rt.PendingAllocatedClaims.SetUtil(potentialNode, allocatedUtilisations)
 	}
@@ -116,10 +118,11 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 	return nil
 }
 
-func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cpucas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, node string) (map[string][]nascrd.AllocatedCpu, map[int]*nascrd.AllocatedUtil) {
+func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cpucas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, node string) (map[string][]nascrd.AllocatedCpu, map[int]nascrd.AllocatedUtil, nascrd.AllocatedPodCgroup) {
 	available := make(map[int]*nascrd.AllocatableCpu)
-	util := make(map[int]*nascrd.AllocatedUtil)
-	currUtil := 0
+	util := *crd.Spec.AllocatedUtilToCpu.Cpus
+	allocated := make(map[string][]nascrd.AllocatedCpu)
+	containerCG := make(claimCgroup)
 
 	for _, device := range crd.Spec.AllocatableCpuset {
 		switch device.Type() {
@@ -129,45 +132,17 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 			// skip other devices
 		}
 	}
-	if crd.Spec.AllocatedUtilToCpu == nil {
-		for _, device := range crd.Spec.AllocatableCpuset {
-			util[device.RtCpu.ID] = &nascrd.AllocatedUtil{
-				ID:   device.RtCpu.ID,
-				Util: 0,
-			}
-
-		}
-	} else {
-		for _, device := range crd.Spec.AllocatedUtilToCpu {
-			util[device.RtUtil.ID] = device.RtUtil
-		}
-	}
-
-	// for _, allocation := range crd.Spec.AllocatedClaims {
-	// 	switch allocation.Type() {
-	// 	case nascrd.RtCpuType:
-	// 		for _, device := range allocation.RtCpu.Cpuset {
-	// 			delete(available, device.ID)
+	// if crd.Spec.AllocatedUtilToCpu.Cpus == nil {
+	// 	for _, device := range crd.Spec.AllocatableCpuset {
+	// 		util[device.RtCpu.ID] = nascrd.AllocatedUtil{
+	// 			Util: device.RtCpu.Util,
 	// 		}
-	// 	default:
-	// 		// skip other devices
-	// 	}
-	// }
-	for _, c := range pod.Spec.Containers {
-		fmt.Println("container names", c.Name)
-		for _, cl := range c.Resources.Claims {
-			fmt.Println("claim names", cl.Name)
-		}
-	}
-	for _, n := range pod.Spec.ResourceClaims {
-		fmt.Println("claim names from pod:", *n.Source.ResourceClaimTemplateName)
-	}
-	for _, ca := range cpucas {
-		fmt.Println("claimnames from rtcas:", ca.Claim.Name)
-		fmt.Println("claimnames from rtcas:", ca.PodClaimName)
-	}
 
-	allocated := make(map[string][]nascrd.AllocatedCpu)
+	// 	}
+	// } else {
+	// 	util = *crd.Spec.AllocatedUtilToCpu.Cpus
+	// }
+
 	for _, ca := range cpucas {
 		claimUID := string(ca.Claim.UID)
 		if _, exists := crd.Spec.AllocatedClaims[claimUID]; exists {
@@ -179,61 +154,60 @@ func (g *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cp
 		}
 
 		claimParams, _ := ca.ClaimParameters.(*rtcrd.RtClaimParametersSpec)
+		claimUtil := (claimParams.Runtime * 1000 / claimParams.Period)
 		var devices []nascrd.AllocatedCpu
 		for i := 0; i < claimParams.Count; i++ {
 			// for _, device := range available {
-			bestFitCpus := worstFit(util, (claimParams.Runtime * 1000 / claimParams.Period), claimParams.Count)
-			claimUtil := (claimParams.Runtime * 1000 / claimParams.Period)
-
-			if _, exist := util[bestFitCpus[0]]; !exist {
-				fmt.Println("AllocatedUtilToCpu is nil (function:allocate)")
-			} else {
-				currUtil = util[bestFitCpus[0]].Util
+			worstFitCpus := cpuPartitioning(util, claimUtil, 1, "worstFit") //must get the policy from the user
+			if worstFitCpus == nil {
+				return nil, nil, nascrd.AllocatedPodCgroup{}
 			}
-
-			if claimUtil+currUtil <= 1000 {
-				d := nascrd.AllocatedCpu{
-					ID:            bestFitCpus[0],
-					Runtime:       claimParams.Runtime,
-					Period:        claimParams.Period,
-					PodUID:        pod.Name,
-					ContainerName: pod.Spec.Containers[0].Name,
-				}
-				devices = append(devices, d)
-				util[d.ID].Util = util[d.ID].Util + claimUtil
-				if util[d.ID].Util >= 1000 {
-					delete(available, d.ID)
-				}
-				break
+			d := nascrd.AllocatedCpu{
+				ID:      worstFitCpus[0],
+				Runtime: claimParams.Runtime,
+				Period:  claimParams.Period,
 			}
+			util[d.ID] = nascrd.AllocatedUtil{
+				Util: util[d.ID].Util + claimUtil,
+			}
+			if util[d.ID].Util >= 1000 {
+				delete(available, d.ID)
+			}
+			devices = append(devices, d)
+
+			break
 		}
 		allocated[claimUID] = devices
-	}
+		fmt.Println("podUID", pod.UID)
 
-	var utilisations []nascrd.AllocatedUtilset
-	for _, device := range util {
-		utilslice := nascrd.AllocatedUtilset{
-			RtUtil: device,
+		rt.containerCgroups(containerCG, devices, ca.PodClaimName, pod)
+		for c, claims := range containerCG {
+			fmt.Println("containername", c)
+			for typed, cgroup := range claims {
+				fmt.Println("cgroup", cgroup)
+				fmt.Println("typed", typed)
+			}
 		}
-		utilisations = append(utilisations, utilslice)
 	}
-	crd.Spec.AllocatedUtilToCpu = utilisations
+	// rt.podCgroups(containerCG,crd, pod)
+	crd.Spec.AllocatedUtilToCpu = nascrd.AllocatedUtilset{
+		Cpus: &util,
+	}
 
-	return allocated, util
+	return allocated, util, nascrd.AllocatedPodCgroup{}
 }
 
-func worstFit(spec map[int]*nascrd.AllocatedUtil, reqUtil int, reqCpus int) []int {
+func cpuPartitioning(spec map[int]nascrd.AllocatedUtil, reqUtil int, reqCpus int, policy string) []int {
 	type scoredCpu struct {
 		cpu   int
 		score int
 	}
-
 	var scoredCpus []scoredCpu
-	for _, cpuinfo := range spec {
+	for id, cpuinfo := range spec {
 		score := 1000 - cpuinfo.Util - reqUtil
 		if score > 0 {
 			scoredCpus = append(scoredCpus, scoredCpu{
-				cpu:   cpuinfo.ID,
+				cpu:   id,
 				score: score,
 			})
 		}
@@ -242,49 +216,29 @@ func worstFit(spec map[int]*nascrd.AllocatedUtil, reqUtil int, reqCpus int) []in
 	if int(len(scoredCpus)) < reqCpus {
 		return nil
 	}
-
-	sort.SliceStable(scoredCpus, func(i, j int) bool {
-		if scoredCpus[i].score > scoredCpus[j].score {
-			return true
-		}
-		return false
-	})
-
-	var fittingCpus []int
-	for i := int(0); i < reqCpus; i++ {
-		fittingCpus = append(fittingCpus, scoredCpus[i].cpu)
+	switch policy {
+	case "worstFit":
+		sort.SliceStable(scoredCpus, func(i, j int) bool {
+			if scoredCpus[i].score > scoredCpus[j].score {
+				return true
+			}
+			return false
+		})
+	case "bestFit":
+		sort.SliceStable(scoredCpus, func(i, j int) bool {
+			if scoredCpus[i].score < scoredCpus[j].score {
+				return true
+			}
+			return false
+		})
+	default:
+		sort.SliceStable(scoredCpus, func(i, j int) bool {
+			if scoredCpus[i].score > scoredCpus[j].score {
+				return true
+			}
+			return false
+		}) //default is worstFit
 	}
-
-	return fittingCpus
-}
-
-func bestFit(spec map[int]*nascrd.AllocatedUtil, reqUtil int, reqCpus int) []int {
-	type scoredCpu struct {
-		cpu   int
-		score int
-	}
-
-	var scoredCpus []scoredCpu
-	for _, cpuinfo := range spec {
-		score := 1000 - cpuinfo.Util - reqUtil
-		if score > 0 {
-			scoredCpus = append(scoredCpus, scoredCpu{
-				cpu:   cpuinfo.ID,
-				score: score,
-			})
-		}
-	}
-
-	if int(len(scoredCpus)) < reqCpus {
-		return nil
-	}
-
-	sort.SliceStable(scoredCpus, func(i, j int) bool {
-		if scoredCpus[i].score < scoredCpus[j].score {
-			return true
-		}
-		return false
-	})
 
 	var fittingCpus []int
 	for i := int(0); i < reqCpus; i++ {

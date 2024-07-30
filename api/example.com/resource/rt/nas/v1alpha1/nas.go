@@ -42,16 +42,15 @@ func (d AllocatableCpuset) Type() string {
 
 // AllocatedGpu represents an allocated GPU.
 type AllocatedCpu struct {
-	ID            int    `json:"id,omitempty"`
-	Runtime       int    `json:"runtime,omitempty"`
-	Period        int    `json:"period,omitempty"`
-	PodUID        string `json:"podUID,omitempty"`
-	ContainerName string `json:"containerName,omitempty"`
+	ID      int `json:"id,omitempty"`
+	Runtime int `json:"runtime,omitempty"`
+	Period  int `json:"period,omitempty"`
 }
 
 // AllocatedCpuset represents a set of allocated CPUs.
 type AllocatedRtCpu struct {
-	Cpuset []AllocatedCpu `json:"cpuset"`
+	Cpuset   []AllocatedCpu `json:"cpuset"`
+	CgoupUID string         `json:"cgroupUID,omitempty"`
 }
 
 // AllocatedRtCpu represents a set of allocated CPUs.
@@ -84,19 +83,29 @@ type PreparedCpuset struct {
 }
 
 type AllocatedUtil struct {
-	ID   int `json:"id"`
 	Util int `json:"util"`
 	// ProductName string `json:"productName"` // let's assume that the UUID is enough for now
 }
-
-// AllocatableDevice represents an allocatable device on a node.
 type AllocatedUtilset struct {
-	RtUtil *AllocatedUtil `json:"rtutil,omitempty"`
+	Cpus *(map[int]AllocatedUtil) `json:"cpus,omitempty"`
+}
+type ContainerCgroup struct {
+	ContainerName    string      `json:"containerName,omitempty"`
+	ContainerRuntime map[int]int `json:"containerRuntime,omitempty"`
+	ContainerPeriod  map[int]int `json:"containerPeriod,omitempty"`
 }
 
-// type AllocatedUtilset struct {
-// 	Mapped *AllocatedUtil `json:"mapped,omitempty"`
-// }
+type AllocatedPodCgroup struct {
+	PodUID     string                     `json:"podName,omitempty"`
+	PodRuntime map[int]int                `json:"podRuntime,omitempty"`
+	PodPeriod  map[int]int                `json:"podPeriod,omitempty"`
+	Containers map[string]ContainerCgroup `json:"containers,omitempty"` // key is the container Name
+}
+
+const (
+	AllocatedPodCgroupStatus   = "Allocated"
+	UnallocatedPodCgroupStatus = "Unallocated"
+)
 
 // Type returns the type of PreparedDevices this represents.
 func (d PreparedCpuset) Type() string {
@@ -108,10 +117,11 @@ func (d PreparedCpuset) Type() string {
 
 // NodeAllocationStateSpec is the spec for the NodeAllocationState CRD.
 type NodeAllocationStateSpec struct {
-	AllocatableCpuset  []AllocatableCpuset        `json:"allocatableCpuset,omitempty"`
-	AllocatedClaims    map[string]AllocatedCpuset `json:"allocatedClaims,omitempty"`
-	PreparedClaims     map[string]PreparedCpuset  `json:"preparedClaims,omitempty"`
-	AllocatedUtilToCpu []AllocatedUtilset         `json:"allocatedUtilToCpu,omitempty"`
+	AllocatableCpuset   []AllocatableCpuset           `json:"allocatableCpuset,omitempty"`
+	AllocatedClaims     map[string]AllocatedCpuset    `json:"allocatedClaims,omitempty"`
+	PreparedClaims      map[string]PreparedCpuset     `json:"preparedClaims,omitempty"`
+	AllocatedUtilToCpu  AllocatedUtilset              `json:"allocatedUtilToCpu,omitempty"`
+	AllocatedPodCgroups map[string]AllocatedPodCgroup `json:"allocatedPodCgroups,omitempty"` // key is the cgroup UID
 }
 
 // +genclient

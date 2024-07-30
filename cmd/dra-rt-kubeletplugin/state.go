@@ -42,12 +42,18 @@ type AllocatableCpusetInfo struct {
 	*RtCpuInfo
 }
 
+type preparedCgroup struct {
+	cgroupUID string
+}
+
 type DeviceState struct {
 	sync.Mutex
-	cdi           *CDIHandler
-	allocatable   AllocatableRtCpus
-	prepared      PreparedClaims
-	allocatedUtil AllocatedUtil
+	cdi             *CDIHandler
+	allocatable     AllocatableRtCpus
+	prepared        PreparedClaims
+	allocatedUtil   AllocatedUtil
+	cgroup          *CgroupManager
+	preparedCgroups map[string]preparedCgroup
 }
 
 func NewDeviceState(config *Config) (*DeviceState, error) {
@@ -71,9 +77,11 @@ func NewDeviceState(config *Config) (*DeviceState, error) {
 	}
 
 	state := &DeviceState{
-		cdi:         cdi,
-		allocatable: allocatable,
-		prepared:    make(PreparedClaims),
+		cdi:             cdi,
+		allocatable:     allocatable,
+		prepared:        make(PreparedClaims),
+		cgroup:          &CgroupManager{},
+		preparedCgroups: make(map[string]preparedCgroup),
 	}
 	err = state.syncAllocatedUtilFromAllocatableRtCpu()
 	if err != nil {
@@ -158,6 +166,24 @@ func (s *DeviceState) Unprepare(claimUID string) error {
 
 	delete(s.prepared, claimUID)
 
+	return nil
+}
+
+func (s *DeviceState) prepareCgroups(claimUID string, allocated nascrd.AllocatedCpuset) (string, error) { // does not handle errors yet
+	s.Lock()
+	defer s.Unlock()
+
+	if _, ok := s.preparedCgroups[claimUID]; ok {
+		return nascrd.AllocatedPodCgroupStatus, nil
+	}
+	cgroup := preparedCgroup{
+		cgroupUID: allocated.RtCpu.CgoupUID,
+	}
+	s.preparedCgroups[claimUID] = cgroup
+	return nascrd.AllocatedPodCgroupStatus, nil
+
+}
+func (s *DeviceState) UnprepareCgroups() error {
 	return nil
 }
 
@@ -282,18 +308,16 @@ func (s *DeviceState) syncPreparedRtCpuToCRDSpec(spec *nascrd.NodeAllocationStat
 // }
 
 func (s *DeviceState) syncAllocatedUtilToCRDSpec(spec *nascrd.NodeAllocationStateSpec) error {
-	allocatedUtilToCpu := []nascrd.AllocatedUtilset{}
+	allocatedUtil := make(map[int]nascrd.AllocatedUtil)
 	for id, util := range s.allocatedUtil {
-		allocatedUtil := nascrd.AllocatedUtilset{
-			RtUtil: &nascrd.AllocatedUtil{
-				Util: util,
-				ID:   id,
-			},
+		allocatedUtil[id] = nascrd.AllocatedUtil{
+			Util: util,
 		}
-		allocatedUtilToCpu = append(allocatedUtilToCpu, allocatedUtil)
-	}
-	spec.AllocatedUtilToCpu = allocatedUtilToCpu
 
+	}
+	spec.AllocatedUtilToCpu = nascrd.AllocatedUtilset{
+		Cpus: &allocatedUtil,
+	}
 	return nil
 }
 

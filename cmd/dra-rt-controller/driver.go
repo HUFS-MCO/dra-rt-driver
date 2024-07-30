@@ -132,19 +132,16 @@ func (d driver) allocate(ctx context.Context, claim *resourcev1.ResourceClaim, c
 		crd.Spec.AllocatedClaims = make(map[string]nascrd.AllocatedCpuset)
 	}
 
-	if crd.Spec.AllocatedUtilToCpu == nil {
-		crd.Spec.AllocatedUtilToCpu = []nascrd.AllocatedUtilset{}
-		utils := []nascrd.AllocatedUtilset{}
+	if crd.Spec.AllocatedUtilToCpu.Cpus == nil {
+		utils := make(map[int]nascrd.AllocatedUtil)
 		for _, cpu := range crd.Spec.AllocatableCpuset {
-			util := nascrd.AllocatedUtilset{
-				RtUtil: &nascrd.AllocatedUtil{
-					ID:   cpu.RtCpu.ID,
-					Util: cpu.RtCpu.Util,
-				},
+			utils[cpu.RtCpu.ID] = nascrd.AllocatedUtil{
+				Util: cpu.RtCpu.Util,
 			}
-			utils = append(utils, util)
 		}
-		crd.Spec.AllocatedUtilToCpu = utils
+		crd.Spec.AllocatedUtilToCpu = nascrd.AllocatedUtilset{
+			Cpus: &utils,
+		}
 	}
 	if _, exists := crd.Spec.AllocatedClaims[string(claim.UID)]; exists {
 		return buildAllocationResult(selectedNode, true), nil
@@ -269,19 +266,16 @@ func (d driver) unsuitableNode(ctx context.Context, pod *corev1.Pod, allcas []*c
 		crd.Spec.AllocatedClaims = make(map[string]nascrd.AllocatedCpuset)
 	}
 
-	if crd.Spec.AllocatedUtilToCpu == nil {
-		crd.Spec.AllocatedUtilToCpu = []nascrd.AllocatedUtilset{}
-		utils := []nascrd.AllocatedUtilset{}
+	if crd.Spec.AllocatedUtilToCpu.Cpus == nil {
+		utils := make(map[int]nascrd.AllocatedUtil)
 		for _, cpu := range crd.Spec.AllocatableCpuset {
-			util := nascrd.AllocatedUtilset{
-				RtUtil: &nascrd.AllocatedUtil{
-					ID:   cpu.RtCpu.ID,
-					Util: cpu.RtCpu.Util,
-				},
+			utils[cpu.RtCpu.ID] = nascrd.AllocatedUtil{
+				Util: cpu.RtCpu.Util,
 			}
-			utils = append(utils, util)
 		}
-		crd.Spec.AllocatedUtilToCpu = utils
+		crd.Spec.AllocatedUtilToCpu = nascrd.AllocatedUtilset{
+			Cpus: &utils,
+		}
 	}
 
 	perKindCas := make(map[string][]*controller.ClaimAllocation)
