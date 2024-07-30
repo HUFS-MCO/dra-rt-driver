@@ -316,7 +316,7 @@ func (s *DeviceState) syncAllocatedUtilToCRDSpec(spec *nascrd.NodeAllocationStat
 
 	}
 	spec.AllocatedUtilToCpu = nascrd.AllocatedUtilset{
-		Cpus: &allocatedUtil,
+		Cpus: allocatedUtil,
 	}
 	return nil
 }

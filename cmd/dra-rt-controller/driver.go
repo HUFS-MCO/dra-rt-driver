@@ -144,7 +144,7 @@ func (d driver) allocate(ctx context.Context, claim *resourcev1.ResourceClaim, c
 			}
 		}
 		crd.Spec.AllocatedUtilToCpu = nascrd.AllocatedUtilset{
-			Cpus: &utils,
+			Cpus: utils,
 		}
 	}
 	if _, exists := crd.Spec.AllocatedClaims[string(claim.UID)]; exists {
@@ -282,7 +282,7 @@ func (d driver) unsuitableNode(ctx context.Context, pod *corev1.Pod, allcas []*c
 			}
 		}
 		crd.Spec.AllocatedUtilToCpu = nascrd.AllocatedUtilset{
-			Cpus: &utils,
+			Cpus: utils,
 		}
 	}
 

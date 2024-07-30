@@ -149,7 +149,7 @@ func (p *PerNodeAllocatedClaims) RemoveUtil(claimUID string) {
 	p.Lock()
 	defer p.Unlock()
 	for node, allocated := range p.allocations[string(claimUID)] {
-		util := *p.utilisation[node].Cpus
+		util := p.utilisation[node].Cpus
 
 		for _, allocatedCpu := range allocated.RtCpu.Cpuset {
 			runtime := allocatedCpu.Runtime
@@ -161,7 +161,7 @@ func (p *PerNodeAllocatedClaims) RemoveUtil(claimUID string) {
 			}
 		}
 		p.utilisation[node] = nascrd.AllocatedUtilset{
-			Cpus: &util,
+			Cpus: util,
 		}
 	}
 }

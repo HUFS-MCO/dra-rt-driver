@@ -87,7 +87,7 @@ type AllocatedUtil struct {
 	// ProductName string `json:"productName"` // let's assume that the UUID is enough for now
 }
 type AllocatedUtilset struct {
-	Cpus *(map[int]AllocatedUtil) `json:"cpus,omitempty"`
+	Cpus map[int]AllocatedUtil `json:"cpus,omitempty"`
 }
 type ContainerCgroup struct {
 	ContainerName    string      `json:"containerName,omitempty"`

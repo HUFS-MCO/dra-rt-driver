@@ -108,7 +108,7 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 		}
 
 		allocatedUtilisations := nascrd.AllocatedUtilset{
-			Cpus: &allocatedUtil,
+			Cpus: allocatedUtil,
 		}
 
 		rt.PendingAllocatedClaims.Set(claimUID, potentialNode, allocatedDevices)
@@ -120,7 +120,7 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 
 func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cpucas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, node string) (map[string][]nascrd.AllocatedCpu, map[int]nascrd.AllocatedUtil, nascrd.AllocatedPodCgroup) {
 	available := make(map[int]*nascrd.AllocatableCpu)
-	util := *crd.Spec.AllocatedUtilToCpu.Cpus
+	util := crd.Spec.AllocatedUtilToCpu.Cpus
 	allocated := make(map[string][]nascrd.AllocatedCpu)
 	containerCG := make(claimCgroup)
 
@@ -191,7 +191,7 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 	}
 	// rt.podCgroups(containerCG,crd, pod)
 	crd.Spec.AllocatedUtilToCpu = nascrd.AllocatedUtilset{
-		Cpus: &util,
+		Cpus: util,
 	}
 
 	return allocated, util, nascrd.AllocatedPodCgroup{}
