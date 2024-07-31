@@ -103,7 +103,6 @@ type ContainerCgroup map[string]ClaimCgroup
 
 type PodCgroup struct {
 	PodName    string                     `json:"podName,omitempty"`
-	PodUID     string                     `json:"podUID,omitempty"`
 	Containers map[string]ContainerCgroup `json:"containers,omitempty"` // key is the container Name
 }
 

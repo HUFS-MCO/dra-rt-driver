@@ -91,29 +91,23 @@ spec:
                   properties:
                     containers:
                       additionalProperties:
-                        properties:
-                          containerName:
-                            type: object
-                          containerPeriod:
-                            additionalProperties:
-                              type: integer
-                            type: object
-                          containerRuntime:
-                            additionalProperties:
-                              type: integer
-                            type: object
+                        additionalProperties:
+                          properties:
+                            containerPeriod:
+                              additionalProperties:
+                                type: integer
+                              type: object
+                            containerRuntime:
+                              additionalProperties:
+                                type: integer
+                              type: object
+                          type: object
                         type: object
                       type: object
                     podName:
-                      type: object
-                    podPeriod:
-                      additionalProperties:
-                        type: integer
-                      type: object
-                    podRuntime:
-                      additionalProperties:
-                        type: integer
-                      type: object
+                      type: string
+                    podUID:
+                      type: string
                   type: object
                 type: object
               allocatedUtilToCpu:
@@ -126,14 +120,11 @@ spec:
                         to a CPU.
                       properties:
                         util:
-                          minimum: 0
                           type: integer
                       required:
                       - util
                       type: object
                     type: object
-                required:
-                - cpus
                 type: object
               preparedClaims:
                 additionalProperties:
