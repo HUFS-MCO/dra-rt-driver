@@ -12,6 +12,7 @@ func (rt *rtdriver) containerCgroups(claimCgroups map[string]map[string]cgroups,
 
 	runtime := make(map[int]int)
 	period := make(map[int]int)
+	claimCgroup := make(map[string]cgroups)
 	for _, allocatedCpu := range allocated {
 		runtime[allocatedCpu.ID] = allocatedCpu.Runtime
 		period[allocatedCpu.ID] = allocatedCpu.Period
@@ -26,7 +27,8 @@ func (rt *rtdriver) containerCgroups(claimCgroups map[string]map[string]cgroups,
 				if _, exists := claimCgroups[c.Name][podClaimName]; exists {
 					break
 				}
-				claimCgroups[c.Name][podClaimName] = cgroup
+				claimCgroup[podClaimName] = cgroup
+				claimCgroups[c.Name] = claimCgroup
 				break
 			}
 		}
