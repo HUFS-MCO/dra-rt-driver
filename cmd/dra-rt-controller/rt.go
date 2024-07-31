@@ -70,19 +70,19 @@ func (g *rtdriver) Deallocate(crd *nascrd.NodeAllocationState, claim *resourcev1
 }
 
 func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.Pod, rtcas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, potentialNode string) error {
-	rt.PendingAllocatedClaims.VisitNode(potentialNode, func(claimUID string, allocation nascrd.AllocatedCpuset, utilisation nascrd.AllocatedUtilset, cgroups nascrd.AllocatedPodCgroup) {
+	rt.PendingAllocatedClaims.VisitNode(potentialNode, func(claimUID string, allocation nascrd.AllocatedCpuset, utilisation nascrd.AllocatedUtilset, cgroups nascrd.PodCgroup) {
 		if _, exists := crd.Spec.AllocatedClaims[claimUID]; exists {
 			rt.PendingAllocatedClaims.Remove(claimUID)
 		} else {
 			crd.Spec.AllocatedClaims[claimUID] = allocation
 			crd.Spec.AllocatedUtilToCpu = utilisation
-			crd.Spec.AllocatedPodCgroups[claimUID] = cgroups
+			crd.Spec.AllocatedPodCgroups[crd.Spec.AllocatedClaims[claimUID].RtCpu.CgoupUID] = cgroups
 		}
 	})
-
-	allocated, allocatedUtil, allocatedCgroup := rt.allocate(crd, pod, rtcas, allcas, potentialNode)
-	fmt.Println("Allocated: ", allocatedCgroup)
 	cgroupUID := cgroupUIDGenerator()
+
+	allocated, allocatedUtil, podCgroup := rt.allocate(crd, pod, rtcas, allcas, potentialNode)
+	fmt.Println("Allocated: ", podCgroup)
 
 	for _, ca := range rtcas {
 		claimUID := string(ca.Claim.UID)
@@ -114,17 +114,18 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 
 		rt.PendingAllocatedClaims.Set(claimUID, potentialNode, allocatedDevices)
 		rt.PendingAllocatedClaims.SetUtil(potentialNode, allocatedUtilisations)
+		rt.PendingAllocatedClaims.SetCgroup(cgroupUID, potentialNode, podCgroup)
 	}
 
 	return nil
 }
 
-func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cpucas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, node string) (map[string][]nascrd.AllocatedCpu, map[string]nascrd.AllocatedUtil, nascrd.AllocatedPodCgroup) {
+func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cpucas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, node string) (map[string][]nascrd.AllocatedCpu, map[string]nascrd.AllocatedUtil, nascrd.PodCgroup) {
 	available := make(map[int]*nascrd.AllocatableCpu)
 	util := crd.Spec.AllocatedUtilToCpu.Cpus
 	// util := make(map[string]nascrd.AllocatedUtil)
 	allocated := make(map[string][]nascrd.AllocatedCpu)
-	containerCG := make(claimCgroup)
+	containerCG := make(map[string]nascrd.ContainerCgroup)
 
 	for _, device := range crd.Spec.AllocatableCpuset {
 		switch device.Type() {
@@ -134,16 +135,6 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 			// skip other devices
 		}
 	}
-	// if crd.Spec.AllocatedUtilToCpu.Cpus == nil {
-	// 	for _, device := range crd.Spec.AllocatableCpuset {
-	// 		util[strconv.Itoa(device.RtCpu.ID)] = nascrd.AllocatedUtil{
-	// 			Util: device.RtCpu.Util,
-	// 		}
-
-	// 	}
-	// } else {
-	// 	util = crd.Spec.AllocatedUtilToCpu.Cpus
-	// }
 
 	for _, ca := range cpucas {
 		claimUID := string(ca.Claim.UID)
@@ -162,7 +153,7 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 			// for _, device := range available {
 			worstFitCpus := cpuPartitioning(util, claimUtil, 1, "worstFit") //must get the policy from the user
 			if worstFitCpus == nil {
-				return nil, nil, nascrd.AllocatedPodCgroup{}
+				return nil, nil, nascrd.PodCgroup{}
 			}
 			worstFitCpusStr, _ := strconv.Atoi(worstFitCpus[0])
 			d := nascrd.AllocatedCpu{
@@ -191,13 +182,14 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 				fmt.Println("typed", typed)
 			}
 		}
+		fmt.Println("claimlabels", ca.Claim.Labels)
 	}
-	// rt.podCgroups(containerCG,crd, pod)
-	crd.Spec.AllocatedUtilToCpu = nascrd.AllocatedUtilset{
-		Cpus: util,
-	}
+	podCG := rt.podCgroups(containerCG, crd, pod)
+	// crd.Spec.AllocatedUtilToCpu = nascrd.AllocatedUtilset{
+	// 	Cpus: util,
+	// }
 
-	return allocated, util, nascrd.AllocatedPodCgroup{}
+	return allocated, util, podCG
 }
 
 func cpuPartitioning(spec map[string]nascrd.AllocatedUtil, reqUtil int, reqCpus int, policy string) []string {

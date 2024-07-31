@@ -134,7 +134,7 @@ func (d driver) allocate(ctx context.Context, claim *resourcev1.ResourceClaim, c
 	}
 
 	if crd.Spec.AllocatedPodCgroups == nil {
-		crd.Spec.AllocatedPodCgroups = make(map[string]nascrd.AllocatedPodCgroup)
+		crd.Spec.AllocatedPodCgroups = make(map[string]nascrd.PodCgroup)
 	}
 
 	if crd.Spec.AllocatedUtilToCpu.Cpus == nil {
@@ -272,7 +272,7 @@ func (d driver) unsuitableNode(ctx context.Context, pod *corev1.Pod, allcas []*c
 	}
 
 	if crd.Spec.AllocatedPodCgroups == nil {
-		crd.Spec.AllocatedPodCgroups = make(map[string]nascrd.AllocatedPodCgroup)
+		crd.Spec.AllocatedPodCgroups = make(map[string]nascrd.PodCgroup)
 	}
 
 	if crd.Spec.AllocatedUtilToCpu.Cpus == nil {

@@ -49,11 +49,11 @@ type preparedCgroup struct {
 
 type DeviceState struct {
 	sync.Mutex
-	cdi           *CDIHandler
-	allocatable   AllocatableRtCpus
-	prepared      PreparedClaims
-	allocatedUtil AllocatedUtil
-	// preparedCgroups map[string]preparedCgroup
+	cdi             *CDIHandler
+	allocatable     AllocatableRtCpus
+	prepared        PreparedClaims
+	allocatedUtil   AllocatedUtil
+	preparedCgroups map[string]preparedCgroup
 }
 
 func NewDeviceState(config *Config) (*DeviceState, error) {
@@ -77,11 +77,11 @@ func NewDeviceState(config *Config) (*DeviceState, error) {
 	}
 
 	state := &DeviceState{
-		cdi:           cdi,
-		allocatable:   allocatable,
-		prepared:      make(PreparedClaims),
-		allocatedUtil: make(AllocatedUtil),
-		// preparedCgroups: make(map[string]preparedCgroup),
+		cdi:             cdi,
+		allocatable:     allocatable,
+		prepared:        make(PreparedClaims),
+		allocatedUtil:   make(AllocatedUtil),
+		preparedCgroups: make(map[string]preparedCgroup),
 	}
 	err = state.syncAllocatedUtilFromAllocatableRtCpu()
 	if err != nil {
@@ -169,20 +169,20 @@ func (s *DeviceState) Unprepare(claimUID string) error {
 	return nil
 }
 
-// func (s *DeviceState) prepareCgroups(claimUID string, allocated nascrd.AllocatedCpuset) (string, error) { // does not handle errors yet
-// 	s.Lock()
-// 	defer s.Unlock()
+func (s *DeviceState) prepareCgroups(claimUID string, allocated nascrd.AllocatedCpuset) (string, error) { // does not handle errors yet
+	s.Lock()
+	defer s.Unlock()
 
-// 	if _, ok := s.preparedCgroups[claimUID]; ok {
-// 		return nascrd.AllocatedPodCgroupStatus, nil
-// 	}
-// 	cgroup := preparedCgroup{
-// 		cgroupUID: allocated.RtCpu.CgoupUID,
-// 	}
-// 	s.preparedCgroups[claimUID] = cgroup
-// 	return nascrd.AllocatedPodCgroupStatus, nil
+	if _, ok := s.preparedCgroups[claimUID]; ok {
+		return nascrd.AllocatedPodCgroupStatus, nil
+	}
+	cgroup := preparedCgroup{
+		cgroupUID: allocated.RtCpu.CgoupUID,
+	}
+	s.preparedCgroups[claimUID] = cgroup
+	return nascrd.AllocatedPodCgroupStatus, nil
 
-// }
+}
 func (s *DeviceState) UnprepareCgroups() error {
 	return nil
 }

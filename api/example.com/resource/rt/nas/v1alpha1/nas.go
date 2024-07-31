@@ -97,18 +97,16 @@ type AllocatedUtilset struct {
 //// +kubebuilder:validation:Type=object
 
 type MappedCgroup map[string]int
-type ContainerCgroup struct {
-	// +kubebuilder:validation:Type=object
-	ContainerName    string       `json:"containerName,omitempty"`
+type ClaimCgroup struct {
 	ContainerRuntime MappedCgroup `json:"containerRuntime,omitempty"`
 	ContainerPeriod  MappedCgroup `json:"containerPeriod,omitempty"`
 }
+type ContainerCgroup map[string]ClaimCgroup
 
-type AllocatedPodCgroup struct {
+type PodCgroup struct {
 	// +kubebuilder:validation:Type=object
 	PodName    string                     `json:"podName,omitempty"`
-	PodRuntime MappedCgroup               `json:"podRuntime,omitempty"`
-	PodPeriod  MappedCgroup               `json:"podPeriod,omitempty"`
+	PodUID     string                     `json:"podUID,omitempty"`
 	Containers map[string]ContainerCgroup `json:"containers,omitempty"` // key is the container Name
 }
 
@@ -127,11 +125,11 @@ func (d PreparedCpuset) Type() string {
 
 // NodeAllocationStateSpec is the spec for the NodeAllocationState CRD.
 type NodeAllocationStateSpec struct {
-	AllocatableCpuset   []AllocatableCpuset           `json:"allocatableCpuset,omitempty"`
-	AllocatedClaims     map[string]AllocatedCpuset    `json:"allocatedClaims,omitempty"`
-	PreparedClaims      map[string]PreparedCpuset     `json:"preparedClaims,omitempty"`
-	AllocatedUtilToCpu  AllocatedUtilset              `json:"allocatedUtilToCpu,omitempty"`
-	AllocatedPodCgroups map[string]AllocatedPodCgroup `json:"allocatedPodCgroups,omitempty"` // key is the cgroup UID
+	AllocatableCpuset   []AllocatableCpuset        `json:"allocatableCpuset,omitempty"`
+	AllocatedClaims     map[string]AllocatedCpuset `json:"allocatedClaims,omitempty"`
+	PreparedClaims      map[string]PreparedCpuset  `json:"preparedClaims,omitempty"`
+	AllocatedUtilToCpu  AllocatedUtilset           `json:"allocatedUtilToCpu,omitempty"`
+	AllocatedPodCgroups map[string]PodCgroup       `json:"allocatedPodCgroups,omitempty"` // key is the cgroup UID
 }
 
 // +genclient

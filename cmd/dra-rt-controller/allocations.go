@@ -27,14 +27,14 @@ type PerNodeAllocatedClaims struct {
 	sync.RWMutex
 	allocations map[string]map[string]nascrd.AllocatedCpuset
 	utilisation map[string]nascrd.AllocatedUtilset
-	cgroups     map[string]map[string]nascrd.AllocatedPodCgroup
+	cgroups     map[string]map[string]nascrd.PodCgroup
 }
 
 func NewPerNodeAllocatedClaims() *PerNodeAllocatedClaims {
 	return &PerNodeAllocatedClaims{
 		allocations: make(map[string]map[string]nascrd.AllocatedCpuset),
 		utilisation: make(map[string]nascrd.AllocatedUtilset),
-		cgroups:     make(map[string]map[string]nascrd.AllocatedPodCgroup),
+		cgroups:     make(map[string]map[string]nascrd.PodCgroup),
 	}
 }
 
@@ -77,7 +77,7 @@ func (p *PerNodeAllocatedClaims) GetUtil(node string) nascrd.AllocatedUtilset {
 	return p.utilisation[node]
 }
 
-func (p *PerNodeAllocatedClaims) VisitNode(node string, visitor func(claimUID string, allocation nascrd.AllocatedCpuset, utilisation nascrd.AllocatedUtilset, cgroups nascrd.AllocatedPodCgroup)) {
+func (p *PerNodeAllocatedClaims) VisitNode(node string, visitor func(claimUID string, allocation nascrd.AllocatedCpuset, utilisation nascrd.AllocatedUtilset, cgroups nascrd.PodCgroup)) {
 	p.RLock()
 	for claimUID := range p.allocations {
 		if allocation, exists := p.allocations[claimUID][node]; exists {
@@ -125,6 +125,18 @@ func (p *PerNodeAllocatedClaims) SetUtil(node string, devices nascrd.AllocatedUt
 	}
 
 	p.utilisation[node] = devices
+}
+
+func (p *PerNodeAllocatedClaims) SetCgroup(cgroupUID string, node string, devices nascrd.PodCgroup) {
+	p.Lock()
+	defer p.Unlock()
+
+	_, exists := p.cgroups[node]
+	if !exists {
+		p.cgroups[node] = make(map[string]nascrd.PodCgroup)
+	}
+
+	p.cgroups[node][cgroupUID] = devices
 }
 
 func (p *PerNodeAllocatedClaims) RemoveNode(claimUID, node string) {
