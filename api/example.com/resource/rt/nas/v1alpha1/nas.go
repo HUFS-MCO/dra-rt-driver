@@ -91,9 +91,10 @@ type MappedUtil map[string]AllocatedUtil
 
 // AllocatedUtilset represents a set of allocated utilisations to CPUs.
 type AllocatedUtilset struct {
-	// +kubebuilder:validation:Type=object
-	Cpus MappedUtil `json:"cpus"`
+	Cpus MappedUtil `json:"cpus,omitempty"`
 }
+
+//// +kubebuilder:validation:Type=object
 
 type MappedCgroup map[string]int
 type ContainerCgroup struct {
