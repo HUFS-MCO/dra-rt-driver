@@ -76,6 +76,7 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 		} else {
 			crd.Spec.AllocatedClaims[claimUID] = allocation
 			crd.Spec.AllocatedUtilToCpu = utilisation
+			fmt.Println("print cgroups coming from visit:", cgroups)
 			crd.Spec.AllocatedPodCgroups[string(pod.UID)] = cgroups
 		}
 	})
