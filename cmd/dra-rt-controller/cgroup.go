@@ -49,10 +49,14 @@ func (rt *rtdriver) podCgroups(containerCgroups map[string]nascrd.ContainerCgrou
 	// cgroupUID:=cgroupUIDGenerator()
 	if _, exists := crd.Spec.AllocatedPodCgroups[string(pod.UID)]; exists {
 		fmt.Println("Pod already exists")
+		fmt.Println("Pod already exists:", crd.Spec.AllocatedPodCgroups[string(pod.UID)])
 		return crd.Spec.AllocatedPodCgroups[string(pod.UID)]
 
 	}
 	fmt.Println("in pod cgroups function:", containerCgroups)
+	if containerCgroups == nil {
+		return nascrd.PodCgroup{}
+	}
 	return nascrd.PodCgroup{
 		Containers: containerCgroups,
 		PodName:    pod.Name,

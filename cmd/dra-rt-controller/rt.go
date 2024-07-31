@@ -189,6 +189,7 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 		allocated[claimUID] = devices
 
 		rt.containerCgroups(containerCG, devices, ca.PodClaimName, pod)
+		fmt.Println("after containerCG")
 		for name, cgroup := range containerCG {
 			fmt.Println("name", name)
 			fmt.Println("cgroup", cgroup)
