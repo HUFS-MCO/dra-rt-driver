@@ -78,6 +78,16 @@ func (p *PerNodeAllocatedClaims) GetUtil(node string) nascrd.AllocatedUtilset {
 	return p.utilisation[node]
 }
 
+func (p *PerNodeAllocatedClaims) GetCgroup(node string) map[string]nascrd.PodCgroup {
+	p.RLock()
+	defer p.RUnlock()
+
+	if !p.ExistsUtil(node) {
+		return make(map[string]nascrd.PodCgroup)
+	}
+	return p.cgroups[node]
+}
+
 func (p *PerNodeAllocatedClaims) VisitNode(node string, visitor func(claimUID string, allocation nascrd.AllocatedCpuset, utilisation nascrd.AllocatedUtilset, cgroups nascrd.PodCgroup)) {
 	p.RLock()
 	for claimUID := range p.allocations {

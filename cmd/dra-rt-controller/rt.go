@@ -59,6 +59,7 @@ func (g *rtdriver) Allocate(crd *nascrd.NodeAllocationState, claim *resourcev1.R
 		g.PendingAllocatedClaims.Remove(claimUID)
 	}
 	crd.Spec.AllocatedUtilToCpu = g.PendingAllocatedClaims.GetUtil(selectedNode)
+	crd.Spec.AllocatedPodCgroups = g.PendingAllocatedClaims.cgroups[selectedNode]
 
 	return onSuccess, nil
 }
