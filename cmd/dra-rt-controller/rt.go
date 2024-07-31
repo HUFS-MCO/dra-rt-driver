@@ -79,15 +79,16 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 			crd.Spec.AllocatedPodCgroups[string(pod.UID)] = cgroups
 		}
 	})
-	for id, pcg := range crd.Spec.AllocatedPodCgroups {
-		fmt.Println("id", id)
-		fmt.Println("pcg from crd", pcg)
-	}
-	for _, cr := range crd.Spec.AllocatedUtilToCpu.Cpus {
-		fmt.Println("print cr just to see whether it is empty or not", cr)
-	}
 	cgroupUID := string(pod.UID)
-
+	fmt.Println("just before allocate")
+	for _, c := range crd.Spec.AllocatedPodCgroups {
+		fmt.Println("crd allocated pod cgroup", c)
+	}
+	for _, c := range rt.PendingAllocatedClaims.cgroups {
+		for _, cc := range c {
+			fmt.Println("pending allocated claims cgroups", cc)
+		}
+	}
 	allocated, allocatedUtil, podCgroup := rt.allocate(crd, pod, rtcas, allcas, potentialNode)
 
 	for _, ca := range rtcas {
@@ -120,13 +121,11 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 
 		rt.PendingAllocatedClaims.Set(claimUID, potentialNode, allocatedDevices)
 		rt.PendingAllocatedClaims.SetUtil(potentialNode, allocatedUtilisations)
-		if podCgroup.Containers != nil {
-			rt.PendingAllocatedClaims.SetCgroup(cgroupUID, potentialNode, podCgroup)
-		}
-		for id, pcg := range rt.PendingAllocatedClaims.cgroups[potentialNode] {
-			fmt.Println("id from pending allocated claims", id)
-			fmt.Println("pcg", pcg)
-		}
+	}
+	fmt.Println("before adding to pending allocated claims")
+	fmt.Println("pod cgroups:", podCgroup)
+	if podCgroup.Containers != nil {
+		rt.PendingAllocatedClaims.SetCgroup(cgroupUID, potentialNode, podCgroup)
 	}
 
 	return nil
@@ -190,13 +189,8 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 
 		rt.containerCgroups(containerCG, devices, ca.PodClaimName, pod)
 		fmt.Println("after containerCG")
-		for name, cgroup := range containerCG {
-			fmt.Println("name", name)
-			fmt.Println("cgroup", cgroup)
-		}
 	}
 	podCG := rt.podCgroups(containerCG, crd, pod)
-	fmt.Println("podCG", podCG)
 
 	return allocated, util, podCG
 }

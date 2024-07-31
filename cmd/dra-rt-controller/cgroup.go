@@ -60,7 +60,6 @@ func (rt *rtdriver) podCgroups(containerCgroups map[string]nascrd.ContainerCgrou
 	return nascrd.PodCgroup{
 		Containers: containerCgroups,
 		PodName:    pod.Name,
-		PodUID:     string(pod.UID),
 	}
 	// return nil
 }
