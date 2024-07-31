@@ -82,7 +82,7 @@ func (p *PerNodeAllocatedClaims) VisitNode(node string, visitor func(claimUID st
 	for claimUID := range p.allocations {
 		if allocation, exists := p.allocations[claimUID][node]; exists {
 			utilisation := p.utilisation[node]
-			cgroup := p.cgroups[claimUID][node]
+			cgroup := p.cgroups[node][p.allocations[claimUID][node].RtCpu.CgoupUID]
 			p.RUnlock()
 			visitor(claimUID, allocation, utilisation, cgroup)
 			p.RLock()

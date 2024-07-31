@@ -76,10 +76,14 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 		} else {
 			crd.Spec.AllocatedClaims[claimUID] = allocation
 			crd.Spec.AllocatedUtilToCpu = utilisation
-			crd.Spec.AllocatedPodCgroups[crd.Spec.AllocatedClaims[claimUID].RtCpu.CgoupUID] = cgroups
+			crd.Spec.AllocatedPodCgroups[string(pod.UID)] = cgroups
 		}
 	})
-	cgroupUID := cgroupUIDGenerator()
+	for id, pcg := range crd.Spec.AllocatedPodCgroups {
+		fmt.Println("id", id)
+		fmt.Println("pcg", pcg)
+	}
+	cgroupUID := string(pod.UID)
 
 	allocated, allocatedUtil, podCgroup := rt.allocate(crd, pod, rtcas, allcas, potentialNode)
 	fmt.Println("Allocated: ", podCgroup, "potentialNode: ", potentialNode)
@@ -116,7 +120,7 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 		rt.PendingAllocatedClaims.SetUtil(potentialNode, allocatedUtilisations)
 		rt.PendingAllocatedClaims.SetCgroup(cgroupUID, potentialNode, podCgroup)
 	}
-	for id, pcg := range crd.Spec.AllocatedPodCgroups {
+	for id, pcg := range rt.PendingAllocatedClaims.cgroups[potentialNode] {
 		fmt.Println("id", id)
 		fmt.Println("pcg", pcg)
 	}
@@ -178,6 +182,10 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 		allocated[claimUID] = devices
 
 		rt.containerCgroups(containerCG, devices, ca.PodClaimName, pod)
+		for name, cgroup := range containerCG {
+			fmt.Println("name", name)
+			fmt.Println("cgroup", cgroup)
+		}
 	}
 	podCG := rt.podCgroups(containerCG, crd, pod)
 	fmt.Println("podCG", podCG)

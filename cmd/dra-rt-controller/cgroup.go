@@ -10,11 +10,11 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-func (rt *rtdriver) containerCgroups(claimCgroups map[string]nascrd.ContainerCgroup, allocated []nascrd.AllocatedCpu, podClaimName string, pod *corev1.Pod) error {
+func (rt *rtdriver) containerCgroups(containerCgroup map[string]nascrd.ContainerCgroup, allocated []nascrd.AllocatedCpu, podClaimName string, pod *corev1.Pod) error {
 
 	runtime := make(nascrd.MappedCgroup)
 	period := make(nascrd.MappedCgroup)
-	claimCgroup := make(nascrd.ContainerCgroup)
+	claimCgroup := nascrd.ContainerCgroup{}
 	for _, allocatedCpu := range allocated {
 		ID := strconv.Itoa(allocatedCpu.ID)
 		runtime[ID] = allocatedCpu.Runtime
@@ -27,15 +27,15 @@ func (rt *rtdriver) containerCgroups(claimCgroups map[string]nascrd.ContainerCgr
 	for _, c := range pod.Spec.Containers {
 		for _, n := range c.Resources.Claims {
 			if n.Name == podClaimName {
-				if _, exists := claimCgroups[c.Name][podClaimName]; exists {
+				if _, exists := containerCgroup[c.Name][podClaimName]; exists {
 					break
 				}
-				if _, exists := claimCgroups[c.Name]; exists {
-					claimCgroups[c.Name][podClaimName] = cgroup
+				if _, exists := containerCgroup[c.Name]; exists {
+					containerCgroup[c.Name][podClaimName] = cgroup
 					break
 				}
 				claimCgroup[podClaimName] = cgroup
-				claimCgroups[c.Name] = claimCgroup
+				containerCgroup[c.Name] = claimCgroup
 				break
 			}
 		}
@@ -44,7 +44,7 @@ func (rt *rtdriver) containerCgroups(claimCgroups map[string]nascrd.ContainerCgr
 	return nil
 }
 
-func (rt *rtdriver) podCgroups(containerCgroups containerCgroup, crd *nascrd.NodeAllocationState, pod *corev1.Pod) nascrd.PodCgroup {
+func (rt *rtdriver) podCgroups(containerCgroups map[string]nascrd.ContainerCgroup, crd *nascrd.NodeAllocationState, pod *corev1.Pod) nascrd.PodCgroup {
 	// cgroupUID:=cgroupUIDGenerator()
 	// if _,exists:=crd.Spec.AllocatedPodCgroups[]
 	return nascrd.PodCgroup{
@@ -59,11 +59,4 @@ func (rt *rtdriver) podCgroups(containerCgroups containerCgroup, crd *nascrd.Nod
 
 func cgroupUIDGenerator() string {
 	return uuid.NewString()
-}
-
-type containerCgroup map[string]nascrd.ContainerCgroup
-
-type cgroups struct {
-	runtime map[int]int
-	period  map[int]int
 }
