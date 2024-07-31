@@ -81,7 +81,7 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 	})
 	for id, pcg := range crd.Spec.AllocatedPodCgroups {
 		fmt.Println("id", id)
-		fmt.Println("pcg", pcg)
+		fmt.Println("pcg from crd", pcg)
 	}
 	cgroupUID := string(pod.UID)
 
@@ -134,6 +134,9 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 	// util := make(map[string]nascrd.AllocatedUtil)
 	allocated := make(map[string][]nascrd.AllocatedCpu)
 	containerCG := make(map[string]nascrd.ContainerCgroup)
+	if _, exists := crd.Spec.AllocatedPodCgroups[string(pod.UID)]; exists {
+		containerCG = crd.Spec.AllocatedPodCgroups[string(pod.UID)].Containers
+	}
 
 	for _, device := range crd.Spec.AllocatableCpuset {
 		switch device.Type() {
@@ -180,8 +183,10 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 			break
 		}
 		allocated[claimUID] = devices
+		if _, exists := crd.Spec.AllocatedPodCgroups[string(pod.UID)]; !exists {
+			rt.containerCgroups(containerCG, devices, ca.PodClaimName, pod)
+		}
 
-		rt.containerCgroups(containerCG, devices, ca.PodClaimName, pod)
 		for name, cgroup := range containerCG {
 			fmt.Println("name", name)
 			fmt.Println("cgroup", cgroup)
