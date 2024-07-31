@@ -176,22 +176,11 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 			break
 		}
 		allocated[claimUID] = devices
-		fmt.Println("podUID", pod.UID)
 
 		rt.containerCgroups(containerCG, devices, ca.PodClaimName, pod)
-		for c, claims := range containerCG {
-			fmt.Println("containername", c)
-			for typed, cgroup := range claims {
-				fmt.Println("cgroup", cgroup)
-				fmt.Println("typed", typed)
-			}
-		}
-		fmt.Println("claimlabels", ca.Claim.Labels)
 	}
 	podCG := rt.podCgroups(containerCG, crd, pod)
-	// crd.Spec.AllocatedUtilToCpu = nascrd.AllocatedUtilset{
-	// 	Cpus: util,
-	// }
+	fmt.Println("podCG", podCG)
 
 	return allocated, util, podCG
 }
