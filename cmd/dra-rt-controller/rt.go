@@ -80,10 +80,6 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 		}
 	})
 	cgroupUID := cgroupUIDGenerator()
-	for id, pcg := range crd.Spec.AllocatedPodCgroups {
-		fmt.Println("id", id)
-		fmt.Println("pcg", pcg)
-	}
 
 	allocated, allocatedUtil, podCgroup := rt.allocate(crd, pod, rtcas, allcas, potentialNode)
 	fmt.Println("Allocated: ", podCgroup, "potentialNode: ", potentialNode)
@@ -119,6 +115,10 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 		rt.PendingAllocatedClaims.Set(claimUID, potentialNode, allocatedDevices)
 		rt.PendingAllocatedClaims.SetUtil(potentialNode, allocatedUtilisations)
 		rt.PendingAllocatedClaims.SetCgroup(cgroupUID, potentialNode, podCgroup)
+	}
+	for id, pcg := range crd.Spec.AllocatedPodCgroups {
+		fmt.Println("id", id)
+		fmt.Println("pcg", pcg)
 	}
 
 	return nil
