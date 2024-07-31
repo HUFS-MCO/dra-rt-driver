@@ -82,9 +82,9 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 		}
 	})
 	cgroupUID := string(pod.UID)
-	if len(crd.Spec.AllocatedPodCgroups[cgroupUID].Containers) == 0 {
-		crd.Spec.AllocatedPodCgroups[cgroupUID] = rt.PendingAllocatedClaims.cgroups[potentialNode][cgroupUID]
-	}
+	// if len(crd.Spec.AllocatedPodCgroups[cgroupUID].Containers) == 0 {
+	// 	crd.Spec.AllocatedPodCgroups[cgroupUID] = rt.PendingAllocatedClaims.cgroups[potentialNode][cgroupUID]
+	// }
 
 	fmt.Println("just before allocate")
 	for _, c := range crd.Spec.AllocatedPodCgroups {
