@@ -124,7 +124,7 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 	}
 	fmt.Println("before adding to pending allocated claims")
 	fmt.Println("pod cgroups:", podCgroup)
-	if podCgroup.Containers != nil {
+	if len(podCgroup.Containers) > 0 {
 		rt.PendingAllocatedClaims.SetCgroup(cgroupUID, potentialNode, podCgroup)
 	}
 

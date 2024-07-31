@@ -54,7 +54,7 @@ func (rt *rtdriver) podCgroups(containerCgroups map[string]nascrd.ContainerCgrou
 
 	}
 	fmt.Println("in pod cgroups function:", containerCgroups)
-	if containerCgroups == nil {
+	if len(containerCgroups) == 0 {
 		return nascrd.PodCgroup{}
 	}
 	return nascrd.PodCgroup{
