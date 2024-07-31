@@ -94,8 +94,6 @@ type AllocatedUtilset struct {
 	Cpus MappedUtil `json:"cpus,omitempty"`
 }
 
-//// +kubebuilder:validation:Type=object
-
 type MappedCgroup map[string]int
 type ClaimCgroup struct {
 	ContainerRuntime MappedCgroup `json:"containerRuntime,omitempty"`
@@ -104,7 +102,6 @@ type ClaimCgroup struct {
 type ContainerCgroup map[string]ClaimCgroup
 
 type PodCgroup struct {
-	// +kubebuilder:validation:Type=object
 	PodName    string                     `json:"podName,omitempty"`
 	PodUID     string                     `json:"podUID,omitempty"`
 	Containers map[string]ContainerCgroup `json:"containers,omitempty"` // key is the container Name
