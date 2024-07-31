@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/google/uuid"
@@ -46,7 +47,12 @@ func (rt *rtdriver) containerCgroups(containerCgroup map[string]nascrd.Container
 
 func (rt *rtdriver) podCgroups(containerCgroups map[string]nascrd.ContainerCgroup, crd *nascrd.NodeAllocationState, pod *corev1.Pod) nascrd.PodCgroup {
 	// cgroupUID:=cgroupUIDGenerator()
-	// if _,exists:=crd.Spec.AllocatedPodCgroups[]
+	if _, exists := crd.Spec.AllocatedPodCgroups[string(pod.UID)]; exists {
+		fmt.Println("Pod already exists")
+		return crd.Spec.AllocatedPodCgroups[string(pod.UID)]
+
+	}
+	fmt.Println("in pod cgroups function:", containerCgroups)
 	return nascrd.PodCgroup{
 		Containers: containerCgroups,
 		PodName:    pod.Name,
