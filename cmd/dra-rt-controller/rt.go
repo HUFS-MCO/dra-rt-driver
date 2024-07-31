@@ -83,10 +83,12 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 		fmt.Println("id", id)
 		fmt.Println("pcg from crd", pcg)
 	}
+	for _, cr := range crd.Spec.AllocatedUtilToCpu.Cpus {
+		fmt.Println("print cr just to see whether it is empty or not", cr)
+	}
 	cgroupUID := string(pod.UID)
 
 	allocated, allocatedUtil, podCgroup := rt.allocate(crd, pod, rtcas, allcas, potentialNode)
-	fmt.Println("Allocated: ", podCgroup, "potentialNode: ", potentialNode)
 
 	for _, ca := range rtcas {
 		claimUID := string(ca.Claim.UID)
@@ -118,11 +120,13 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 
 		rt.PendingAllocatedClaims.Set(claimUID, potentialNode, allocatedDevices)
 		rt.PendingAllocatedClaims.SetUtil(potentialNode, allocatedUtilisations)
-		rt.PendingAllocatedClaims.SetCgroup(cgroupUID, potentialNode, podCgroup)
-	}
-	for id, pcg := range rt.PendingAllocatedClaims.cgroups[potentialNode] {
-		fmt.Println("id", id)
-		fmt.Println("pcg", pcg)
+		if podCgroup.Containers != nil {
+			rt.PendingAllocatedClaims.SetCgroup(cgroupUID, potentialNode, podCgroup)
+		}
+		for id, pcg := range rt.PendingAllocatedClaims.cgroups[potentialNode] {
+			fmt.Println("id from pending allocated claims", id)
+			fmt.Println("pcg", pcg)
+		}
 	}
 
 	return nil
@@ -183,10 +187,8 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 			break
 		}
 		allocated[claimUID] = devices
-		if _, exists := crd.Spec.AllocatedPodCgroups[string(pod.UID)]; !exists {
-			rt.containerCgroups(containerCG, devices, ca.PodClaimName, pod)
-		}
 
+		rt.containerCgroups(containerCG, devices, ca.PodClaimName, pod)
 		for name, cgroup := range containerCG {
 			fmt.Println("name", name)
 			fmt.Println("cgroup", cgroup)
