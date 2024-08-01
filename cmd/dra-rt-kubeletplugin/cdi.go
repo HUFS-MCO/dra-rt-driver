@@ -155,14 +155,14 @@ func (cdi *CDIHandler) WriteCgroupToCDI(claimUID string, crd nascrd.NodeAllocati
 		period := ""
 		for _, device := range cgroup {
 			for id, r := range device.ContainerRuntime {
-				runtime = runtime + fmt.Sprintf("%v-%v_,", id, r)
+				runtime = runtime + fmt.Sprintf("%v-%v_", id, r)
 			}
 			for id, p := range device.ContainerPeriod {
-				period = period + fmt.Sprintf("%v-%v_,", id, p)
+				period = period + fmt.Sprintf("%v-%v_", id, p)
 			}
 		}
 		rtCDIDevices = []string{
-			fmt.Sprintf("Pod=%v_Container=%v_Runtime=%v_Period=%v", allocatedCgroups.PodName, containerName, runtime, period),
+			fmt.Sprintf("Pod=%v,Container=%v,Runtime=%v,Period=%v", allocatedCgroups.PodName, containerName, runtime, period),
 		}
 	}
 	fmt.Println("rtCDIDevices:", rtCDIDevices)
