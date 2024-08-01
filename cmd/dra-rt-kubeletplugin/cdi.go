@@ -146,7 +146,26 @@ func (cdi *CDIHandler) GetClaimDevices(claimUID string, devices *PreparedCpuset)
 	return cdiDevices, nil
 }
 
-// // /quick fix
-// func sanitizeInput(input string) string {
-// 	return strings.ReplaceAll(input, "\r", "")
-// }
+func (cdi *CDIHandler) WriteCgroupToCDI(claimUID string, crd nascrd.NodeAllocationStateSpec) ([]string, error) {
+	cgroupUID := crd.AllocatedClaims[claimUID].RtCpu.CgoupUID
+	allocatedCgroups := crd.AllocatedPodCgroups[cgroupUID]
+	rtCDIDevices := []string{}
+	for containerName, cgroup := range allocatedCgroups.Containers {
+		runtime := ""
+		period := ""
+		for _, device := range cgroup {
+			for id, r := range device.ContainerRuntime {
+				runtime = runtime + fmt.Sprintf("%v-%v_,", id, r)
+			}
+			for id, p := range device.ContainerPeriod {
+				period = period + fmt.Sprintf("%v-%v_,", id, p)
+			}
+		}
+		rtCDIDevices = []string{
+			fmt.Sprintf("Pod=%v_Container=%v_Runtime=%v_Period=%v", allocatedCgroups.PodName, containerName, runtime, period),
+		}
+	}
+	fmt.Println("rtCDIDevices:", rtCDIDevices)
+	return rtCDIDevices, nil
+
+}
