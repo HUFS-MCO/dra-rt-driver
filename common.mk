@@ -27,6 +27,6 @@ PLURAL_EXCEPTIONS  = DeviceClassParameters:DeviceClassParameters
 PLURAL_EXCEPTIONS += RtClaimParameters:RtClaimParameters
 
 ifeq ($(IMAGE_NAME),)
-REGISTRY ?= nasimm
+REGISTRY ?= registry.example.com
 IMAGE_NAME = $(REGISTRY)/$(DRIVER_NAME)
 endif
