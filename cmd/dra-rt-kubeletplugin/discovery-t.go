@@ -2,30 +2,36 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
-	"path/filepath"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
+	"k8s.io/client-go/rest"
 )
 
 func enumerateCpusets() error {
 
 	// Define the kubeconfig path
-	var kubeconfig *string
-	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join("$HOME", ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-	}
-	flag.Parse()
+	// var kubeconfig *string
+	// if home := homedir.HomeDir(); home != "" {
+	// 	kubeconfig = flag.String("kubeconfig", filepath.Join("$HOME", ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+	// } else {
+	// 	kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+	// }
+	// flag.Parse()
 
-	cfg, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	// cfg, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	// if err != nil {
+	// 	return fmt.Errorf("error building kubeconfig: %v", err)
+	// }
+
+	var cfg *rest.Config
+	var err error
+
+	// Use in-cluster configuration if running inside a Kubernetes pod
+	cfg, err = rest.InClusterConfig()
 	if err != nil {
-		return fmt.Errorf("error building kubeconfig: %v", err)
+		return fmt.Errorf("error building in-cluster config: %v", err)
 	}
 
 	c, err := kubernetes.NewForConfig(cfg)
