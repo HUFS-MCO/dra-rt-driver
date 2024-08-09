@@ -33,11 +33,13 @@ func enumerateCpusets() error {
 	if err != nil {
 		return fmt.Errorf("error building in-cluster config: %v", err)
 	}
+	fmt.Println("cluster config is ready")
 
 	c, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
 		return fmt.Errorf("error building kubernetes client: %v", err)
 	}
+	fmt.Println("kubernetes client is ready")
 	pod_list, e := c.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
 	if e != nil {
 		return fmt.Errorf("error listing pods: %v", e)
