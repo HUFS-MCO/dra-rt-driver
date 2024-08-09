@@ -39,8 +39,6 @@ func enumerateCpusets() error {
 
 	for i, p := range pod_list.Items {
 		fmt.Printf("Pod %d: %s\n", i, p.Name)
-		// p.Spec.NodeName
-		// (SetAnnotation("period", period_as_a_string) or similar)
 	}
 	return nil
 }
