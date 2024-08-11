@@ -40,6 +40,7 @@ func enumerateCpusets() error {
 		return fmt.Errorf("error building kubernetes client: %v", err)
 	}
 	fmt.Println("kubernetes client is ready")
+
 	pod_list, e := c.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
 	if e != nil {
 		return fmt.Errorf("error listing pods: %v", e)
@@ -47,6 +48,31 @@ func enumerateCpusets() error {
 
 	for i, p := range pod_list.Items {
 		fmt.Printf("Pod %d: %s\n", i, p.Name)
+	}
+
+	// List nodes
+	nodes, err := c.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		panic(err.Error())
+	}
+
+	for _, node := range nodes.Items {
+		fmt.Printf("Node Name: %s\n", node.Name)
+
+		// Get the CPU capacity of the node
+		cpuCapacity := node.Status.Capacity["cpu"]
+		fmt.Printf("CPU Capacity: %s\n", cpuCapacity.String())
+
+		// Optionally, get allocatable CPU (available for pods)
+		cpuAllocatable := node.Status.Allocatable["cpu"]
+		fmt.Printf("CPU Allocatable: %s\n", cpuAllocatable.String())
+
+		// You could also check for annotations or labels if custom ones exist
+		if cpuset, ok := node.Annotations["cpuset"]; ok {
+			fmt.Printf("Cpuset annotation: %s\n", cpuset)
+		}
+		cpusets := node.Status.Capacity.Cpu()
+		fmt.Println("Cpusets:", cpusets)
 	}
 	return nil
 }
