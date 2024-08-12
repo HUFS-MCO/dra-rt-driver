@@ -57,11 +57,11 @@ type DeviceState struct {
 }
 
 func NewDeviceState(config *Config) (*DeviceState, error) {
-	allocatable, err := enumerateAllPossibleDevices()
-	if err != nil {
-		return nil, fmt.Errorf("error enumerating all possible devices: %v", err)
-	}
-	err = enumerateCpusets()
+	// allocatableold, err := enumerateAllPossibleDevices()
+	// if err != nil {
+	// 	return nil, fmt.Errorf("error enumerating all possible devices: %v", err)
+	// }
+	allocatable, err := enumerateCpusets()
 	if err != nil {
 		return nil, fmt.Errorf("error enumerating cpusets: %v", err)
 	}

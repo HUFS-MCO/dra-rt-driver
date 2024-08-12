@@ -94,16 +94,16 @@ type AllocatedUtilset struct {
 	Cpus MappedUtil `json:"cpus,omitempty"`
 }
 
-type MappedCgroup map[string]int
 type ClaimCgroup struct {
-	ContainerRuntime MappedCgroup `json:"containerRuntime,omitempty"`
-	ContainerPeriod  MappedCgroup `json:"containerPeriod,omitempty"`
+	ContainerRuntime int    `json:"containerRuntime,omitempty"`
+	ContainerPeriod  int    `json:"containerPeriod,omitempty"`
+	ContainerCpuset  string `json:"containerCpuset,omitempty"`
 }
-type ContainerCgroup map[string]ClaimCgroup
+type ContainerCgroup map[string]ClaimCgroup // key is the container Name
 
 type PodCgroup struct {
-	PodName    string                     `json:"podName,omitempty"`
-	Containers map[string]ContainerCgroup `json:"containers,omitempty"` // key is the container Name
+	PodName    string          `json:"podName,omitempty"`
+	Containers ContainerCgroup `json:"containers,omitempty"` // key is the container Name
 }
 
 const (

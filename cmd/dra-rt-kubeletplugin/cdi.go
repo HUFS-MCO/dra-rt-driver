@@ -96,21 +96,22 @@ func (cdi *CDIHandler) CreateClaimSpecFile(claimUID string, devices *PreparedCpu
 		Kind:    cdiKind,
 		Devices: []cdispec.Device{},
 	}
-	cpuIdx := 0
+	// cpuIdx := 0
 	switch devices.Type() {
 	case nascrd.RtCpuType:
-		for _, device := range devices.RtCpu.Cpuset {
-			cdiDevice := cdispec.Device{
-				Name: strconv.Itoa(device.id),
-				ContainerEdits: cdispec.ContainerEdits{
-					Env: []string{
-						fmt.Sprintf("RT_DEVICE_%d=%v", cpuIdx, strconv.Itoa(device.id)),
-					},
+		// for _, device := range devices.RtCpu.Cpuset {
+		cdiDevice := cdispec.Device{
+			// Name: strconv.Itoa(device.id),
+			ContainerEdits: cdispec.ContainerEdits{
+				Env: []string{
+					fmt.Sprintf("RT_DEVICE"),
 				},
-			}
-			spec.Devices = append(spec.Devices, cdiDevice)
-			cpuIdx++
+			},
 		}
+		// spec.Devices = append(spec.Devices, cdiDevice)
+		spec.Devices = append(spec.Devices, cdiDevice)
+		// cpuIdx++
+		// }
 	default:
 		return fmt.Errorf("unknown device type: %v", devices.Type())
 	}
@@ -146,26 +147,26 @@ func (cdi *CDIHandler) GetClaimDevices(claimUID string, devices *PreparedCpuset)
 	return cdiDevices, nil
 }
 
-func (cdi *CDIHandler) WriteCgroupToCDI(claimUID string, crd nascrd.NodeAllocationStateSpec) ([]string, error) {
-	cgroupUID := crd.AllocatedClaims[claimUID].RtCpu.CgoupUID
-	allocatedCgroups := crd.AllocatedPodCgroups[cgroupUID]
-	rtCDIDevices := []string{}
-	for containerName, cgroup := range allocatedCgroups.Containers {
-		runtime := ""
-		period := ""
-		for _, device := range cgroup {
-			for id, r := range device.ContainerRuntime {
-				runtime = runtime + fmt.Sprintf("%v-%v_", id, r)
-			}
-			for id, p := range device.ContainerPeriod {
-				period = period + fmt.Sprintf("%v-%v_", id, p)
-			}
-		}
-		rtCDIDevices = []string{
-			fmt.Sprintf("Pod=%v,Container=%v,Runtime=%v,Period=%v", allocatedCgroups.PodName, containerName, runtime, period),
-		}
-	}
-	fmt.Println("rtCDIDevices:", rtCDIDevices)
-	return rtCDIDevices, nil
+// func (cdi *CDIHandler) WriteCgroupToCDI(claimUID string, crd nascrd.NodeAllocationStateSpec) ([]string, error) {
+// 	cgroupUID := crd.AllocatedClaims[claimUID].RtCpu.CgoupUID
+// 	allocatedCgroups := crd.AllocatedPodCgroups[cgroupUID]
+// 	rtCDIDevices := []string{}
+// 	for containerName, cgroup := range allocatedCgroups.Containers {
+// 		runtime := ""
+// 		period := ""
+// 		for _, device := range cgroup {
+// 			for id, r := range device.ContainerRuntime {
+// 				runtime = runtime + fmt.Sprintf("%v-%v_", id, r)
+// 			}
+// 			for id, p := range device.ContainerPeriod {
+// 				period = period + fmt.Sprintf("%v-%v_", id, p)
+// 			}
+// 		}
+// 		rtCDIDevices = []string{
+// 			fmt.Sprintf("Pod=%v,Container=%v,Runtime=%v,Period=%v", allocatedCgroups.PodName, containerName, runtime, period),
+// 		}
+// 	}
+// 	fmt.Println("rtCDIDevices:", rtCDIDevices)
+// 	return rtCDIDevices, nil
 
-}
+// }

@@ -121,7 +121,7 @@ func (d *driver) nodePrepareResource(ctx context.Context, claim *drapbv1.Claim) 
 		}
 
 		updatedSpec, err := d.state.GetUpdatedSpec(&d.nascrd.Spec)
-		d.state.cdi.WriteCgroupToCDI(claim.Uid, d.nascrd.Spec)
+		// d.state.cdi.WriteCgroupToCDI(claim.Uid, d.nascrd.Spec)
 
 		if err != nil {
 			return fmt.Errorf("error getting updated CRD spec: %v", err)
