@@ -75,6 +75,8 @@ func setAnnotations(podCG map[string]nascrd.PodCgroup, pod *corev1.Pod) {
 
 	fmt.Println("Annotations:", annotations)
 	pod.SetAnnotations(annotations)
+	fmt.Println("Pod get annotations:", pod.GetAnnotations())
+	fmt.Println("Pod annotations:", pod.Annotations)
 }
 
 // func (rt *rtdriver) podCgroups(containerCgroups map[string]nascrd.ContainerCgroup, crd *nascrd.NodeAllocationState, pod *corev1.Pod) nascrd.PodCgroup {
