@@ -108,7 +108,7 @@ func (cdi *CDIHandler) CreateClaimSpecFile(claimUID string, devices *PreparedCpu
 					},
 				},
 			}
-			spec.Devices = append(spec.Devices, cdiDevice)
+			// spec.Devices = append(spec.Devices, cdiDevice)
 			spec.Devices = append(spec.Devices, cdiDevice)
 			cpuIdx++
 		}
