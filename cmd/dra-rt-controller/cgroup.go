@@ -60,7 +60,8 @@ func (rt *rtdriver) containerCgroups(podCgroup map[string]nascrd.PodCgroup, allo
 }
 
 func setAnnotations(podCG map[string]nascrd.PodCgroup, pod *corev1.Pod) {
-	annotations := make(map[string]string)
+	annotations := pod.GetAnnotations()
+	fmt.Println("old Pod annotations:", annotations)
 	if _, exists := podCG[string(pod.UID)]; exists {
 		annotations["RT-Device"] = "exists"
 		for c, cg := range podCG[string(pod.UID)].Containers {
