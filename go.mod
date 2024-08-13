@@ -14,8 +14,15 @@ require (
 	k8s.io/dynamic-resource-allocation v0.28.0
 	k8s.io/klog/v2 v2.120.1
 	k8s.io/kubelet v0.28.0
-	k8s.io/kubernetes v1.30.3
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8
+)
+
+require (
+	github.com/onsi/ginkgo/v2 v2.15.0 // indirect
+	github.com/onsi/gomega v1.31.0 // indirect
+	github.com/opencontainers/selinux v1.11.0 // indirect
+	github.com/sirupsen/logrus v1.9.0 // indirect
+	go.uber.org/goleak v1.3.0 // indirect
 )
 
 require (
@@ -35,7 +42,6 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
-	github.com/google/cadvisor v0.49.1
 	github.com/google/gnostic-models v0.6.8 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
@@ -65,7 +71,7 @@ require (
 	golang.org/x/mod v0.15.0 // indirect
 	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/oauth2 v0.10.0 // indirect
-	golang.org/x/sys v0.18.0
+	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/term v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
