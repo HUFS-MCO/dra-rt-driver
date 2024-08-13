@@ -61,6 +61,8 @@ func (rt *rtdriver) containerCgroups(podCgroup map[string]nascrd.PodCgroup, allo
 
 func setAnnotations(podCG map[string]nascrd.PodCgroup, pod *corev1.Pod) {
 	annotations := pod.GetAnnotations()
+	p := pod.ObjectMeta.Annotations
+	fmt.Println("Pod metadate annotations:", p)
 	if pod.GetAnnotations() == nil {
 		annotations = make(map[string]string)
 	}
