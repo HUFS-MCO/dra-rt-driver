@@ -91,22 +91,16 @@ spec:
                   properties:
                     containers:
                       additionalProperties:
-                        additionalProperties:
-                          properties:
-                            containerPeriod:
-                              additionalProperties:
-                                type: integer
-                              type: object
-                            containerRuntime:
-                              additionalProperties:
-                                type: integer
-                              type: object
-                          type: object
+                        properties:
+                          containerCpuset:
+                            type: string
+                          containerPeriod:
+                            type: integer
+                          containerRuntime:
+                            type: integer
                         type: object
                       type: object
                     podName:
-                      type: string
-                    podUID:
                       type: string
                   type: object
                 type: object
