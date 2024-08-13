@@ -96,22 +96,22 @@ func (cdi *CDIHandler) CreateClaimSpecFile(claimUID string, devices *PreparedCpu
 		Kind:    cdiKind,
 		Devices: []cdispec.Device{},
 	}
-	// cpuIdx := 0
+	cpuIdx := 0
 	switch devices.Type() {
 	case nascrd.RtCpuType:
-		// for _, device := range devices.RtCpu.Cpuset {
-		cdiDevice := cdispec.Device{
-			// Name: "cpu",
-			// ContainerEdits: cdispec.ContainerEdits{
-			// Env: []string{
-			// fmt.Sprintf("RT_DEVICE"),
-			// },
-			// },
+		for _, device := range devices.RtCpu.Cpuset {
+			cdiDevice := cdispec.Device{
+				Name: "cpu",
+				ContainerEdits: cdispec.ContainerEdits{
+					Env: []string{
+						fmt.Sprintf("RT_DEVICE=%s", strconv.Itoa(device.id)),
+					},
+				},
+			}
+			spec.Devices = append(spec.Devices, cdiDevice)
+			spec.Devices = append(spec.Devices, cdiDevice)
+			cpuIdx++
 		}
-		// spec.Devices = append(spec.Devices, cdiDevice)
-		spec.Devices = append(spec.Devices, cdiDevice)
-		// cpuIdx++
-		// }
 	default:
 		return fmt.Errorf("unknown device type: %v", devices.Type())
 	}
