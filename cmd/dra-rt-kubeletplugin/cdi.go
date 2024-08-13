@@ -29,7 +29,7 @@ import (
 
 const (
 	cdiVendor = "k8s." + DriverName
-	cdiClass  = "cpu"
+	cdiClass  = "gpu"
 	cdiKind   = cdiVendor + "/" + cdiClass
 
 	cdiCommonDeviceName = "common"
@@ -101,10 +101,10 @@ func (cdi *CDIHandler) CreateClaimSpecFile(claimUID string, devices *PreparedCpu
 	case nascrd.RtCpuType:
 		for _, device := range devices.RtCpu.Cpuset {
 			cdiDevice := cdispec.Device{
-				Name: "cpu" + strconv.Itoa(device.id) + strconv.Itoa(cpuIdx) + claimUID,
+				Name: "cpu" + strconv.Itoa(device.id),
 				ContainerEdits: cdispec.ContainerEdits{
 					Env: []string{
-						fmt.Sprintf("RT_DEVICE=%s", strconv.Itoa(device.id)),
+						fmt.Sprintf("RT_DEVICE_%d=%s", cpuIdx, strconv.Itoa(device.id)),
 					},
 				},
 			}
