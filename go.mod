@@ -4,6 +4,7 @@ go 1.22.2
 
 require (
 	github.com/container-orchestrated-devices/container-device-interface v0.5.4
+	github.com/google/uuid v1.3.0
 	github.com/prometheus/client_golang v1.16.0
 	github.com/spf13/pflag v1.0.5
 	github.com/urfave/cli/v2 v2.25.3
@@ -45,7 +46,6 @@ require (
 	github.com/google/gnostic-models v0.6.8 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/imdario/mergo v0.3.6 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
