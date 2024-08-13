@@ -237,6 +237,7 @@ func (d driver) UnsuitableNodes(ctx context.Context, pod *corev1.Pod, cas []*con
 	for _, ca := range cas {
 		ca.UnsuitableNodes = unique(ca.UnsuitableNodes)
 	}
+	fmt.Println("Pod annotations at the end:", pod.Annotations)
 
 	return nil
 }
