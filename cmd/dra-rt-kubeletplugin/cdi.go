@@ -21,8 +21,6 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/google/uuid"
-
 	cdiapi "github.com/container-orchestrated-devices/container-device-interface/pkg/cdi"
 	cdispec "github.com/container-orchestrated-devices/container-device-interface/specs-go"
 
@@ -103,7 +101,7 @@ func (cdi *CDIHandler) CreateClaimSpecFile(claimUID string, devices *PreparedCpu
 	case nascrd.RtCpuType:
 		for _, device := range devices.RtCpu.Cpuset {
 			cdiDevice := cdispec.Device{
-				Name: uuid.NewString(),
+				Name: "cpu" + strconv.Itoa(device.id),
 				ContainerEdits: cdispec.ContainerEdits{
 					Env: []string{
 						fmt.Sprintf("RT_DEVICE=%s", strconv.Itoa(device.id)),
