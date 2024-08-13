@@ -59,7 +59,7 @@ func (rt *rtdriver) containerCgroups(podCgroup map[string]nascrd.PodCgroup, allo
 	return nil
 }
 
-func setAnnotations(podCG map[string]nascrd.PodCgroup, pod *corev1.Pod) {
+func setAnnotations(podCG map[string]nascrd.PodCgroup, pod *corev1.Pod) map[string]string {
 	annotations := pod.GetAnnotations()
 	p := pod.ObjectMeta.Annotations
 	fmt.Println("Pod metadate annotations:", p)
@@ -68,7 +68,7 @@ func setAnnotations(podCG map[string]nascrd.PodCgroup, pod *corev1.Pod) {
 	}
 	fmt.Println("old Pod annotations:", annotations)
 	if _, exists := podCG[string(pod.UID)]; exists {
-		annotations["RT-Device"] = "exists"
+		annotations["RTDevice"] = "exists"
 		for c, cg := range podCG[string(pod.UID)].Containers {
 			runtime := strconv.Itoa(cg.ContainerRuntime)
 			period := strconv.Itoa(cg.ContainerPeriod)
@@ -85,6 +85,7 @@ func setAnnotations(podCG map[string]nascrd.PodCgroup, pod *corev1.Pod) {
 	fmt.Println("Pod get annotations:", pod.GetAnnotations())
 	fmt.Println("Pod annotations:", pod.Annotations)
 	fmt.Println("Pod get metadate annotations:", pod.ObjectMeta.Annotations)
+	return annotations
 }
 
 // func (rt *rtdriver) podCgroups(containerCgroups map[string]nascrd.ContainerCgroup, crd *nascrd.NodeAllocationState, pod *corev1.Pod) nascrd.PodCgroup {

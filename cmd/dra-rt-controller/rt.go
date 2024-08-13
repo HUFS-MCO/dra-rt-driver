@@ -189,7 +189,8 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 		fmt.Println("pod cgroups:", podCG)
 	}
 	// adding to container annotations
-	setAnnotations(podCG, pod)
+	annotations := setAnnotations(podCG, pod)
+	cpucas[0].Claim.Annotations = annotations
 
 	return allocated, util, podCG
 }
