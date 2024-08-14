@@ -163,7 +163,7 @@ func (cdi *CDIHandler) WriteCgroupToCDI(claim *drapbv1.Claim, crd nascrd.NodeAll
 		period = fmt.Sprintf(containerName+"period%v", cgroup.ContainerPeriod)
 		cpusets = fmt.Sprintf(containerName+"cpuset%v", cgroup.ContainerCpuset)
 	}
-	rtCDIDevices := fmt.Sprintf("Pod%v%v%v%v", allocatedCgroups.PodName, runtime, period, cpusets)
+	rtCDIDevices := fmt.Sprintf("pod%v--%v--%v--%v", allocatedCgroups.PodName, runtime, period, cpusets)
 
 	fmt.Println("rtCDIDevices:", rtCDIDevices)
 	return rtCDIDevices, nil

@@ -68,7 +68,7 @@ func setAnnotations(podCG map[string]nascrd.PodCgroup, pod *corev1.Pod) map[stri
 	}
 	fmt.Println("old Pod annotations:", annotations)
 	if _, exists := podCG[string(pod.UID)]; exists {
-		if pod.GetAnnotations()["RTDevice"] == "exists" {
+		if pod.GetAnnotations()["rtdevice"] == "exists" {
 			fmt.Println("Pod already exists")
 			return pod.GetAnnotations()
 		}
@@ -76,11 +76,11 @@ func setAnnotations(podCG map[string]nascrd.PodCgroup, pod *corev1.Pod) map[stri
 			runtime := strconv.Itoa(cg.ContainerRuntime)
 			period := strconv.Itoa(cg.ContainerPeriod)
 			cpuset := cg.ContainerCpuset
-			annotations[c+"-runtime"] = runtime
-			annotations[c+"-period"] = period
-			annotations[c+"-CPUs"] = cpuset
+			annotations[c+"runtime"] = runtime
+			annotations[c+"period"] = period
+			annotations[c+"cpus"] = cpuset
 		}
-		annotations["RTDevice"] = "exists"
+		annotations["rtdevice"] = "exists"
 	}
 
 	fmt.Println("Annotations:", annotations)
