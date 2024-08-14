@@ -130,17 +130,18 @@ func (cdi *CDIHandler) DeleteClaimSpecFile(claimUID string) error {
 	return cdi.registry.SpecDB().RemoveSpec(specName)
 }
 
-func (cdi *CDIHandler) GetClaimDevices(claimUID string, devices *PreparedCpuset) ([]string, error) {
+func (cdi *CDIHandler) GetClaimDevices(claimUID string, devices *PreparedCpuset, rtcdidevices string) ([]string, error) {
 	cdiDevices := []string{
 		cdiapi.QualifiedName(cdiVendor, cdiClass, cdiCommonDeviceName),
 	}
 
 	switch devices.Type() {
 	case nascrd.RtCpuType:
-		for _, device := range devices.RtCpu.Cpuset {
-			cdiDevice := cdiapi.QualifiedName(cdiVendor, cdiClass, strconv.Itoa(device.id))
-			cdiDevices = append(cdiDevices, cdiDevice)
-		}
+		// for _, device := range devices.RtCpu.Cpuset {
+		cdiDevice := cdiapi.QualifiedName(cdiVendor, cdiClass, rtcdidevices)
+		cdiDevices = append(cdiDevices, cdiDevice)
+
+		// }
 	default:
 		return nil, fmt.Errorf("unknown device type: %v", devices.Type())
 	}

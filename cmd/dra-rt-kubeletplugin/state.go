@@ -107,7 +107,7 @@ func (s *DeviceState) Prepare(claimUID string, allocation nascrd.AllocatedCpuset
 	defer s.Unlock()
 
 	if s.prepared[claimUID] != nil {
-		cdiDevices, err := s.cdi.GetClaimDevices(claimUID, s.prepared[claimUID])
+		cdiDevices, err := s.cdi.GetClaimDevices(claimUID, s.prepared[claimUID], rtcdidevices)
 		if err != nil {
 			return nil, fmt.Errorf("unable to get CDI devices names: %v", err)
 		}
@@ -134,7 +134,7 @@ func (s *DeviceState) Prepare(claimUID string, allocation nascrd.AllocatedCpuset
 
 	s.prepared[claimUID] = prepared
 
-	cdiDevices, err := s.cdi.GetClaimDevices(claimUID, s.prepared[claimUID])
+	cdiDevices, err := s.cdi.GetClaimDevices(claimUID, s.prepared[claimUID], rtcdidevices)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get CDI devices names: %v", err)
 	}
