@@ -120,7 +120,9 @@ func (d *driver) nodePrepareResource(ctx context.Context, claim *drapbv1.Claim) 
 		if err != nil {
 			return fmt.Errorf("error allocating devices for claim '%v': %v", claim.Uid, err)
 		}
-
+		for _, t := range claim.ResourceHandle {
+			fmt.Println(t)
+		}
 		updatedSpec, err := d.state.GetUpdatedSpec(&d.nascrd.Spec)
 
 		if err != nil {
