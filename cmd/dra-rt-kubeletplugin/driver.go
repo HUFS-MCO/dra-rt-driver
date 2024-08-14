@@ -115,13 +115,13 @@ func (d *driver) nodePrepareResource(ctx context.Context, claim *drapbv1.Claim) 
 	var err error
 	var prepared []string
 	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		prepared, err = d.prepare(ctx, claim.Uid)
+		rtCDIDevices, _ := d.state.cdi.WriteCgroupToCDI(claim, d.nascrd.Spec)
+		prepared, err = d.prepare(ctx, claim.Uid, rtCDIDevices)
 		if err != nil {
 			return fmt.Errorf("error allocating devices for claim '%v': %v", claim.Uid, err)
 		}
 
 		updatedSpec, err := d.state.GetUpdatedSpec(&d.nascrd.Spec)
-		d.state.cdi.WriteCgroupToCDI(claim, d.nascrd.Spec)
 
 		if err != nil {
 			return fmt.Errorf("error getting updated CRD spec: %v", err)
@@ -194,12 +194,12 @@ func (d *driver) nodeUnprepareResource(ctx context.Context, claim *drapbv1.Claim
 	return &drapbv1.NodeUnprepareResourceResponse{}
 }
 
-func (d *driver) prepare(ctx context.Context, claimUID string) ([]string, error) {
+func (d *driver) prepare(ctx context.Context, claimUID string, rtcdidevices []string) ([]string, error) {
 	err := d.nasclient.Get(ctx)
 	if err != nil {
 		return nil, err
 	}
-	prepared, err := d.state.Prepare(claimUID, d.nascrd.Spec.AllocatedClaims[claimUID])
+	prepared, err := d.state.Prepare(claimUID, d.nascrd.Spec.AllocatedClaims[claimUID], rtcdidevices)
 	if err != nil {
 		return nil, err
 	}

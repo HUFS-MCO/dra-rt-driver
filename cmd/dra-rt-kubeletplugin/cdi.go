@@ -90,7 +90,7 @@ func (cdi *CDIHandler) CreateCommonSpecFile() error {
 	return cdi.registry.SpecDB().WriteSpec(spec, specName)
 }
 
-func (cdi *CDIHandler) CreateClaimSpecFile(claimUID string, devices *PreparedCpuset) error {
+func (cdi *CDIHandler) CreateClaimSpecFile(claimUID string, devices *PreparedCpuset, rtcdidevices []string) error {
 	specName := cdiapi.GenerateTransientSpecName(cdiVendor, cdiClass, claimUID)
 
 	spec := &cdispec.Spec{

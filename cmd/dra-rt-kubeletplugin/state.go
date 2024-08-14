@@ -102,7 +102,7 @@ func NewDeviceState(config *Config) (*DeviceState, error) {
 	return state, nil
 }
 
-func (s *DeviceState) Prepare(claimUID string, allocation nascrd.AllocatedCpuset) ([]string, error) {
+func (s *DeviceState) Prepare(claimUID string, allocation nascrd.AllocatedCpuset, rtcdidevices []string) ([]string, error) {
 	s.Lock()
 	defer s.Unlock()
 
@@ -127,7 +127,7 @@ func (s *DeviceState) Prepare(claimUID string, allocation nascrd.AllocatedCpuset
 		return nil, fmt.Errorf("allocation failed: %v", err)
 	}
 
-	err = s.cdi.CreateClaimSpecFile(claimUID, prepared)
+	err = s.cdi.CreateClaimSpecFile(claimUID, prepared, rtcdidevices)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create CDI spec file for claim: %v", err)
 	}
