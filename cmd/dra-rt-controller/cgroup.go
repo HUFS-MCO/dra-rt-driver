@@ -20,7 +20,7 @@ func (rt *rtdriver) containerCgroups(podCgroup map[string]nascrd.PodCgroup, allo
 	var builder strings.Builder
 	for i, allocatedCpu := range allocated {
 		if i > 0 {
-			builder.WriteString(",")
+			builder.WriteString("-") // TODO: change this later to comma
 		}
 		builder.WriteString(strconv.Itoa(allocatedCpu.ID))
 	}

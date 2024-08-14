@@ -102,7 +102,7 @@ func NewDeviceState(config *Config) (*DeviceState, error) {
 	return state, nil
 }
 
-func (s *DeviceState) Prepare(claimUID string, allocation nascrd.AllocatedCpuset, rtcdidevices []string) ([]string, error) {
+func (s *DeviceState) Prepare(claimUID string, allocation nascrd.AllocatedCpuset, rtcdidevices string) ([]string, error) {
 	s.Lock()
 	defer s.Unlock()
 

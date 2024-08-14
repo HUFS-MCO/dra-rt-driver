@@ -90,19 +90,20 @@ func (cdi *CDIHandler) CreateCommonSpecFile() error {
 	return cdi.registry.SpecDB().WriteSpec(spec, specName)
 }
 
-func (cdi *CDIHandler) CreateClaimSpecFile(claimUID string, devices *PreparedCpuset, rtcdidevices []string) error {
+func (cdi *CDIHandler) CreateClaimSpecFile(claimUID string, devices *PreparedCpuset, rtcdidevices string) error {
 	specName := cdiapi.GenerateTransientSpecName(cdiVendor, cdiClass, claimUID)
 
 	spec := &cdispec.Spec{
 		Kind:    cdiKind,
 		Devices: []cdispec.Device{},
 	}
+	fmt.Println("rtcdidevices:", rtcdidevices)
 	cpuIdx := 0
 	switch devices.Type() {
 	case nascrd.RtCpuType:
 		for _, device := range devices.RtCpu.Cpuset {
 			cdiDevice := cdispec.Device{
-				Name: rtcdidevices[0],
+				Name: rtcdidevices,
 				ContainerEdits: cdispec.ContainerEdits{
 					Env: []string{
 						fmt.Sprintf("RT_DEVICE_%d=%v", cpuIdx, strconv.Itoa(device.id)),
@@ -147,10 +148,10 @@ func (cdi *CDIHandler) GetClaimDevices(claimUID string, devices *PreparedCpuset)
 	return cdiDevices, nil
 }
 
-func (cdi *CDIHandler) WriteCgroupToCDI(claim *drapbv1.Claim, crd nascrd.NodeAllocationStateSpec) ([]string, error) {
+func (cdi *CDIHandler) WriteCgroupToCDI(claim *drapbv1.Claim, crd nascrd.NodeAllocationStateSpec) (string, error) {
 	cgroupUID := crd.AllocatedClaims[claim.Uid].RtCpu.CgoupUID
 	allocatedCgroups := crd.AllocatedPodCgroups[cgroupUID]
-	rtCDIDevices := []string{}
+	// rtCDIDevices := []string{}
 	runtime := ""
 	period := ""
 	cpusets := ""
@@ -161,9 +162,8 @@ func (cdi *CDIHandler) WriteCgroupToCDI(claim *drapbv1.Claim, crd nascrd.NodeAll
 		period = fmt.Sprintf(containerName+"period%v", cgroup.ContainerPeriod)
 		cpusets = fmt.Sprintf(containerName+"cpuset%v", cgroup.ContainerCpuset)
 	}
-	rtCDIDevices = []string{
-		fmt.Sprintf("Pod%v%v%v%v", allocatedCgroups.PodName, runtime, period, cpusets),
-	}
+	rtCDIDevices := fmt.Sprintf("Pod%v%v%v%v", allocatedCgroups.PodName, runtime, period, cpusets)
+
 	fmt.Println("rtCDIDevices:", rtCDIDevices)
 	return rtCDIDevices, nil
 

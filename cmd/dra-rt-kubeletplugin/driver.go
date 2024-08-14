@@ -196,7 +196,7 @@ func (d *driver) nodeUnprepareResource(ctx context.Context, claim *drapbv1.Claim
 	return &drapbv1.NodeUnprepareResourceResponse{}
 }
 
-func (d *driver) prepare(ctx context.Context, claimUID string, rtcdidevices []string) ([]string, error) {
+func (d *driver) prepare(ctx context.Context, claimUID string, rtcdidevices string) ([]string, error) {
 	err := d.nasclient.Get(ctx)
 	if err != nil {
 		return nil, err
