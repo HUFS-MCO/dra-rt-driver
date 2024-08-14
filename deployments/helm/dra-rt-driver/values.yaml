@@ -12,7 +12,7 @@ allowDefaultNamespace: false
 imagePullSecrets: []
 image:
   repository: nasimm/dra-rt-driver #nasimm/dra-rt-driver #registry.example.com/dra-rt-driver
-  pullPolicy: IfNotPresent
+  pullPolicy: Always #IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
