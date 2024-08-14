@@ -156,13 +156,13 @@ func (cdi *CDIHandler) WriteCgroupToCDI(claim *drapbv1.Claim, crd nascrd.NodeAll
 	cpusets := ""
 	for containerName, cgroup := range allocatedCgroups.Containers {
 
-		runtime = fmt.Sprintf(containerName+"-runtime=%v", cgroup.ContainerRuntime)
+		runtime = fmt.Sprintf(containerName+"-runtime/%v", cgroup.ContainerRuntime)
 
-		period = fmt.Sprintf(containerName+"-period=%v", cgroup.ContainerPeriod)
-		cpusets = fmt.Sprintf(containerName+"-cpuset=%v", cgroup.ContainerCpuset)
+		period = fmt.Sprintf(containerName+"-period/%v", cgroup.ContainerPeriod)
+		cpusets = fmt.Sprintf(containerName+"-cpuset/%v", cgroup.ContainerCpuset)
 	}
 	rtCDIDevices = []string{
-		fmt.Sprintf("Pod=%v,%v,%v,%v", allocatedCgroups.PodName, runtime, period, cpusets),
+		fmt.Sprintf("Pod/%v,%v,%v,%v", allocatedCgroups.PodName, runtime, period, cpusets),
 	}
 	fmt.Println("rtCDIDevices:", rtCDIDevices)
 	return rtCDIDevices, nil
