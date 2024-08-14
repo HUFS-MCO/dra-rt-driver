@@ -101,14 +101,13 @@ func (cdi *CDIHandler) CreateClaimSpecFile(claimUID string, devices *PreparedCpu
 	case nascrd.RtCpuType:
 		for _, device := range devices.RtCpu.Cpuset {
 			cdiDevice := cdispec.Device{
-				Name: "cpu" + strconv.Itoa(device.id),
+				Name: strconv.Itoa(device.id),
 				ContainerEdits: cdispec.ContainerEdits{
 					Env: []string{
-						fmt.Sprintf("RT_DEVICE_%d=%s", cpuIdx, strconv.Itoa(device.id)),
+						fmt.Sprintf("RT_DEVICE_%d=%v", cpuIdx, strconv.Itoa(device.id)),
 					},
 				},
 			}
-			// spec.Devices = append(spec.Devices, cdiDevice)
 			spec.Devices = append(spec.Devices, cdiDevice)
 			cpuIdx++
 		}
