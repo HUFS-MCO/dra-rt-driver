@@ -23,6 +23,7 @@ import (
 
 	cdiapi "github.com/container-orchestrated-devices/container-device-interface/pkg/cdi"
 	cdispec "github.com/container-orchestrated-devices/container-device-interface/specs-go"
+	drapbv1 "k8s.io/kubelet/pkg/apis/dra/v1alpha3"
 
 	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
 )
@@ -146,26 +147,24 @@ func (cdi *CDIHandler) GetClaimDevices(claimUID string, devices *PreparedCpuset)
 	return cdiDevices, nil
 }
 
-// func (cdi *CDIHandler) WriteCgroupToCDI(claimUID string, crd nascrd.NodeAllocationStateSpec) ([]string, error) {
-// 	cgroupUID := crd.AllocatedClaims[claimUID].RtCpu.CgoupUID
-// 	allocatedCgroups := crd.AllocatedPodCgroups[cgroupUID]
-// 	rtCDIDevices := []string{}
-// 	for containerName, cgroup := range allocatedCgroups.Containers {
-// 		runtime := ""
-// 		period := ""
-// 		for _, device := range cgroup {
-// 			for id, r := range device.ContainerRuntime {
-// 				runtime = runtime + fmt.Sprintf("%v-%v_", id, r)
-// 			}
-// 			for id, p := range device.ContainerPeriod {
-// 				period = period + fmt.Sprintf("%v-%v_", id, p)
-// 			}
-// 		}
-// 		rtCDIDevices = []string{
-// 			fmt.Sprintf("Pod=%v,Container=%v,Runtime=%v,Period=%v", allocatedCgroups.PodName, containerName, runtime, period),
-// 		}
-// 	}
-// 	fmt.Println("rtCDIDevices:", rtCDIDevices)
-// 	return rtCDIDevices, nil
+func (cdi *CDIHandler) WriteCgroupToCDI(claim *drapbv1.Claim, crd nascrd.NodeAllocationStateSpec) ([]string, error) {
+	cgroupUID := crd.AllocatedClaims[claim.Uid].RtCpu.CgoupUID
+	allocatedCgroups := crd.AllocatedPodCgroups[cgroupUID]
+	rtCDIDevices := []string{}
+	runtime := ""
+	period := ""
+	cpusets := ""
+	for containerName, cgroup := range allocatedCgroups.Containers {
 
-// }
+		runtime = fmt.Sprintf(containerName+"-runtime=%v", cgroup.ContainerRuntime)
+
+		period = fmt.Sprintf(containerName+"-period=%v", cgroup.ContainerPeriod)
+		cpusets = fmt.Sprintf(containerName+"-cpuset=%v", cgroup.ContainerCpuset)
+	}
+	rtCDIDevices = []string{
+		fmt.Sprintf("Pod=%v,%v,%v,%v", allocatedCgroups.PodName, runtime, period, cpusets),
+	}
+	fmt.Println("rtCDIDevices:", rtCDIDevices)
+	return rtCDIDevices, nil
+
+}
