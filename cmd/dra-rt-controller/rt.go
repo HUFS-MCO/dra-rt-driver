@@ -180,7 +180,7 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 			}
 			devices = append(devices, d)
 
-			break
+			// break
 		}
 		allocated[claimUID] = devices
 
