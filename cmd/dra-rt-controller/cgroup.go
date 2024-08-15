@@ -9,9 +9,10 @@ import (
 
 	rtcrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
+	resourcev1 "k8s.io/api/resource/v1alpha2"
 )
 
-func (rt *rtdriver) containerCgroups(podCgroup map[string]nascrd.PodCgroup, allocated []nascrd.AllocatedCpu, podClaimName string, pod *corev1.Pod, claimParams *rtcrd.RtClaimParametersSpec) error {
+func (rt *rtdriver) containerCgroups(podCgroup map[string]nascrd.PodCgroup, allocated []nascrd.AllocatedCpu, podClaimName string, pod *corev1.Pod, claimParams *rtcrd.RtClaimParametersSpec) (map[string]nascrd.ClaimCgroup, error) {
 
 	claimRuntime := claimParams.Runtime
 	claimPeriod := claimParams.Period
@@ -31,15 +32,18 @@ func (rt *rtdriver) containerCgroups(podCgroup map[string]nascrd.PodCgroup, allo
 		ContainerPeriod:  claimPeriod,
 		ContainerCpuset:  claimCpuset,
 	}
+	containerCgroup := make(map[string]nascrd.ClaimCgroup)
 	for _, c := range pod.Spec.Containers {
 		for _, n := range c.Resources.Claims {
 			if n.Name == podClaimName {
 				if _, exists := podCgroup[string(pod.UID)].Containers[c.Name]; exists {
 					fmt.Println("Container already exists:", podCgroup[string(pod.UID)].Containers[c.Name])
-					break
+					containerCgroup[c.Name] = cgroup
+					return containerCgroup, nil
 				}
 				podCgroup[string(pod.UID)].Containers[c.Name] = cgroup
-				break
+				containerCgroup[c.Name] = cgroup
+				return containerCgroup, nil
 				/////////////this code is for when we need to have podClaimName in the cgroup struct
 				// if _, exists := podCgroup[string(pod.UID)].Containers[c.Name][podClaimName]; exists {
 				// 	fmt.Println("Container already exists:", podCgroup[string(pod.UID)].Containers[c.Name][podClaimName])
@@ -56,10 +60,10 @@ func (rt *rtdriver) containerCgroups(podCgroup map[string]nascrd.PodCgroup, allo
 		}
 	}
 
-	return nil
+	return containerCgroup, nil
 }
 
-func setAnnotations(podCG map[string]nascrd.PodCgroup, pod *corev1.Pod) map[string]string {
+func setPodAnnotations(podCG map[string]nascrd.PodCgroup, pod *corev1.Pod) {
 	annotations := pod.GetAnnotations()
 	p := pod.ObjectMeta.Annotations
 	fmt.Println("Pod metadate annotations:", p)
@@ -70,7 +74,7 @@ func setAnnotations(podCG map[string]nascrd.PodCgroup, pod *corev1.Pod) map[stri
 	if _, exists := podCG[string(pod.UID)]; exists {
 		if pod.GetAnnotations()["rtdevice"] == "exists" {
 			fmt.Println("Pod already exists")
-			return pod.GetAnnotations()
+			return
 		}
 		for c, cg := range podCG[string(pod.UID)].Containers {
 			runtime := strconv.Itoa(cg.ContainerRuntime)
@@ -81,6 +85,8 @@ func setAnnotations(podCG map[string]nascrd.PodCgroup, pod *corev1.Pod) map[stri
 			annotations[c+"cpus"] = cpuset
 		}
 		annotations["rtdevice"] = "exists"
+	} else {
+		return
 	}
 
 	fmt.Println("Annotations:", annotations)
@@ -89,7 +95,34 @@ func setAnnotations(podCG map[string]nascrd.PodCgroup, pod *corev1.Pod) map[stri
 	fmt.Println("Pod get annotations:", pod.GetAnnotations())
 	fmt.Println("Pod annotations:", pod.Annotations)
 	fmt.Println("Pod get metadate annotations:", pod.ObjectMeta.Annotations)
-	return annotations
+	return
+}
+
+func setClaimAnnotations(containerCG map[string]nascrd.ClaimCgroup, pod *corev1.Pod, claim *resourcev1.ResourceClaim) {
+
+	if containerCG == nil {
+		return
+	}
+	if claim.GetAnnotations()["rtdevice"] == "exists" {
+		fmt.Println("Claim already exists")
+		return
+	}
+	annotations := make(map[string]string)
+	for c, cg := range containerCG {
+		runtime := strconv.Itoa(cg.ContainerRuntime)
+		period := strconv.Itoa(cg.ContainerPeriod)
+		cpuset := cg.ContainerCpuset
+		annotations[c+"runtime"] = runtime
+		annotations[c+"period"] = period
+		annotations[c+"cpus"] = cpuset
+	}
+	annotations["rtdevice"] = "exists"
+
+	fmt.Println("Pod get annotations:", pod.GetAnnotations())
+	fmt.Println("Pod annotations:", pod.Annotations)
+	fmt.Println("Pod get metadate annotations:", pod.ObjectMeta.Annotations)
+	claim.SetAnnotations(annotations)
+	return
 }
 
 // func (rt *rtdriver) podCgroups(containerCgroups map[string]nascrd.ContainerCgroup, crd *nascrd.NodeAllocationState, pod *corev1.Pod) nascrd.PodCgroup {

@@ -166,6 +166,7 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 			if err != nil {
 				return nil, nil, nil
 			}
+			fmt.Println("worstFitCpus:", worstFitCpus)
 			worstFitCpusStr, _ := strconv.Atoi(worstFitCpus[0])
 			d := nascrd.AllocatedCpu{
 				ID:      worstFitCpusStr,
@@ -179,18 +180,21 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 				delete(available, d.ID)
 			}
 			devices = append(devices, d)
+			fmt.Println("devices:", devices)
+			fmt.Println("i:", i)
 
-			// break
 		}
 		allocated[claimUID] = devices
+		fmt.Println("allocated devices:", devices)
 
-		rt.containerCgroups(podCG, devices, ca.PodClaimName, pod, claimParams)
+		CCgroup, _ := rt.containerCgroups(podCG, devices, ca.PodClaimName, pod, claimParams)
 		fmt.Println("after containerCG")
 		fmt.Println("pod cgroups:", podCG)
+		setClaimAnnotations(CCgroup, pod, ca.Claim)
+
 	}
-	// adding to container annotations
-	annotations := setAnnotations(podCG, pod)
-	cpucas[0].Claim.SetAnnotations(annotations)
+	// adding to pod annotations
+	setPodAnnotations(podCG, pod)
 
 	return allocated, util, podCG
 }
