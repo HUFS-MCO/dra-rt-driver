@@ -53,12 +53,9 @@ func (rt *rtdriver) containerCgroups(podCgroup map[string]nascrd.PodCgroup, allo
 
 func setPodAnnotations(podCG map[string]nascrd.PodCgroup, pod *corev1.Pod) {
 	annotations := pod.GetAnnotations()
-	p := pod.ObjectMeta.Annotations
-	fmt.Println("Pod metadate annotations:", p)
 	if pod.GetAnnotations() == nil {
 		annotations = make(map[string]string)
 	}
-	fmt.Println("old Pod annotations:", annotations)
 	if _, exists := podCG[string(pod.UID)]; exists {
 		if pod.GetAnnotations()["rtdevice"] == "exists" {
 			fmt.Println("Pod already exists")
@@ -71,18 +68,19 @@ func setPodAnnotations(podCG map[string]nascrd.PodCgroup, pod *corev1.Pod) {
 			annotations[c+"runtime"] = runtime
 			annotations[c+"period"] = period
 			annotations[c+"cpus"] = cpuset
+			annotations["rtdevice"] = "exists"
 		}
-		annotations["rtdevice"] = "exists"
+
 	} else {
 		return
 	}
 
 	fmt.Println("Annotations:", annotations)
 	pod.SetAnnotations(annotations)
-	pod.ObjectMeta.Annotations = annotations
+	// pod.ObjectMeta.Annotations = annotations
 	fmt.Println("Pod get annotations:", pod.GetAnnotations())
-	fmt.Println("Pod annotations:", pod.Annotations)
-	fmt.Println("Pod get metadate annotations:", pod.ObjectMeta.Annotations)
+	// fmt.Println("Pod annotations:", pod.Annotations)
+	// fmt.Println("Pod get metadate annotations:", pod.ObjectMeta.Annotations)
 	return
 }
 
@@ -103,12 +101,8 @@ func setClaimAnnotations(containerCG map[string]nascrd.ClaimCgroup, pod *corev1.
 		annotations[c+"runtime"] = runtime
 		annotations[c+"period"] = period
 		annotations[c+"cpus"] = cpuset
+		annotations["rtdevice"] = "exists"
 	}
-	annotations["rtdevice"] = "exists"
-
-	fmt.Println("Pod get annotations:", pod.GetAnnotations())
-	fmt.Println("Pod annotations:", pod.Annotations)
-	fmt.Println("Pod get metadate annotations:", pod.ObjectMeta.Annotations)
 	claim.SetAnnotations(annotations)
 	return
 }
