@@ -102,12 +102,12 @@ func NewDeviceState(config *Config) (*DeviceState, error) {
 	return state, nil
 }
 
-func (s *DeviceState) Prepare(claimUID string, allocation nascrd.AllocatedCpuset, rtcdidevices string) ([]string, error) {
+func (s *DeviceState) Prepare(claimUID string, allocation nascrd.AllocatedCpuset, rtCDIDevices []string) ([]string, error) {
 	s.Lock()
 	defer s.Unlock()
 
 	if s.prepared[claimUID] != nil {
-		cdiDevices, err := s.cdi.GetClaimDevices(claimUID, s.prepared[claimUID], rtcdidevices)
+		cdiDevices, err := s.cdi.GetClaimDevices(claimUID, s.prepared[claimUID], rtCDIDevices)
 		if err != nil {
 			return nil, fmt.Errorf("unable to get CDI devices names: %v", err)
 		}
@@ -127,14 +127,14 @@ func (s *DeviceState) Prepare(claimUID string, allocation nascrd.AllocatedCpuset
 		return nil, fmt.Errorf("allocation failed: %v", err)
 	}
 
-	err = s.cdi.CreateClaimSpecFile(claimUID, prepared, rtcdidevices)
+	err = s.cdi.CreateClaimSpecFile(claimUID, prepared, rtCDIDevices)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create CDI spec file for claim: %v", err)
 	}
 
 	s.prepared[claimUID] = prepared
 
-	cdiDevices, err := s.cdi.GetClaimDevices(claimUID, s.prepared[claimUID], rtcdidevices)
+	cdiDevices, err := s.cdi.GetClaimDevices(claimUID, s.prepared[claimUID], rtCDIDevices)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get CDI devices names: %v", err)
 	}

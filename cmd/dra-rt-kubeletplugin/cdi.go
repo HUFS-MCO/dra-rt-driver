@@ -90,20 +90,20 @@ func (cdi *CDIHandler) CreateCommonSpecFile() error {
 	return cdi.registry.SpecDB().WriteSpec(spec, specName)
 }
 
-func (cdi *CDIHandler) CreateClaimSpecFile(claimUID string, devices *PreparedCpuset, rtcdidevices string) error {
+func (cdi *CDIHandler) CreateClaimSpecFile(claimUID string, devices *PreparedCpuset, rtCDIDevices []string) error {
 	specName := cdiapi.GenerateTransientSpecName(cdiVendor, cdiClass, claimUID)
 
 	spec := &cdispec.Spec{
 		Kind:    cdiKind,
 		Devices: []cdispec.Device{},
 	}
-	fmt.Println("rtcdidevices:", rtcdidevices)
+	fmt.Println("rtcdidevices:", rtCDIDevices)
 	cpuIdx := 0
 	switch devices.Type() {
 	case nascrd.RtCpuType:
 		for _, device := range devices.RtCpu.Cpuset {
 			cdiDevice := cdispec.Device{
-				Name: rtcdidevices,
+				Name: "cpu" + strconv.Itoa(device.id),
 				ContainerEdits: cdispec.ContainerEdits{
 					Env: []string{
 						fmt.Sprintf("RT_DEVICE_%d=%v", cpuIdx, strconv.Itoa(device.id)),
@@ -130,15 +130,16 @@ func (cdi *CDIHandler) DeleteClaimSpecFile(claimUID string) error {
 	return cdi.registry.SpecDB().RemoveSpec(specName)
 }
 
-func (cdi *CDIHandler) GetClaimDevices(claimUID string, devices *PreparedCpuset, rtcdidevices string) ([]string, error) {
+func (cdi *CDIHandler) GetClaimDevices(claimUID string, devices *PreparedCpuset, rtCDIDevices []string) ([]string, error) {
 	cdiDevices := []string{
-		cdiapi.QualifiedName(cdiVendor, cdiClass, cdiCommonDeviceName),
-	}
+		// cdiapi.QualifiedName(cdiVendor, cdiClass, cdiCommonDeviceName),
+	} // TODO: could we append the cpusets in different cdi devices?
 
 	switch devices.Type() {
 	case nascrd.RtCpuType:
 		// for _, device := range devices.RtCpu.Cpuset {
-		cdiDevice := cdiapi.QualifiedName(cdiVendor, cdiClass, rtcdidevices)
+		// cdiDevice := cdiapi.QualifiedName(cdiVendor, cdiClass, rtCDIDevices)
+		cdiDevice := cdiapi.QualifiedName(rtCDIDevices[0], "CPUSET", rtCDIDevices[1])
 		cdiDevices = append(cdiDevices, cdiDevice)
 
 		// }
@@ -149,21 +150,22 @@ func (cdi *CDIHandler) GetClaimDevices(claimUID string, devices *PreparedCpuset,
 	return cdiDevices, nil
 }
 
-func (cdi *CDIHandler) WriteCgroupToCDI(claim *drapbv1.Claim, crd nascrd.NodeAllocationStateSpec) (string, error) {
+func (cdi *CDIHandler) WriteCgroupToCDI(claim *drapbv1.Claim, crd nascrd.NodeAllocationStateSpec) ([]string, error) {
 	cgroupUID := crd.AllocatedClaims[claim.Uid].RtCpu.CgoupUID
 	allocatedCgroups := crd.AllocatedPodCgroups[cgroupUID]
-	// rtCDIDevices := []string{}
+	rtCDIDevices := []string{}
 	runtime := ""
 	period := ""
 	cpusets := ""
-	for containerName, cgroup := range allocatedCgroups.Containers {
+	for _, cgroup := range allocatedCgroups.Containers {
 
-		runtime = fmt.Sprintf(containerName+"runtime%v", cgroup.ContainerRuntime)
+		runtime = fmt.Sprintf("runtime-%v", cgroup.ContainerRuntime)
 
-		period = fmt.Sprintf(containerName+"period%v", cgroup.ContainerPeriod)
-		cpusets = fmt.Sprintf(containerName+"cpuset%v", cgroup.ContainerCpuset)
+		period = fmt.Sprintf("period-%v", cgroup.ContainerPeriod)
+		cpusets = fmt.Sprintf("%v", cgroup.ContainerCpuset)
 	}
-	rtCDIDevices := fmt.Sprintf("pod%v--%v--%v--%v", allocatedCgroups.PodName, runtime, period, cpusets)
+	rtCDIDevices = append(rtCDIDevices, fmt.Sprintf("%v.%v", runtime, period))
+	rtCDIDevices = append(rtCDIDevices, cpusets)
 
 	fmt.Println("rtCDIDevices:", rtCDIDevices)
 	return rtCDIDevices, nil
