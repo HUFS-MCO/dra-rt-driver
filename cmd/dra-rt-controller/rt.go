@@ -162,7 +162,7 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 		var devices []nascrd.AllocatedCpu
 		for i := 0; i < claimParams.Count; i++ {
 			// for _, device := range available {
-			worstFitCpus, err := cpuPartitioning(util, claimUtil, 1, "worstFit") //must get the policy from the user
+			worstFitCpus, err := cpuPartitioning(util, claimUtil, claimParams.Count, "worstFit") //must get the policy from the user
 			if err != nil {
 				return nil, nil, nil
 			}

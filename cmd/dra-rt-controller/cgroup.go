@@ -44,18 +44,6 @@ func (rt *rtdriver) containerCgroups(podCgroup map[string]nascrd.PodCgroup, allo
 				podCgroup[string(pod.UID)].Containers[c.Name] = cgroup
 				containerCgroup[c.Name] = cgroup
 				return containerCgroup, nil
-				/////////////this code is for when we need to have podClaimName in the cgroup struct
-				// if _, exists := podCgroup[string(pod.UID)].Containers[c.Name][podClaimName]; exists {
-				// 	fmt.Println("Container already exists:", podCgroup[string(pod.UID)].Containers[c.Name][podClaimName])
-				// 	break
-				// }
-				// if len(podCgroup[string(pod.UID)].Containers[c.Name]) != 0 {
-				// 	podCgroup[string(pod.UID)].Containers[c.Name][podClaimName] = cgroup
-				// 	break
-				// }
-				// podCgroup[string(pod.UID)].Containers[c.Name] = make(map[string]nascrd.ClaimCgroup)
-				// podCgroup[string(pod.UID)].Containers[c.Name][podClaimName] = cgroup
-				// break
 			}
 		}
 	}
