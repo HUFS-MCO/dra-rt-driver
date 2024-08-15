@@ -66,7 +66,7 @@ func generateIDs(seed string, count int) []int {
 
 	ids := make([]int, count)
 	for i := 0; i < count; i++ {
-		id := rand.Intn(16)
+		id := rand.Intn(5)
 		ids[i] = id
 	}
 
