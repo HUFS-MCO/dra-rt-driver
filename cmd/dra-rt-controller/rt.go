@@ -88,7 +88,7 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 	for _, ca := range rtcas {
 		claimUID := string(ca.Claim.UID)
 		claimParams, _ := ca.ClaimParameters.(*rtcrd.RtClaimParametersSpec)
-
+		fmt.Println("claimParams.Count in unsuitable nodes:", claimParams.Count)
 		if claimParams.Count != len(allocated[claimUID]) {
 			for _, ca := range allcas {
 				ca.UnsuitableNodes = append(ca.UnsuitableNodes, potentialNode)
