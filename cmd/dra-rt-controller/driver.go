@@ -215,10 +215,6 @@ func (d driver) Deallocate(ctx context.Context, claim *resourcev1.ResourceClaim)
 		return fmt.Errorf("unable to deallocate devices '%v': %v", devices, err)
 	}
 
-	cgroupUID := crd.Spec.AllocatedClaims[string(claim.UID)].RtCpu.CgroupUID
-	delete(crd.Spec.AllocatedClaims, string(claim.UID))
-	delete(crd.Spec.AllocatedPodCgroups, cgroupUID)
-
 	util := crd.Spec.AllocatedUtilToCpu.Cpus
 
 	for _, sets := range crd.Spec.AllocatedClaims[string(claim.UID)].RtCpu.Cpuset {
@@ -233,6 +229,10 @@ func (d driver) Deallocate(ctx context.Context, claim *resourcev1.ResourceClaim)
 	crd.Spec.AllocatedUtilToCpu = nascrd.AllocatedUtilset{
 		Cpus: util,
 	}
+
+	cgroupUID := crd.Spec.AllocatedClaims[string(claim.UID)].RtCpu.CgroupUID
+	delete(crd.Spec.AllocatedClaims, string(claim.UID))
+	delete(crd.Spec.AllocatedPodCgroups, cgroupUID)
 
 	//TODO: remove utilisation from AllocatedUtilToCpu
 
