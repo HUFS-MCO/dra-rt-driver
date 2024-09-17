@@ -215,21 +215,21 @@ func (d driver) Deallocate(ctx context.Context, claim *resourcev1.ResourceClaim)
 		return fmt.Errorf("unable to deallocate devices '%v': %v", devices, err)
 	}
 
-	if _, exists := crd.Spec.AllocatedClaims[string(claim.UID)]; exists {
-		util := crd.Spec.AllocatedUtilToCpu.Cpus
-		for _, sets := range crd.Spec.AllocatedClaims[string(claim.UID)].RtCpu.Cpuset {
-			runtime := sets.Runtime
-			period := sets.Period
-			id := strconv.Itoa(sets.ID)
-			deletedUtil := runtime * 1000 / period
-			util[id] = nascrd.AllocatedUtil{
-				Util: util[id].Util - deletedUtil,
-			}
-		}
-		crd.Spec.AllocatedUtilToCpu = nascrd.AllocatedUtilset{
-			Cpus: util,
-		}
-	}
+	// if _, exists := crd.Spec.AllocatedClaims[string(claim.UID)]; exists {
+	// 	util := crd.Spec.AllocatedUtilToCpu.Cpus
+	// 	for _, cpuss := range crd.Spec.AllocatedClaims[string(claim.UID)].RtCpu.Cpuset {
+	// 		runtime := cpuss.Runtime
+	// 		period := cpuss.Period
+	// 		id := strconv.Itoa(cpuss.ID)
+	// 		deletedUtil := runtime * 1000 / period
+	// 		util[id] = nascrd.AllocatedUtil{
+	// 			Util: util[id].Util - deletedUtil,
+	// 		}
+	// 	}
+	// 	crd.Spec.AllocatedUtilToCpu = nascrd.AllocatedUtilset{
+	// 		Cpus: util,
+	// 	}
+	// }
 
 	cgroupUID := crd.Spec.AllocatedClaims[string(claim.UID)].RtCpu.CgroupUID
 	delete(crd.Spec.AllocatedClaims, string(claim.UID))
