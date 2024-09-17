@@ -115,8 +115,8 @@ func (d *driver) nodePrepareResource(ctx context.Context, claim *drapbv1.Claim) 
 	var err error
 	var prepared []string
 	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		rtCDIDevices, _ := d.state.cdi.WriteCgroupToCDI(claim, d.nascrd.Spec)
-		prepared, err = d.prepare(ctx, claim.Uid, rtCDIDevices)
+		// rtCDIDevices, _ := d.state.cdi.WriteCgroupToCDI(claim, d.nascrd.Spec) // TODO: uncomment this line later
+		// prepared, err = d.prepare(ctx, claim.Uid, rtCDIDevices)
 		if err != nil {
 			return fmt.Errorf("error allocating devices for claim '%v': %v", claim.Uid, err)
 		}

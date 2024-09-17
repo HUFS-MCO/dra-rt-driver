@@ -215,27 +215,25 @@ func (d driver) Deallocate(ctx context.Context, claim *resourcev1.ResourceClaim)
 		return fmt.Errorf("unable to deallocate devices '%v': %v", devices, err)
 	}
 
-	// if _, exists := crd.Spec.AllocatedClaims[string(claim.UID)]; exists {
-	// 	util := crd.Spec.AllocatedUtilToCpu.Cpus
-	// 	for _, cpuss := range crd.Spec.AllocatedClaims[string(claim.UID)].RtCpu.Cpuset {
-	// 		runtime := cpuss.Runtime
-	// 		period := cpuss.Period
-	// 		id := strconv.Itoa(cpuss.ID)
-	// 		deletedUtil := runtime * 1000 / period
-	// 		util[id] = nascrd.AllocatedUtil{
-	// 			Util: util[id].Util - deletedUtil,
-	// 		}
-	// 	}
-	// 	crd.Spec.AllocatedUtilToCpu = nascrd.AllocatedUtilset{
-	// 		Cpus: util,
-	// 	}
-	// }
+	if _, exists := crd.Spec.AllocatedClaims[string(claim.UID)]; exists {
+		util := crd.Spec.AllocatedUtilToCpu.Cpus
+		for _, cpuss := range crd.Spec.AllocatedClaims[string(claim.UID)].RtCpu.Cpuset {
+			runtime := cpuss.Runtime
+			period := cpuss.Period
+			id := strconv.Itoa(cpuss.ID)
+			deletedUtil := (runtime * 1000) / period
+			util[id] = nascrd.AllocatedUtil{
+				Util: util[id].Util - deletedUtil,
+			}
+		}
+		crd.Spec.AllocatedUtilToCpu = nascrd.AllocatedUtilset{
+			Cpus: util,
+		}
+	}
 
 	cgroupUID := crd.Spec.AllocatedClaims[string(claim.UID)].RtCpu.CgroupUID
 	delete(crd.Spec.AllocatedClaims, string(claim.UID))
 	delete(crd.Spec.AllocatedPodCgroups, cgroupUID)
-
-	//TODO: remove utilisation from AllocatedUtilToCpu
 
 	err = client.Update(ctx, &crd.Spec)
 	if err != nil {
@@ -256,7 +254,6 @@ func (d driver) UnsuitableNodes(ctx context.Context, pod *corev1.Pod, cas []*con
 	for _, ca := range cas {
 		ca.UnsuitableNodes = unique(ca.UnsuitableNodes)
 	}
-	fmt.Println("Pod annotations at the end:", pod.Annotations)
 
 	return nil
 }

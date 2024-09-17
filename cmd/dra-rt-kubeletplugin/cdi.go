@@ -167,7 +167,6 @@ func (cdi *CDIHandler) WriteCgroupToCDI(claim *drapbv1.Claim, crd nascrd.NodeAll
 	rtCDIDevices = append(rtCDIDevices, fmt.Sprintf("%v.%v", runtime, period))
 	rtCDIDevices = append(rtCDIDevices, cpusets)
 
-	fmt.Println("rtCDIDevices:", rtCDIDevices)
 	return rtCDIDevices, nil
 
 }
