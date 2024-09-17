@@ -219,6 +219,21 @@ func (d driver) Deallocate(ctx context.Context, claim *resourcev1.ResourceClaim)
 	delete(crd.Spec.AllocatedClaims, string(claim.UID))
 	delete(crd.Spec.AllocatedPodCgroups, cgroupUID)
 
+	util := crd.Spec.AllocatedUtilToCpu.Cpus
+
+	for _, sets := range crd.Spec.AllocatedClaims[string(claim.UID)].RtCpu.Cpuset {
+		runtime := sets.Runtime
+		period := sets.Period
+		id := strconv.Itoa(sets.ID)
+		deletedUtil := runtime * 1000 / period
+		util[id] = nascrd.AllocatedUtil{
+			Util: util[id].Util - deletedUtil,
+		}
+	}
+	crd.Spec.AllocatedUtilToCpu = nascrd.AllocatedUtilset{
+		Cpus: util,
+	}
+
 	//TODO: remove utilisation from AllocatedUtilToCpu
 
 	err = client.Update(ctx, &crd.Spec)
