@@ -187,16 +187,14 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 
 		}
 		allocated[claimUID] = devices
-		fmt.Println("allocated devices:", devices)
 
 		CCgroup, _ := rt.containerCgroups(podCG, devices, ca.PodClaimName, pod, claimParams)
-		fmt.Println("after containerCG")
-		fmt.Println("pod cgroups:", podCG)
 		setClaimAnnotations(CCgroup, pod, ca.Claim)
 
 	}
 	// adding to pod annotations
 	setPodAnnotations(podCG, pod)
+	fmt.Println("util:", util)
 
 	return allocated, util, podCG
 }
