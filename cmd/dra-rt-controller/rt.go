@@ -119,7 +119,7 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 		fmt.Println("allocatedUtilisations:", allocatedUtilisations)
 
 		rt.PendingAllocatedClaims.Set(claimUID, potentialNode, allocatedDevices)
-		rt.PendingAllocatedClaims.SetUtil(potentialNode, allocatedUtilisations)
+		// rt.PendingAllocatedClaims.SetUtil(potentialNode, allocatedUtilisations)
 	}
 
 	if len(podCgroup[cgroupUID].Containers) > 0 {
@@ -193,7 +193,7 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 
 	}
 	// adding to pod annotations
-	setPodAnnotations(podCG, pod)
+	// setPodAnnotations(podCG, pod) // not working
 
 	return allocated, util, podCG
 }

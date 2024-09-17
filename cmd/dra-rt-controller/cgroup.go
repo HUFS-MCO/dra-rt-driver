@@ -75,12 +75,8 @@ func setPodAnnotations(podCG map[string]nascrd.PodCgroup, pod *corev1.Pod) {
 		return
 	}
 
-	fmt.Println("Annotations:", annotations)
-	pod.SetAnnotations(annotations)
-	// pod.ObjectMeta.Annotations = annotations
-	fmt.Println("Pod get annotations:", pod.GetAnnotations())
-	// fmt.Println("Pod annotations:", pod.Annotations)
-	// fmt.Println("Pod get metadate annotations:", pod.ObjectMeta.Annotations)
+	// pod.SetAnnotations(annotations)
+
 	return
 }
 
