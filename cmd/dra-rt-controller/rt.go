@@ -67,6 +67,7 @@ func (g *rtdriver) Allocate(crd *nascrd.NodeAllocationState, claim *resourcev1.R
 func (g *rtdriver) Deallocate(crd *nascrd.NodeAllocationState, claim *resourcev1.ResourceClaim) error {
 	g.PendingAllocatedClaims.Remove(string(claim.UID))
 	g.PendingAllocatedClaims.RemoveUtil(string(claim.UID))
+	g.PendingAllocatedClaims.RemoveCgroup(string(claim.UID))
 	return nil
 }
 
