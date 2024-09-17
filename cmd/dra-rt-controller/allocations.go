@@ -93,7 +93,7 @@ func (p *PerNodeAllocatedClaims) VisitNode(node string, visitor func(claimUID st
 	for claimUID := range p.allocations {
 		if allocation, exists := p.allocations[claimUID][node]; exists {
 			utilisation := p.utilisation[node]
-			cgroup := p.cgroups[node][p.allocations[claimUID][node].RtCpu.CgoupUID]
+			cgroup := p.cgroups[node][p.allocations[claimUID][node].RtCpu.CgroupUID]
 			fmt.Println("cgroup in visit node function:", p.cgroups[node])
 			p.RUnlock()
 			fmt.Println("cgroup in visit node function:", cgroup)
@@ -199,7 +199,7 @@ func (p *PerNodeAllocatedClaims) RemoveCgroup(claimUID string) {
 	defer p.Unlock()
 
 	for node, allocated := range p.allocations[string(claimUID)] {
-		cgroupUID := allocated.RtCpu.CgoupUID
+		cgroupUID := allocated.RtCpu.CgroupUID
 		delete(p.cgroups[node], cgroupUID)
 	}
 }

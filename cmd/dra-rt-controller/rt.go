@@ -105,8 +105,8 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 
 		allocatedDevices := nascrd.AllocatedCpuset{
 			RtCpu: &nascrd.AllocatedRtCpu{
-				Cpuset:   devices,
-				CgoupUID: cgroupUID,
+				Cpuset:    devices,
+				CgroupUID: cgroupUID,
 			},
 		}
 

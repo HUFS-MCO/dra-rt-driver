@@ -49,8 +49,8 @@ type AllocatedCpu struct {
 
 // AllocatedCpuset represents a set of allocated CPUs.
 type AllocatedRtCpu struct {
-	Cpuset   []AllocatedCpu `json:"cpuset"`
-	CgoupUID string         `json:"cgroupUID,omitempty"`
+	Cpuset    []AllocatedCpu `json:"cpuset"`
+	CgroupUID string         `json:"cgroupUID,omitempty"`
 }
 
 // AllocatedRtCpu represents a set of allocated CPUs.

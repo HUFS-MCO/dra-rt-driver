@@ -177,7 +177,7 @@ func (s *DeviceState) prepareCgroups(claimUID string, allocated nascrd.Allocated
 		return nascrd.AllocatedPodCgroupStatus, nil
 	}
 	cgroup := preparedCgroup{
-		cgroupUID: allocated.RtCpu.CgoupUID,
+		cgroupUID: allocated.RtCpu.CgroupUID,
 	}
 	s.preparedCgroups[claimUID] = cgroup
 	return nascrd.AllocatedPodCgroupStatus, nil
