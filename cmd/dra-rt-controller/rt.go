@@ -78,7 +78,7 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 		if _, exists := crd.Spec.AllocatedClaims[claimUID]; exists {
 			rt.PendingAllocatedClaims.Remove(claimUID)
 			// rt.PendingAllocatedClaims.RemoveUtil(claimUID)
-			// rt.PendingAllocatedClaims.RemoveCgroup(claimUID)
+			rt.PendingAllocatedClaims.RemoveCgroup(claimUID)
 		} else {
 			crd.Spec.AllocatedClaims[claimUID] = allocation
 			crd.Spec.AllocatedUtilToCpu = utilisation

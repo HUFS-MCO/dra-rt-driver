@@ -195,9 +195,9 @@ func (p *PerNodeAllocatedClaims) RemoveCgroup(claimUID string) {
 	p.Lock()
 	defer p.Unlock()
 
-	for node := range p.allocations[claimUID] {
-		// cgroupUID := allocated.RtCpu.CgroupUID
-		delete(p.cgroups[node], p.allocations[claimUID][node].RtCpu.CgroupUID)
+	for node, allocated := range p.allocations[claimUID] {
+		cgroupUID := allocated.RtCpu.CgroupUID
+		delete(p.cgroups[node], cgroupUID)
 	}
 
 }
