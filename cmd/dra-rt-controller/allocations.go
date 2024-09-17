@@ -193,3 +193,13 @@ func (p *PerNodeAllocatedClaims) RemoveUtil(claimUID string) {
 		}
 	}
 }
+
+func (p *PerNodeAllocatedClaims) RemoveCgroup(claimUID string) {
+	p.Lock()
+	defer p.Unlock()
+
+	for node, allocated := range p.allocations[string(claimUID)] {
+		cgroupUID := allocated.RtCpu.CgoupUID
+		delete(p.cgroups[node], cgroupUID)
+	}
+}
