@@ -216,7 +216,7 @@ func (d driver) Deallocate(ctx context.Context, claim *resourcev1.ResourceClaim)
 	}
 
 	cgroupUID := crd.Spec.AllocatedClaims[string(claim.UID)].RtCpu.CgroupUID
-	// delete(crd.Spec.AllocatedClaims, string(claim.UID))
+	delete(crd.Spec.AllocatedClaims, string(claim.UID))
 	delete(crd.Spec.AllocatedPodCgroups, cgroupUID)
 
 	//TODO: remove utilisation from AllocatedUtilToCpu
