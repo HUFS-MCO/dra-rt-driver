@@ -92,10 +92,10 @@ func NewDeviceState(config *Config) (*DeviceState, error) {
 		return nil, fmt.Errorf("unable to sync prepared devices from CRD: %v", err)
 	}
 
-	err = state.syncAllocatedUtilToCRDSpec(&config.nascr.Spec)
-	if err != nil {
-		return nil, fmt.Errorf("unable to sync allocated util to crd spec: %v", err)
-	}
+	// err = state.syncAllocatedUtilToCRDSpec(&config.nascr.Spec)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("unable to sync allocated util to crd spec: %v", err)
+	// }
 
 	fmt.Println("how many times the allocatable is synced to allocated util?")
 
