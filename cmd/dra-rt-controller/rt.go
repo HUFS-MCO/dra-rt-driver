@@ -78,7 +78,6 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 		} else {
 			crd.Spec.AllocatedClaims[claimUID] = allocation
 			crd.Spec.AllocatedUtilToCpu = utilisation
-			fmt.Println("print cgroups coming from visit:", cgroups)
 			crd.Spec.AllocatedPodCgroups[string(pod.UID)] = cgroups
 		}
 	})
@@ -89,7 +88,6 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 	for _, ca := range rtcas {
 		claimUID := string(ca.Claim.UID)
 		claimParams, _ := ca.ClaimParameters.(*rtcrd.RtClaimParametersSpec)
-		fmt.Println("claimParams.Count in unsuitable nodes:", claimParams.Count)
 		if claimParams.Count != len(allocated[claimUID]) {
 			for _, ca := range allcas {
 				ca.UnsuitableNodes = append(ca.UnsuitableNodes, potentialNode)
@@ -109,10 +107,11 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 				CgroupUID: cgroupUID,
 			},
 		}
-
+		fmt.Println("allocatedUtil:", allocatedUtil)
 		allocatedUtilisations := nascrd.AllocatedUtilset{
 			Cpus: allocatedUtil,
 		}
+		fmt.Println("allocatedUtilisations:", allocatedUtilisations)
 
 		rt.PendingAllocatedClaims.Set(claimUID, potentialNode, allocatedDevices)
 		rt.PendingAllocatedClaims.SetUtil(potentialNode, allocatedUtilisations)
@@ -161,7 +160,6 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 		claimParams, _ := ca.ClaimParameters.(*rtcrd.RtClaimParametersSpec)
 		claimUtil := (claimParams.Runtime * 1000 / claimParams.Period)
 		var devices []nascrd.AllocatedCpu
-		fmt.Println("claimParams.Count:", claimParams.Count)
 		for i := 0; i < claimParams.Count; i++ {
 			// for _, device := range available {
 			worstFitCpus, err := cpuPartitioning(util, claimUtil, 1, "worstFit") //must get the policy from the user
@@ -182,9 +180,6 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 				delete(available, d.ID)
 			}
 			devices = append(devices, d)
-			fmt.Println("devices:", devices)
-			fmt.Println("i:", i)
-
 		}
 		allocated[claimUID] = devices
 
@@ -194,7 +189,6 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 	}
 	// adding to pod annotations
 	setPodAnnotations(podCG, pod)
-	fmt.Println("util:", util)
 
 	return allocated, util, podCG
 }

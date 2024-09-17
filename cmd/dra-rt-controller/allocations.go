@@ -17,7 +17,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 	"sync"
 
@@ -94,9 +93,7 @@ func (p *PerNodeAllocatedClaims) VisitNode(node string, visitor func(claimUID st
 		if allocation, exists := p.allocations[claimUID][node]; exists {
 			utilisation := p.utilisation[node]
 			cgroup := p.cgroups[node][p.allocations[claimUID][node].RtCpu.CgroupUID]
-			fmt.Println("cgroup in visit node function:", p.cgroups[node])
 			p.RUnlock()
-			fmt.Println("cgroup in visit node function:", cgroup)
 			visitor(claimUID, allocation, utilisation, cgroup)
 			p.RLock()
 		}
