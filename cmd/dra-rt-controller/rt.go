@@ -61,8 +61,8 @@ func (g *rtdriver) Allocate(crd *nascrd.NodeAllocationState, claim *resourcev1.R
 	fmt.Println("Allocate, crd.Spec.AllocatedClaims:", crd.Spec.AllocatedClaims)
 
 	onSuccess := func() {
-		// g.PendingAllocatedClaims.RemoveUtil(claimUID)
-		// g.PendingAllocatedClaims.RemoveCgroup(claimUID)
+		g.PendingAllocatedClaims.RemoveUtil(claimUID)
+		g.PendingAllocatedClaims.RemoveCgroup(claimUID)
 		g.PendingAllocatedClaims.Remove(claimUID)
 		fmt.Println("what happens in remove cgroups:", g.PendingAllocatedClaims.GetCgroup(selectedNode))
 	}
@@ -81,8 +81,8 @@ func (g *rtdriver) Deallocate(crd *nascrd.NodeAllocationState, claim *resourcev1
 func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.Pod, rtcas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, potentialNode string) error {
 	rt.PendingAllocatedClaims.VisitNode(potentialNode, func(claimUID string, allocation nascrd.AllocatedCpuset, utilisation nascrd.AllocatedUtilset, cgroups nascrd.PodCgroup) {
 		if _, exists := crd.Spec.AllocatedClaims[claimUID]; exists {
-			rt.PendingAllocatedClaims.RemoveUtil(claimUID)
-			rt.PendingAllocatedClaims.RemoveCgroup(claimUID)
+			// rt.PendingAllocatedClaims.RemoveUtil(claimUID)
+			// rt.PendingAllocatedClaims.RemoveCgroup(claimUID)
 			rt.PendingAllocatedClaims.Remove(claimUID)
 		} else {
 			fmt.Println("what is assigned to crd in unsuitable nodes:", cgroups)
