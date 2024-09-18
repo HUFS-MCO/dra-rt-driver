@@ -57,6 +57,7 @@ func (g *rtdriver) Allocate(crd *nascrd.NodeAllocationState, claim *resourcev1.R
 	crd.Spec.AllocatedClaims[claimUID] = g.PendingAllocatedClaims.Get(claimUID, selectedNode)
 	crd.Spec.AllocatedUtilToCpu = g.PendingAllocatedClaims.GetUtil(selectedNode)
 	crd.Spec.AllocatedPodCgroups = g.PendingAllocatedClaims.GetCgroup(selectedNode)
+	fmt.Println("Allocate, crd.Spec.AllocatedPodCgroups:", crd.Spec.AllocatedPodCgroups)
 
 	onSuccess := func() {
 		g.PendingAllocatedClaims.RemoveUtil(claimUID)
@@ -68,9 +69,10 @@ func (g *rtdriver) Allocate(crd *nascrd.NodeAllocationState, claim *resourcev1.R
 }
 
 func (g *rtdriver) Deallocate(crd *nascrd.NodeAllocationState, claim *resourcev1.ResourceClaim) error {
-	g.PendingAllocatedClaims.RemoveUtil(string(claim.UID))
-	g.PendingAllocatedClaims.RemoveCgroup(string(claim.UID))
-	g.PendingAllocatedClaims.Remove(string(claim.UID))
+	claimUID := string(claim.UID)
+	g.PendingAllocatedClaims.RemoveUtil(claimUID)
+	g.PendingAllocatedClaims.RemoveCgroup(claimUID)
+	g.PendingAllocatedClaims.Remove(claimUID)
 	return nil
 }
 
@@ -121,7 +123,7 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 		rt.PendingAllocatedClaims.Set(claimUID, potentialNode, allocatedDevices)
 		rt.PendingAllocatedClaims.SetUtil(potentialNode, allocatedUtilisations)
 	}
-
+	fmt.Println("UnsuitableNode, podCgroup:", podCgroup[cgroupUID].Containers)
 	if len(podCgroup[cgroupUID].Containers) > 0 {
 		rt.PendingAllocatedClaims.SetCgroup(cgroupUID, potentialNode, podCgroup[cgroupUID])
 	}
@@ -190,6 +192,7 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 
 		CCgroup, _ := rt.containerCgroups(podCG, devices, ca.PodClaimName, pod, claimParams)
 		setClaimAnnotations(CCgroup, pod, ca.Claim)
+		fmt.Println("allocate, CCgroup:", CCgroup)
 
 	}
 	// adding to pod annotations
