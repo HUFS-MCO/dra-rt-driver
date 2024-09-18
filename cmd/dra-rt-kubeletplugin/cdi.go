@@ -151,6 +151,8 @@ func (cdi *CDIHandler) GetClaimDevices(claimUID string, devices *PreparedCpuset,
 }
 
 func (cdi *CDIHandler) WriteCgroupToCDI(claim *drapbv1.Claim, crd nascrd.NodeAllocationStateSpec) ([]string, error) {
+	fmt.Println("writecgrouptocdi, claim:", claim)
+	fmt.Println("writecgrouptocdi, crd:", crd)
 	cgroupUID := crd.AllocatedClaims[claim.Uid].RtCpu.CgroupUID
 	allocatedCgroups := crd.AllocatedPodCgroups[cgroupUID]
 	rtCDIDevices := []string{}
