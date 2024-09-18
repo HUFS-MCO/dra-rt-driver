@@ -58,6 +58,7 @@ func (g *rtdriver) Allocate(crd *nascrd.NodeAllocationState, claim *resourcev1.R
 	crd.Spec.AllocatedUtilToCpu = g.PendingAllocatedClaims.GetUtil(selectedNode)
 	crd.Spec.AllocatedPodCgroups = g.PendingAllocatedClaims.GetCgroup(selectedNode)
 	fmt.Println("Allocate, crd.Spec.AllocatedPodCgroups:", crd.Spec.AllocatedPodCgroups)
+	fmt.Println("Allocate, crd.Spec.AllocatedClaims:", crd.Spec.AllocatedClaims)
 
 	onSuccess := func() {
 		g.PendingAllocatedClaims.RemoveUtil(claimUID)
