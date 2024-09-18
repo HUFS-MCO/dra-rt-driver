@@ -140,6 +140,10 @@ func (cdi *CDIHandler) GetClaimDevices(claimUID string, devices *PreparedCpuset,
 		// for _, device := range devices.RtCpu.Cpuset {
 		// cdiDevice := cdiapi.QualifiedName(cdiVendor, cdiClass, rtCDIDevices)
 		cdiDevice := cdiapi.QualifiedName(rtCDIDevices[0], "CPUSET", rtCDIDevices[1])
+		fmt.Println("getclaimdevices:")
+		fmt.Println(rtCDIDevices[0])
+		fmt.Println(rtCDIDevices[1])
+		fmt.Println(cdiDevice)
 		cdiDevices = append(cdiDevices, cdiDevice)
 
 		// }
@@ -168,6 +172,7 @@ func (cdi *CDIHandler) WriteCgroupToCDI(claim *drapbv1.Claim, crd nascrd.NodeAll
 	}
 	rtCDIDevices = append(rtCDIDevices, fmt.Sprintf("%v.%v", runtime, period))
 	rtCDIDevices = append(rtCDIDevices, cpusets)
+	fmt.Println("writecgrouptocdi, rtcdidevices:", rtCDIDevices)
 
 	return rtCDIDevices, nil
 
