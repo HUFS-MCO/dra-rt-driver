@@ -137,12 +137,14 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cpucas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, node string) (map[string][]nascrd.AllocatedCpu, map[string]nascrd.AllocatedUtil, map[string]nascrd.PodCgroup) {
 	available := make(map[int]*nascrd.AllocatableCpu)
 	util := crd.Spec.AllocatedUtilToCpu.Cpus
-	cgroupUID := string(pod.UID)
 	// util := make(map[string]nascrd.AllocatedUtil)
 	allocated := make(map[string][]nascrd.AllocatedCpu)
+	fmt.Println("do we have the cgroups in pending and crd?")
+	fmt.Println("pending:", rt.PendingAllocatedClaims.GetCgroup(node))
+	fmt.Println("crd:", crd.Spec.AllocatedPodCgroups)
 	podCG := make(map[string]nascrd.PodCgroup)
-	podCG[cgroupUID] = nascrd.PodCgroup{
-		Containers: make(nascrd.ContainerCgroup),
+	podCG[string(pod.UID)] = nascrd.PodCgroup{
+		Containers: make(map[string]nascrd.ClaimCgroup),
 		PodName:    pod.Name,
 	}
 	// if _, exists := crd.Spec.AllocatedPodCgroups[string(pod.UID)]; exists {
@@ -162,12 +164,14 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 		claimUID := string(ca.Claim.UID)
 		if _, exists := crd.Spec.AllocatedClaims[claimUID]; exists {
 			devices := crd.Spec.AllocatedClaims[claimUID].RtCpu.Cpuset
+			cgroupUID := crd.Spec.AllocatedClaims[claimUID].RtCpu.CgroupUID
 			for _, device := range devices {
 				allocated[claimUID] = append(allocated[claimUID], device)
 			}
 			if _, exists := crd.Spec.AllocatedPodCgroups[cgroupUID]; exists {
 				podCG[cgroupUID] = crd.Spec.AllocatedPodCgroups[cgroupUID]
 			}
+
 			continue
 		}
 
@@ -204,6 +208,7 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 	}
 	// adding to pod annotations
 	setPodAnnotations(podCG, pod) // not working
+	fmt.Println("allocate, podCG:", podCG)
 
 	return allocated, util, podCG
 }

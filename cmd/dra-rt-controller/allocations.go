@@ -145,9 +145,11 @@ func (p *PerNodeAllocatedClaims) SetCgroup(cgroupUID string, node string, device
 	if !exists {
 		p.cgroups[node] = make(map[string]nascrd.PodCgroup)
 	}
-	if devices.Containers != nil {
+	if _, exists = p.cgroups[node][cgroupUID]; !exists {
+		if devices.Containers != nil {
 
-		p.cgroups[node][cgroupUID] = devices
+			p.cgroups[node][cgroupUID] = devices
+		}
 	}
 }
 
