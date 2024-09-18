@@ -160,7 +160,7 @@ func (cdi *CDIHandler) WriteCgroupToCDI(claim *drapbv1.Claim, crd nascrd.NodeAll
 	period := ""
 	cpusets := ""
 	for _, cgroup := range allocatedCgroups.Containers {
-
+		fmt.Println("allocatedCgroups:", cgroup)
 		runtime = fmt.Sprintf("runtime-%v", cgroup.ContainerRuntime)
 
 		period = fmt.Sprintf("period-%v", cgroup.ContainerPeriod)
