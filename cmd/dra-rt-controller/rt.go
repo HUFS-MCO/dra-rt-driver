@@ -61,8 +61,8 @@ func (g *rtdriver) Allocate(crd *nascrd.NodeAllocationState, claim *resourcev1.R
 	fmt.Println("Allocate, crd.Spec.AllocatedClaims:", crd.Spec.AllocatedClaims)
 
 	onSuccess := func() {
-		g.PendingAllocatedClaims.RemoveUtil(claimUID)
-		g.PendingAllocatedClaims.RemoveCgroup(claimUID)
+		// g.PendingAllocatedClaims.RemoveUtil(claimUID)
+		// g.PendingAllocatedClaims.RemoveCgroup(claimUID)
 		g.PendingAllocatedClaims.Remove(claimUID)
 		fmt.Println("what happens in remove cgroups:", g.PendingAllocatedClaims.GetCgroup(selectedNode))
 	}
