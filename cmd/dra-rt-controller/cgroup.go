@@ -17,6 +17,7 @@ func (rt *rtdriver) containerCgroups(podCgroup map[string]nascrd.PodCgroup, allo
 	claimRuntime := claimParams.Runtime
 	claimPeriod := claimParams.Period
 
+	podRuntimes := podCgroup[string(pod.UID)].PodRuntimes
 	// containerCgroup := make(map[string]nascrd.ContainerCgroup)
 	var builder strings.Builder
 	for i, allocatedCpu := range allocated {
@@ -24,6 +25,8 @@ func (rt *rtdriver) containerCgroups(podCgroup map[string]nascrd.PodCgroup, allo
 			builder.WriteString("-") // TODO: change this later to comma
 		}
 		builder.WriteString(strconv.Itoa(allocatedCpu.ID))
+		podRuntimes[allocatedCpu.ID] += allocatedCpu.Runtime
+
 	}
 	claimCpuset := builder.String()
 

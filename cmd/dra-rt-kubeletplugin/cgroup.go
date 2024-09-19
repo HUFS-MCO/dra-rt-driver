@@ -1,0 +1,80 @@
+package main
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+
+	drapbv1 "k8s.io/kubelet/pkg/apis/dra/v1alpha3"
+
+	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
+)
+
+func UpdateParentCgroup(claim *drapbv1.Claim, crd nascrd.NodeAllocationStateSpec) {
+	podUID := crd.AllocatedClaims[claim.Uid].RtCpu.CgroupUID
+
+	// podUIDFormatted := strings.ReplaceAll(podUID, "-", "_") // TODO: must add to pod cgroup too?
+
+	podRuntimes := crd.AllocatedPodCgroups[podUID].PodRuntimes
+
+	cgroupBasePath := "/sys/fs/cgroup/cpu,cpuacct"
+
+	// Update the KubePods cgroup
+	cgroupKubePods := filepath.Join(cgroupBasePath, "kubepods.slice")
+	fmt.Println("kubepods:", cgroupKubePods)
+	writeToParentMultiRuntime(cgroupKubePods, podRuntimes)
+
+	// Update the KubePodsBestEffort cgroup
+	cgroupKubePodsBestEffort := filepath.Join(cgroupBasePath, "kubepods.slice", "kubepods-besteffort.slice")
+	fmt.Println("kubepodsbesteffort:", cgroupKubePodsBestEffort)
+	writeToParentMultiRuntime(cgroupKubePodsBestEffort, podRuntimes)
+
+}
+
+func readCpuRtMultiRuntimeFile(path string) ([]int64, error) {
+	const (
+		CpuRtMultiRuntimeFile = "cpu.rt_multi_runtime_us"
+	)
+
+	filePath := filepath.Join(path, CpuRtMultiRuntimeFile)
+	buf, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	runtimeStrings := strings.Split(string(buf), " ")
+	runtimeStrings = runtimeStrings[:len(runtimeStrings)-2]
+
+	runtimes := make([]int64, 0, len(runtimeStrings))
+	for _, runtimeStr := range runtimeStrings {
+		v, err := strconv.ParseInt(runtimeStr, 10, 32)
+		if err != nil {
+			panic(fmt.Errorf("error parsing runtime %s in file %s: %v", runtimeStr, filePath, err))
+		}
+		runtimes = append(runtimes, v)
+	}
+	return runtimes, nil
+}
+
+func writeToParentMultiRuntime(path string, podRuntimes []int) error {
+	str := ""
+	runtimes, _ := readCpuRtMultiRuntimeFile(path)
+
+	newRuntimes := runtimes
+
+	for cpu, runtime := range newRuntimes {
+		newRuntimes[cpu] = runtimes[cpu] + int64(podRuntimes[cpu])
+		str = str + strconv.Itoa(cpu) + " " + strconv.FormatInt(runtime, 10) + " "
+	}
+	filePath := filepath.Join(path, "cpu.rt_multi_runtime_us")
+	if rerr := os.WriteFile(filePath, []byte(str), os.ModePerm); rerr != nil {
+		return rerr
+	}
+	return nil
+}
+
+func removeRuntimeFromParent() error {
+	return nil
+}

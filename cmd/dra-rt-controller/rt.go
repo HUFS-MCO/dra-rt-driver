@@ -144,8 +144,9 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 	fmt.Println("crd:", crd.Spec.AllocatedPodCgroups)
 	podCG := make(map[string]nascrd.PodCgroup)
 	podCG[string(pod.UID)] = nascrd.PodCgroup{
-		Containers: make(map[string]nascrd.ClaimCgroup),
-		PodName:    pod.Name,
+		Containers:  make(map[string]nascrd.ClaimCgroup),
+		PodName:     pod.Name,
+		PodRuntimes: make([]int, len(crd.Spec.AllocatableCpuset)),
 	}
 	// if _, exists := crd.Spec.AllocatedPodCgroups[string(pod.UID)]; exists {
 	// 	containerCG = crd.Spec.AllocatedPodCgroups[string(pod.UID)].Containers
