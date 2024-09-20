@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -35,12 +36,20 @@ func UpdateParentCgroup(claim *drapbv1.Claim, crd nascrd.NodeAllocationStateSpec
 
 func readCpuRtMultiRuntimeFile(filePath string) ([]int64, error) {
 
-	buf, err := os.ReadFile(filePath)
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		fmt.Println("Error stating file:", err)
+		return nil, err
+	}
+
+	fmt.Printf("File permissions: %v\n", fileInfo.Mode())
+
+	buf, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
 
-	fmt.Println("buf:", string(buf))
+	fmt.Println("buf:", buf)
 
 	runtimeStrings := strings.Split(string(buf), " ")
 	runtimeStrings = runtimeStrings[:len(runtimeStrings)-2]
