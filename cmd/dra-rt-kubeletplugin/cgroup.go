@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -44,7 +43,7 @@ func readCpuRtMultiRuntimeFile(filePath string) ([]int64, error) {
 
 	fmt.Printf("File permissions: %v\n", fileInfo.Mode())
 
-	buf, err := ioutil.ReadFile(filePath)
+	buf, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
