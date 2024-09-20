@@ -33,19 +33,18 @@ func UpdateParentCgroup(claim *drapbv1.Claim, crd nascrd.NodeAllocationStateSpec
 
 }
 
-func readCpuRtMultiRuntimeFile(path string) ([]int64, error) {
-	const (
-		CpuRtMultiRuntimeFile = "cpu.rt_multi_runtime_us"
-	)
+func readCpuRtMultiRuntimeFile(filePath string) ([]int64, error) {
 
-	filePath := filepath.Join(path, CpuRtMultiRuntimeFile)
 	buf, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
 
+	fmt.Println("buf:", string(buf))
+
 	runtimeStrings := strings.Split(string(buf), " ")
 	runtimeStrings = runtimeStrings[:len(runtimeStrings)-2]
+	fmt.Println("runtimeStrings:", runtimeStrings)
 
 	runtimes := make([]int64, 0, len(runtimeStrings))
 	for _, runtimeStr := range runtimeStrings {
@@ -59,9 +58,11 @@ func readCpuRtMultiRuntimeFile(path string) ([]int64, error) {
 }
 
 func writeToParentMultiRuntime(path string, podRuntimes []int) error {
+	filePath := filepath.Join(path, "cpu.rt_multi_runtime_us")
 	str := ""
-	runtimes, _ := readCpuRtMultiRuntimeFile(path)
+	runtimes, _ := readCpuRtMultiRuntimeFile(filePath)
 	fmt.Println("runtimes:", runtimes)
+	fmt.Println("podRuntimes:", podRuntimes)
 
 	newRuntimes := runtimes
 
@@ -71,7 +72,7 @@ func writeToParentMultiRuntime(path string, podRuntimes []int) error {
 	}
 	fmt.Println("new runtimes:", newRuntimes)
 	fmt.Println("new runtimes string:", str)
-	filePath := filepath.Join(path, "cpu.rt_multi_runtime_us")
+
 	fmt.Println("filepath:", filePath)
 	if rerr := os.WriteFile(filePath, []byte(str), os.ModePerm); rerr != nil {
 		return rerr
