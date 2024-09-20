@@ -50,6 +50,11 @@ func (rt *rtdriver) containerCgroups(podCgroup map[string]nascrd.PodCgroup, allo
 			}
 		}
 	}
+	podCgroup[string(pod.UID)] = nascrd.PodCgroup{
+		Containers:  podCgroup[string(pod.UID)].Containers,
+		PodName:     pod.Name,
+		PodRuntimes: podRuntimes,
+	}
 
 	return containerCgroup, nil
 }

@@ -116,6 +116,7 @@ func (d *driver) nodePrepareResource(ctx context.Context, claim *drapbv1.Claim) 
 	var prepared []string
 	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		rtCDIDevices, _ := d.state.cdi.WriteCgroupToCDI(claim, d.nascrd.Spec)
+		UpdateParentCgroup(claim, d.nascrd.Spec)
 		prepared, err = d.prepare(ctx, claim.Uid, rtCDIDevices)
 		if err != nil {
 			return fmt.Errorf("error allocating devices for claim '%v': %v", claim.Uid, err)
