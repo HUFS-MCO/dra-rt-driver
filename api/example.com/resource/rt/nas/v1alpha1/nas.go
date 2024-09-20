@@ -104,7 +104,7 @@ type ContainerCgroup map[string]ClaimCgroup // key is the container Name
 type PodCgroup struct {
 	PodName     string          `json:"podName,omitempty"`
 	Containers  ContainerCgroup `json:"containers,omitempty"` // key is the container Name
-	PodRuntimes []int
+	PodRuntimes []int           `json:"podRuntimes,omitempty"`
 }
 
 const (
