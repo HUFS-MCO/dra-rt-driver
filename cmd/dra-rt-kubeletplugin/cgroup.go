@@ -61,6 +61,7 @@ func readCpuRtMultiRuntimeFile(path string) ([]int64, error) {
 func writeToParentMultiRuntime(path string, podRuntimes []int) error {
 	str := ""
 	runtimes, _ := readCpuRtMultiRuntimeFile(path)
+	fmt.Println("runtimes:", runtimes)
 
 	newRuntimes := runtimes
 
@@ -68,7 +69,10 @@ func writeToParentMultiRuntime(path string, podRuntimes []int) error {
 		newRuntimes[cpu] = runtimes[cpu] + int64(podRuntimes[cpu])
 		str = str + strconv.Itoa(cpu) + " " + strconv.FormatInt(runtime, 10) + " "
 	}
+	fmt.Println("new runtimes:", newRuntimes)
+	fmt.Println("new runtimes string:", str)
 	filePath := filepath.Join(path, "cpu.rt_multi_runtime_us")
+	fmt.Println("filepath:", filePath)
 	if rerr := os.WriteFile(filePath, []byte(str), os.ModePerm); rerr != nil {
 		return rerr
 	}

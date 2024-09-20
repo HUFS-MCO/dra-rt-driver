@@ -126,7 +126,6 @@ func (s *DeviceState) Prepare(claimUID string, allocation nascrd.AllocatedCpuset
 	if err != nil {
 		return nil, fmt.Errorf("allocation failed: %v", err)
 	}
-
 	err = s.cdi.CreateClaimSpecFile(claimUID, prepared, rtCDIDevices)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create CDI spec file for claim: %v", err)
