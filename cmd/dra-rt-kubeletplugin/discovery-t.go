@@ -8,8 +8,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	// v1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
-	// metricsclientset "k8s.io/metrics/pkg/client/clientset/versioned"
+
+	// v1beta1 "k8s.io/metrics/pkg/apis/metrics/v1alpha2"
+	metricsclientset "k8s.io/metrics/pkg/client/clientset/versioned"
 )
 
 func enumerateCpusets() (AllocatableRtCpus, error) {
@@ -65,11 +66,12 @@ func enumerateCpusets() (AllocatableRtCpus, error) {
 	fmt.Println("nodeNames:", nodes)
 	node, err := c.CoreV1().Nodes().Get(context.TODO(), nodeName, metav1.GetOptions{})
 
-	// // Create metrics clientset for accessing metrics API
-	// metricsClient, err := metricsclientset.NewForConfig(cfg)
-	// if err != nil {
-	// 	fmt.Printf("error creating metrics client: %v\n", err)
-	// }
+	// Create metrics clientset for accessing metrics API
+	metricsClient, err := metricsclientset.NewForConfig(cfg)
+	if err != nil {
+		fmt.Printf("error creating metrics client: %v\n", err)
+	}
+	fmt.Println("metrics client is ready", metricsClient)
 
 	// // Get node metrics
 	// nodeMetrics, err := getNodeMetrics(metricsClient, nodeName)
