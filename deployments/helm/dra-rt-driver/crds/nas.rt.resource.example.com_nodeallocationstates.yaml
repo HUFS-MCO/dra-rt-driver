@@ -102,6 +102,10 @@ spec:
                       type: object
                     podName:
                       type: string
+                    podRuntimes:
+                      items:
+                        type: integer
+                      type: array
                   type: object
                 type: object
               allocatedUtilToCpu:

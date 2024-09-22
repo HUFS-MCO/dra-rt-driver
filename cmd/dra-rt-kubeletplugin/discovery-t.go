@@ -60,7 +60,7 @@ func enumerateCpusets() (AllocatableRtCpus, error) {
 		panic(err.Error())
 	}
 
-	podMetrics, err := metricsClient.MetricsV1beta1()
+	podMetrics := metricsClient.MetricsV1beta1()
 	if err != nil {
 		panic(err.Error())
 	}
