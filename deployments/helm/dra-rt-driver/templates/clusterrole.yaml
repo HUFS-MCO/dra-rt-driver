@@ -10,5 +10,6 @@ rules:
   - resource.k8s.io
   - rt.resource.example.com
   - nas.rt.resource.example.com
+  - metrics.k8s.io
   resources: ["*"]
   verbs: ["*"]
