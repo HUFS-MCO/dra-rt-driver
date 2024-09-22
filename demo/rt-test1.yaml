@@ -8,7 +8,7 @@ metadata:
   name: rt-test1
 
 ---
-apiVersion: resource.k8s.io/v1alpha3
+apiVersion: resource.k8s.io/v1alpha2
 kind: ResourceClaimTemplate
 metadata:
   namespace: rt-test1
@@ -29,7 +29,7 @@ metadata:
   namespace: rt-test1
   name: rtclaims
 spec:
-  count: 1
+  count: 2
   runtime: 100
   period: 1000
 

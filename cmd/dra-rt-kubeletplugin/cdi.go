@@ -23,7 +23,7 @@ import (
 
 	cdiapi "github.com/container-orchestrated-devices/container-device-interface/pkg/cdi"
 	cdispec "github.com/container-orchestrated-devices/container-device-interface/specs-go"
-	drapbv1 "k8s.io/kubelet/pkg/apis/dra/v1alpha3"
+	drapbv1 "k8s.io/kubelet/pkg/apis/dra/v1alpha2"
 
 	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
 )
