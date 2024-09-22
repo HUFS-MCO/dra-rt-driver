@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	drapbv1 "k8s.io/kubelet/pkg/apis/dra/v1alpha2"
+	drapbv1 "k8s.io/kubelet/pkg/apis/dra/v1alpha3"
 
 	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
 )
