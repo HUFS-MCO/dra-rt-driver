@@ -84,7 +84,8 @@ func enumerateCpusets() (AllocatableRtCpus, error) {
 
 	cpuset := node.Status.Capacity.Cpu().Value()
 	fmt.Println("cpuset:", cpuset)
-	ids := make([]int, cpuset)
+	ids := make([]int, int(cpuset))
+	fmt.Println("ids:", ids)
 
 	alldevices := make(AllocatableRtCpus)
 	for _, id := range ids {
