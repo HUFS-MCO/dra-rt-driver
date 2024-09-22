@@ -8,8 +8,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+
 	// v1beta1 "k8s.io/metrics/pkg/apis/metrics/v1alpha2"
-	// metricsclientset "k8s.io/metrics/pkg/client/clientset/versioned"
+	metricsv "k8s.io/metrics/pkg/client/clientset/versioned"
 )
 
 func enumerateCpusets() (AllocatableRtCpus, error) {
@@ -49,6 +50,25 @@ func enumerateCpusets() (AllocatableRtCpus, error) {
 		return nil, fmt.Errorf("error listing pods: %v", e)
 	}
 
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		panic(err.Error())
+	}
+	metricsClient, err := metricsv.NewForConfig(config)
+
+	if err != nil {
+		panic(err.Error())
+	}
+
+	podMetrics, err := metricsClient.MetricsV1beta1().PodMetrics("namespace").Get("pod-name", metav1.GetOptions{})
+	if err != nil {
+		panic(err.Error())
+	}
+
+	// Now you can access the metrics
+	fmt.Printf("CPU usage: %v\n", podMetrics.Containers[0].Usage["cpu"])
+	fmt.Printf("Memory usage: %v\n", podMetrics.Containers[0].Usage["memory"])
+
 	for i, p := range pod_list.Items {
 		fmt.Printf("Pod %d: %s\n", i, p.Name)
 
@@ -84,6 +104,7 @@ func enumerateCpusets() (AllocatableRtCpus, error) {
 
 	cpuset := node.Status.Capacity.Cpu().Value()
 	fmt.Println("cpuset:", cpuset)
+	// t:=node.Usage.Cpu().Value()
 
 	alldevices := make(AllocatableRtCpus)
 	for id := 0; id < int(cpuset); id++ {
