@@ -8,7 +8,7 @@ metadata:
   name: gpu-test4
 
 ---
-apiVersion: gpu.resource.example.com/v1alpha1
+apiVersion: gpu.resource.example.com/v1alpha3
 kind: GpuClaimParameters
 metadata:
   namespace: gpu-test4

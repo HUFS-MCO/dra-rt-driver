@@ -24,7 +24,7 @@ import (
 	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
 
 	corev1 "k8s.io/api/core/v1"
-	resourcev1 "k8s.io/api/resource/v1alpha2"
+	resourcev1 "k8s.io/api/resource/v1alpha3"
 	"k8s.io/dynamic-resource-allocation/controller"
 
 	rtcrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/v1alpha1"
