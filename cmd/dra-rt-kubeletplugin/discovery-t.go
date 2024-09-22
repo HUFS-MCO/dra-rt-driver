@@ -60,7 +60,7 @@ func enumerateCpusets() (AllocatableRtCpus, error) {
 		panic(err.Error())
 	}
 
-	podMetricsList, err := metricsClient.MetricsV1beta1().PodMetricses("dra-rt-driver").List(context.TODO(), metav1.ListOptions{})
+	podMetricsList, err := metricsClient.MetricsV1beta1().PodMetricses("kube-system").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		panic(err.Error())
 	}
