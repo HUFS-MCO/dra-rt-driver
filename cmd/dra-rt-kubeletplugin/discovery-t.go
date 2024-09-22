@@ -60,13 +60,16 @@ func enumerateCpusets() (AllocatableRtCpus, error) {
 		panic(err.Error())
 	}
 
-	podMetrics := metricsClient.MetricsV1beta1().PodMetricses("default")
+	podMetricsList, err := metricsClient.MetricsV1beta1().PodMetricses("dra-rt-driver").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		panic(err.Error())
 	}
 
 	// Now you can access the metrics
-	fmt.Println("podMetrics:", podMetrics)
+	for _, podMetrics := range podMetricsList.Items {
+		fmt.Println("podMetrics:", podMetrics)
+		fmt.Println("podMetrics.Containers:", podMetrics.Containers[0].Usage.Cpu())
+	}
 	// fmt.Printf("CPU usage: %v\n", podMetrics.Containers[0].Usage["cpu"])
 	// fmt.Printf("Memory usage: %v\n", podMetrics.Containers[0].Usage["memory"])
 
