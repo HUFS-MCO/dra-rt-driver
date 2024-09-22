@@ -8,8 +8,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	v1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
-	metricsclientset "k8s.io/metrics/pkg/client/clientset/versioned"
+	// v1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
+	// metricsclientset "k8s.io/metrics/pkg/client/clientset/versioned"
 )
 
 func enumerateCpusets() (AllocatableRtCpus, error) {
@@ -65,21 +65,21 @@ func enumerateCpusets() (AllocatableRtCpus, error) {
 	fmt.Println("nodeNames:", nodes)
 	node, err := c.CoreV1().Nodes().Get(context.TODO(), nodeName, metav1.GetOptions{})
 
-	// Create metrics clientset for accessing metrics API
-	metricsClient, err := metricsclientset.NewForConfig(cfg)
-	if err != nil {
-		fmt.Printf("error creating metrics client: %v\n", err)
-	}
+	// // Create metrics clientset for accessing metrics API
+	// metricsClient, err := metricsclientset.NewForConfig(cfg)
+	// if err != nil {
+	// 	fmt.Printf("error creating metrics client: %v\n", err)
+	// }
 
-	// Get node metrics
-	nodeMetrics, err := getNodeMetrics(metricsClient, nodeName)
-	if err != nil {
-		fmt.Printf("error getting node metrics: %v\n", err)
-	}
+	// // Get node metrics
+	// nodeMetrics, err := getNodeMetrics(metricsClient, nodeName)
+	// if err != nil {
+	// 	fmt.Printf("error getting node metrics: %v\n", err)
+	// }
 
-	fmt.Printf("Node %s Metrics:\n", nodeName)
-	fmt.Printf("CPU Usage: %v\n", nodeMetrics.Usage.Cpu().String())
-	fmt.Printf("Memory Usage: %v\n", nodeMetrics.Usage.Memory().String())
+	// fmt.Printf("Node %s Metrics:\n", nodeName)
+	// fmt.Printf("CPU Usage: %v\n", nodeMetrics.Usage.Cpu().String())
+	// fmt.Printf("Memory Usage: %v\n", nodeMetrics.Usage.Memory().String())
 
 	cpuset := node.Status.Capacity.Cpu().Value()
 	fmt.Println("cpuset:", cpuset)
@@ -98,11 +98,11 @@ func enumerateCpusets() (AllocatableRtCpus, error) {
 	return alldevices, nil
 }
 
-// Get node metrics from metrics API
-func getNodeMetrics(metricsClient *metricsclientset.Clientset, nodeName string) (*v1beta1.NodeMetrics, error) {
-	nodeMetrics, err := metricsClient.MetricsV1beta1().NodeMetricses().Get(context.TODO(), nodeName, metav1.GetOptions{})
-	if err != nil {
-		return nil, fmt.Errorf("error fetching node metrics: %v", err)
-	}
-	return nodeMetrics, nil
-}
+// // Get node metrics from metrics API
+// func getNodeMetrics(metricsClient *metricsclientset.Clientset, nodeName string) (*v1beta1.NodeMetrics, error) {
+// 	nodeMetrics, err := metricsClient.MetricsV1beta1().NodeMetricses().Get(context.TODO(), nodeName, metav1.GetOptions{})
+// 	if err != nil {
+// 		return nil, fmt.Errorf("error fetching node metrics: %v", err)
+// 	}
+// 	return nodeMetrics, nil
+// }
