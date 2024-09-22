@@ -22,7 +22,7 @@ import (
 	"strconv"
 
 	corev1 "k8s.io/api/core/v1"
-	resourcev1 "k8s.io/api/resource/v1alpha2"
+	resourcev1 "k8s.io/api/resource/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/dynamic-resource-allocation/controller"
 

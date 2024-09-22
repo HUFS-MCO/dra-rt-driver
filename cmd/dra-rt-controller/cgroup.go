@@ -9,7 +9,7 @@ import (
 
 	rtcrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
-	resourcev1 "k8s.io/api/resource/v1alpha2"
+	resourcev1 "k8s.io/api/resource/v1beta1"
 )
 
 func (rt *rtdriver) containerCgroups(podCgroup map[string]nascrd.PodCgroup, allocated []nascrd.AllocatedCpu, podClaimName string, pod *corev1.Pod, claimParams *rtcrd.RtClaimParametersSpec) (map[string]nascrd.ClaimCgroup, error) {
