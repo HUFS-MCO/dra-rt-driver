@@ -8,7 +8,7 @@ require (
 	github.com/prometheus/client_golang v1.16.0
 	github.com/spf13/pflag v1.0.5
 	github.com/urfave/cli/v2 v2.25.3
-	k8s.io/api v0.28.0 
+	k8s.io/api v0.28.0
 	k8s.io/apimachinery v0.28.0
 	k8s.io/client-go v0.28.0
 	k8s.io/component-base v0.28.0
