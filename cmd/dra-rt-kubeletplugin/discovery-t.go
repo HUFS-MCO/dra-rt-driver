@@ -8,9 +8,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-
 	// v1beta1 "k8s.io/metrics/pkg/apis/metrics/v1alpha2"
-	metricsv "k8s.io/metrics/pkg/client/clientset/versioned"
 )
 
 func enumerateCpusets() (AllocatableRtCpus, error) {
@@ -50,28 +48,28 @@ func enumerateCpusets() (AllocatableRtCpus, error) {
 		return nil, fmt.Errorf("error listing pods: %v", e)
 	}
 
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		panic(err.Error())
-	}
-	metricsClient, err := metricsv.NewForConfig(config)
+	// config, err := rest.InClusterConfig()
+	// if err != nil {
+	// 	panic(err.Error())
+	// }
+	// metricsClient, err := metricsv.NewForConfig(config)
 
-	if err != nil {
-		panic(err.Error())
-	}
+	// if err != nil {
+	// 	panic(err.Error())
+	// }
 
-	podMetricsList, err := metricsClient.MetricsV1beta1().NodeMetricses().List(context.TODO(), metav1.ListOptions{})
-	//can be because of the version beta1
-	// or the issue is with the role of the service account
-	if err != nil {
-		panic(err.Error())
-	}
+	// podMetricsList, err := metricsClient.MetricsV1beta1().NodeMetricses().List(context.TODO(), metav1.ListOptions{})
+	// //can be because of the version beta1
+	// // or the issue is with the role of the service account
+	// if err != nil {
+	// 	panic(err.Error())
+	// }
 
-	// Now you can access the metrics
-	for _, nodeMetrics := range podMetricsList.Items {
-		fmt.Println("podMetrics:", nodeMetrics)
-		fmt.Println("podMetrics.Containers:", nodeMetrics.Usage.Cpu())
-	}
+	// // Now you can access the metrics
+	// for _, nodeMetrics := range podMetricsList.Items {
+	// 	fmt.Println("podMetrics:", nodeMetrics)
+	// 	fmt.Println("podMetrics.Containers:", nodeMetrics.Usage.Cpu())
+	// }
 	// fmt.Printf("CPU usage: %v\n", podMetrics.Containers[0].Usage["cpu"])
 	// fmt.Printf("Memory usage: %v\n", podMetrics.Containers[0].Usage["memory"])
 
