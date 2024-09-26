@@ -44,6 +44,7 @@ func (g *rtdriver) ValidateClaimParameters(claimParams *rtcrd.RtClaimParametersS
 	if claimParams.Count < 1 {
 		return fmt.Errorf("invalid number of HCBS requested: %v", claimParams.Count)
 	}
+	// TODO: add more validation
 	return nil
 }
 
@@ -179,14 +180,15 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 		claimParams, _ := ca.ClaimParameters.(*rtcrd.RtClaimParametersSpec)
 		claimUtil := (claimParams.Runtime * 1000 / claimParams.Period)
 		var devices []nascrd.AllocatedCpu
+		worstFitCpus, err := cpuPartitioning(util, claimUtil, claimParams.Count, "worstFit") //must get the policy from the user
+		if err != nil {
+			return nil, nil, nil
+		}
+		fmt.Println("worstFitCpus:", worstFitCpus)
 		for i := 0; i < claimParams.Count; i++ {
 			// for _, device := range available {
-			worstFitCpus, err := cpuPartitioning(util, claimUtil, 1, "worstFit") //must get the policy from the user
-			if err != nil {
-				return nil, nil, nil
-			}
-			fmt.Println("worstFitCpus:", worstFitCpus)
-			worstFitCpusStr, _ := strconv.Atoi(worstFitCpus[0])
+
+			worstFitCpusStr, _ := strconv.Atoi(worstFitCpus[i])
 			d := nascrd.AllocatedCpu{
 				ID:      worstFitCpusStr,
 				Runtime: claimParams.Runtime,
@@ -195,7 +197,7 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 			util[strconv.Itoa(d.ID)] = nascrd.AllocatedUtil{
 				Util: util[strconv.Itoa(d.ID)].Util + claimUtil,
 			}
-			if util[strconv.Itoa(d.ID)].Util >= 1000 {
+			if util[strconv.Itoa(d.ID)].Util >= 950 {
 				delete(available, d.ID)
 			}
 			devices = append(devices, d)
@@ -221,7 +223,7 @@ func cpuPartitioning(spec map[string]nascrd.AllocatedUtil, reqUtil int, reqCpus 
 	}
 	var scoredCpus []scoredCpu
 	for id, cpuinfo := range spec {
-		score := 1000 - cpuinfo.Util - reqUtil
+		score := 950 - cpuinfo.Util - reqUtil //TODO: make the threshold a parameter
 		if score > 0 {
 			scoredCpus = append(scoredCpus, scoredCpu{
 				cpu:   id,

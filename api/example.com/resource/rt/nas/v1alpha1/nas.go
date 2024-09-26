@@ -87,6 +87,7 @@ type AllocatedUtil struct {
 	Util int `json:"util"`
 }
 
+// MappedUtil represents a mapping of utilisation to CPUs.
 type MappedUtil map[string]AllocatedUtil
 
 // AllocatedUtilset represents a set of allocated utilisations to CPUs.
