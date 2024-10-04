@@ -5,18 +5,18 @@ networking:
 apiServer:
   extraArgs:
     runtime-config: "resource.k8s.io/v1alpha2=true"
-    featureGates:  "DynamicResourceAllocation: true"
+    feature-gates:  "DynamicResourceAllocation: true"
 controllerManager:
   extraArgs:
-    featureGates:  "DynamicResourceAllocation: true"
+    feature-gates:  "DynamicResourceAllocation: true"
 scheduler:
   extraArgs:
-    featureGates:  "DynamicResourceAllocation: true"
+    feature-gates:  "DynamicResourceAllocation: true"
 ---
 apiVersion: kubelet.config.k8s.io/v1beta1
 kind: KubeletConfiguration
 featureGates:  
-  DynamicResourceAllocation: true #can be given separately to worker nodes
+  DynamicResourceAllocation: true
 
 # ---
 # apiVersion: kubeadm.k8s.io/v1beta3
