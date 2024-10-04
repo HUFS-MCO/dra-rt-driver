@@ -13,20 +13,14 @@ scheduler:
   extraArgs:
     featureGates:  "DynamicResourceAllocation: true"
 ---
-# apiVersion: kubeadm.k8s.io/v1beta3
-# kind: InitConfiguration
-# nodeRegistration:
-#   kubeletExtraArgs:
-#     v: "1"
----
 apiVersion: kubelet.config.k8s/v1beta1
 kind: KubeletConfiguration
 featureGates:  
   DynamicResourceAllocation: true #can be given separately to worker nodes
 
----
-apiVersion: kubeadm.k8s.io/v1beta3
-kind: JoinConfiguration
-nodeRegistration:
-  kubeletExtraArgs:
-    feature-gates: "DynamicResourceAllocation=true"
+# ---
+# apiVersion: kubeadm.k8s.io/v1beta3
+# kind: JoinConfiguration
+# nodeRegistration:
+#   kubeletExtraArgs:
+#     feature-gates: "DynamicResourceAllocation=true"
