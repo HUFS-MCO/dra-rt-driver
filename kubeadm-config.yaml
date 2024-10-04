@@ -18,9 +18,9 @@ kind: KubeletConfiguration
 featureGates:  
   DynamicResourceAllocation: true
 
-# ---
-# apiVersion: kubeadm.k8s.io/v1beta3
-# kind: JoinConfiguration
-# nodeRegistration:
-#   kubeletExtraArgs:
-#     feature-gates: "DynamicResourceAllocation=true"
+---
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: JoinConfiguration
+nodeRegistration:
+  kubeletExtraArgs:
+    feature-gates: "DynamicResourceAllocation=true"
