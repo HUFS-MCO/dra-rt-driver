@@ -1,6 +1,5 @@
 apiVersion: kubeadm.k8s.io/v1beta3
 kind: ClusterConfiguration
-kubernetesVersion: v1.30.0 # Specify your Kubernetes version here
 networking:
   podSubnet: "192.168.0.0/16"
 apiServer:
@@ -20,7 +19,7 @@ scheduler:
 #   kubeletExtraArgs:
 #     v: "1"
 ---
-apiVersion: kubeadm.k8s.io/v1beta3
+apiVersion: kubelet.config.k8s/v1beta1
 kind: KubeletConfiguration
 featureGates:  
   DynamicResourceAllocation: true #can be given separately to worker nodes
