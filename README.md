@@ -34,17 +34,43 @@ cd containerd
 make
 sudo make install
 ```
+create the config file for 
+
+```bash
+containerd config default > /etc/containerd/config.toml 
+```
+
 containerd requires CNI plugins which can be installed as explained [here](https://github.com/containerd/containerd/blob/main/docs/getting-started.md).
 
 To install the RT-runc, we must clone it's repository, compile, and install it:
 ```bash
+sudo apt install libseccomp-dev
 git clone -b rt https://github.com/nasm-samimi/runc.git
 cd runc
 make
 sudo install -D -m0755 runc /usr/local/sbin/runc
 ```
 
-We prepared a configuration file that enables the DRA feature at cluster initiation. To use the configuation file, we 
+We prepared a configuration file that enables the DRA feature at cluster initiation. To use the configuation file, we run:
+```bash
+sudo kubeadn init --config=kubeadm-config.yaml
+```
+After installing CNI plugin, run the following commands:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart containerd
+sudo systemctl restart kubelet
+```
+
+To join the worker nodes, first we run get the token from the master node by running the following command on the master node:
+```bash
+kubeadm token create --print-join-command
+```
+After receiving the token and hash code from the previous command, replae the toke and hash fields in the `worker-config.yaml`. Then to join the worker node run the following command from the worker node:
+
+```bash
+sudo kubeadm join --config=worker-config.yaml
+```
 
 ### Demo
 We start by first cloning this repository and `cd`ing into its `demo`
@@ -175,3 +201,10 @@ We build the image for the example resource driver:
 ```bash
 ./build-driver.sh
 ```
+<!-- error with containrd
+
+ls -l /usr/bin/containerd
+ls -l /usr/local/bin/containerd
+
+sudo rm -f /usr/bin/containerd  # Remove the existing /usr/bin/containerd binary
+sudo ln -s /usr/local/bin/containerd /usr/bin/containerd  # Create a symbolic link -->
