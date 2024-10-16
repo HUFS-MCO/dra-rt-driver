@@ -218,5 +218,11 @@ func (d *driver) unprepare(ctx context.Context, claimUID string) error {
 	if err != nil {
 		return err
 	}
+	cgroupUID := d.nascrd.Spec.AllocatedClaims[claimUID].RtCpu.CgroupUID
+	if _, exists := d.nascrd.Spec.AllocatedPodCgroups[cgroupUID]; exists {
+		delete(d.nascrd.Spec.AllocatedPodCgroups, cgroupUID)
+	}
+	delete(d.nascrd.Spec.PreparedClaims, claimUID)
+
 	return nil
 }

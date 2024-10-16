@@ -173,6 +173,7 @@ func (cdi *CDIHandler) WriteCgroupToCDI(claim *drapbv1.Claim, crd nascrd.NodeAll
 	rtCDIDevices = append(rtCDIDevices, fmt.Sprintf("%v.%v", runtime, period))
 	rtCDIDevices = append(rtCDIDevices, cpusets)
 	fmt.Println("writecgrouptocdi, rtcdidevices:", rtCDIDevices)
+	delete(crd.AllocatedPodCgroups, cgroupUID)
 
 	return rtCDIDevices, nil
 

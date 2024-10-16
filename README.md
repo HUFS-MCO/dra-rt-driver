@@ -109,8 +109,22 @@ And show the initial state of available GPU devices on the worker node:
 $ kubectl describe -n dra-rt-driver nas/dra-example-driver-cluster-worker
 ...
 Spec:
-  Allocatable Devices:
-
+  Allocatable Cpuset:
+    Rtcpu:
+      Id:    2
+      Util:  0
+    Rtcpu:
+      Id:    3
+      Util:  0
+    Rtcpu:
+      Id:    4
+      Util:  0
+    Rtcpu:
+      Id:    0
+      Util:  0
+    Rtcpu:
+      Id:    1
+      Util:  0
 ...
 ```
 
