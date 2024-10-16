@@ -3,7 +3,6 @@ kind: JoinConfiguration
 nodeRegistration:
   kubeletExtraArgs:
     feature-gates: "DynamicResourceAllocation=true"
-  name: "worker1" # Replace with your desired node name
 discovery:
   bootstrapToken:
     token: "njzdui.sq5a0tvxc91qen03"

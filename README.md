@@ -95,7 +95,7 @@ helm upgrade -i \
   --create-namespace \
   --namespace dra-rt-driver \
   dra-rt-driver \
-  ../deployments/helm/dra-rt-driver
+  deployments/helm/dra-rt-driver
 ```
 
 Double check the driver components have come up successfully:
