@@ -121,9 +121,9 @@ func (d *driver) nodePrepareResource(ctx context.Context, claim *drapbv1.Claim) 
 		if err != nil {
 			return fmt.Errorf("error allocating devices for claim '%v': %v", claim.Uid, err)
 		}
-		for _, t := range claim.ResourceHandle {
-			fmt.Println(t)
-		}
+		// for _, t := range claim.ResourceHandle {
+		// 	fmt.Println(t)
+		// }
 		updatedSpec, err := d.state.GetUpdatedSpec(&d.nascrd.Spec)
 
 		if err != nil {
@@ -218,9 +218,11 @@ func (d *driver) unprepare(ctx context.Context, claimUID string) error {
 	if err != nil {
 		return err
 	}
-	cgroupUID := d.nascrd.Spec.AllocatedClaims[claimUID].RtCpu.CgroupUID
-	if _, exists := d.nascrd.Spec.AllocatedPodCgroups[cgroupUID]; exists {
-		delete(d.nascrd.Spec.AllocatedPodCgroups, cgroupUID)
+	if _, exists := d.nascrd.Spec.AllocatedClaims[claimUID]; exists {
+		cgroupUID := d.nascrd.Spec.AllocatedClaims[claimUID].RtCpu.CgroupUID
+		if _, exists := d.nascrd.Spec.AllocatedPodCgroups[cgroupUID]; exists {
+			delete(d.nascrd.Spec.AllocatedPodCgroups, cgroupUID)
+		}
 	}
 	delete(d.nascrd.Spec.PreparedClaims, claimUID)
 

@@ -17,19 +17,21 @@ func (rt *rtdriver) containerCgroups(podCgroup map[string]nascrd.PodCgroup, allo
 	claimRuntime := claimParams.Runtime
 	claimPeriod := claimParams.Period
 
-	podRuntimes := podCgroup[string(pod.UID)].PodRuntimes
 	// containerCgroup := make(map[string]nascrd.ContainerCgroup)
 	var builder strings.Builder
-	for i, allocatedCpu := range allocated {
-		if i > 0 {
+	fmt.Println("cgroup.go, allocated:", allocated)
+	for _, allocatedCpu := range allocated {
+
+		if builder.Len() > 0 {
 			builder.WriteString("-") // TODO: change this later to comma
 		}
 		builder.WriteString(strconv.Itoa(allocatedCpu.ID))
-		podRuntimes[allocatedCpu.ID] += allocatedCpu.Runtime
-
 	}
+	fmt.Println("cgroup.go, builder:", builder.String())
 	claimCpuset := builder.String()
-
+	if claimCpuset == "" {
+		claimCpuset = "0"
+	}
 	cgroup := nascrd.ClaimCgroup{
 		ContainerRuntime: claimRuntime,
 		ContainerPeriod:  claimPeriod,
@@ -51,9 +53,8 @@ func (rt *rtdriver) containerCgroups(podCgroup map[string]nascrd.PodCgroup, allo
 		}
 	}
 	podCgroup[string(pod.UID)] = nascrd.PodCgroup{
-		Containers:  podCgroup[string(pod.UID)].Containers,
-		PodName:     pod.Name,
-		PodRuntimes: podRuntimes,
+		Containers: podCgroup[string(pod.UID)].Containers,
+		PodName:    pod.Name,
 	}
 
 	return containerCgroup, nil

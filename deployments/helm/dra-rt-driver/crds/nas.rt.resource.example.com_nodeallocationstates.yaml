@@ -79,6 +79,8 @@ spec:
                                 type: integer
                               runtime:
                                 type: integer
+                            required:
+                            - id
                             type: object
                           type: array
                       required:
@@ -102,10 +104,6 @@ spec:
                       type: object
                     podName:
                       type: string
-                    podRuntimes:
-                      items:
-                        type: integer
-                      type: array
                   type: object
                 type: object
               allocatedUtilToCpu:
@@ -122,6 +120,8 @@ spec:
                       required:
                       - util
                       type: object
+                    description: MappedUtil represents a mapping of utilisation to
+                      CPUs.
                     type: object
                 type: object
               preparedClaims:

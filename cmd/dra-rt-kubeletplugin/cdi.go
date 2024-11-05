@@ -17,7 +17,9 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
+	"math/rand"
 	"os"
 	"strconv"
 
@@ -30,7 +32,7 @@ import (
 
 const (
 	cdiVendor = "k8s." + DriverName
-	cdiClass  = "gpu"
+	cdiClass  = "cpu"
 	cdiKind   = cdiVendor + "/" + cdiClass
 
 	cdiCommonDeviceName = "common"
@@ -82,16 +84,25 @@ func (cdi *CDIHandler) CreateCommonSpecFile() error {
 		return fmt.Errorf("failed to get minimum required CDI spec version: %v", err)
 	}
 	spec.Version = minVersion
-
+	// randomStr, err := generateRandomString(5)
 	specName, err := cdiapi.GenerateNameForTransientSpec(spec, cdiCommonDeviceName)
 	if err != nil {
 		return fmt.Errorf("failed to generate Spec name: %w", err)
 	}
 	return cdi.registry.SpecDB().WriteSpec(spec, specName)
+	// return nil
+}
+
+func generateRandomString(n int) (string, error) {
+	bytes := make([]byte, n)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
 }
 
 func (cdi *CDIHandler) CreateClaimSpecFile(claimUID string, devices *PreparedCpuset, rtCDIDevices []string) error {
-	specName := cdiapi.GenerateTransientSpecName(cdiVendor, cdiClass, claimUID)
+	// specName := cdiapi.GenerateTransientSpecName(cdiVendor, cdiClass, claimUID)
 
 	spec := &cdispec.Spec{
 		Kind:    cdiKind,
@@ -122,7 +133,8 @@ func (cdi *CDIHandler) CreateClaimSpecFile(claimUID string, devices *PreparedCpu
 		return fmt.Errorf("failed to get minimum required CDI spec version: %v", err)
 	}
 	spec.Version = minVersion
-	return cdi.registry.SpecDB().WriteSpec(spec, specName)
+	// return cdi.registry.SpecDB().WriteSpec(spec, specName)
+	return nil
 }
 
 func (cdi *CDIHandler) DeleteClaimSpecFile(claimUID string) error {
@@ -139,14 +151,17 @@ func (cdi *CDIHandler) GetClaimDevices(claimUID string, devices *PreparedCpuset,
 	case nascrd.RtCpuType:
 		// for _, device := range devices.RtCpu.Cpuset {
 		// cdiDevice := cdiapi.QualifiedName(cdiVendor, cdiClass, rtCDIDevices)
-		cdiDevice := cdiapi.QualifiedName(rtCDIDevices[0], "CPUSET", rtCDIDevices[1])
-		fmt.Println("getclaimdevices:")
-		fmt.Println(rtCDIDevices[0])
-		fmt.Println(rtCDIDevices[1])
-		fmt.Println(cdiDevice)
-		cdiDevices = append(cdiDevices, cdiDevice)
+		if rtCDIDevices != nil {
+			cdiDevice := cdiapi.QualifiedName(rtCDIDevices[0], "CPUSET", rtCDIDevices[1])
+			fmt.Println("getclaimdevices:")
+			fmt.Println(rtCDIDevices[0])
+			fmt.Println(rtCDIDevices[1])
+			fmt.Println(cdiDevice)
+			cdiDevices = append(cdiDevices, cdiDevice)
 
-		// }
+		} else {
+			return nil, fmt.Errorf("rtcdidevices is nil")
+		}
 	default:
 		return nil, fmt.Errorf("unknown device type: %v", devices.Type())
 	}
@@ -155,8 +170,17 @@ func (cdi *CDIHandler) GetClaimDevices(claimUID string, devices *PreparedCpuset,
 }
 
 func (cdi *CDIHandler) WriteCgroupToCDI(claim *drapbv1.Claim, crd nascrd.NodeAllocationStateSpec) ([]string, error) {
-	fmt.Println("writecgrouptocdi, claim:", claim)
-	fmt.Println("writecgrouptocdi, crd:", crd)
+	if _, ok := crd.AllocatedClaims[claim.Uid]; ok {
+		if crd.AllocatedClaims[claim.Uid].RtCpu == nil {
+			return nil, fmt.Errorf("claim %v does not have rtcpu", claim.Uid)
+		} else {
+			if crd.AllocatedClaims[claim.Uid].RtCpu.CgroupUID == "" {
+				return nil, fmt.Errorf("claim %v does not have cgroupuid", claim.Uid)
+			}
+		}
+	} else {
+		return nil, fmt.Errorf("claim %v does not exist", claim.Uid)
+	}
 	cgroupUID := crd.AllocatedClaims[claim.Uid].RtCpu.CgroupUID
 	allocatedCgroups := crd.AllocatedPodCgroups[cgroupUID]
 	rtCDIDevices := []string{}

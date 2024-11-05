@@ -145,9 +145,8 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 	fmt.Println("crd:", crd.Spec.AllocatedPodCgroups)
 	podCG := make(map[string]nascrd.PodCgroup)
 	podCG[string(pod.UID)] = nascrd.PodCgroup{
-		Containers:  make(map[string]nascrd.ClaimCgroup),
-		PodName:     pod.Name,
-		PodRuntimes: make([]int, len(crd.Spec.AllocatableCpuset)),
+		Containers: make(map[string]nascrd.ClaimCgroup),
+		PodName:    pod.Name,
 	}
 	// if _, exists := crd.Spec.AllocatedPodCgroups[string(pod.UID)]; exists {
 	// 	containerCG = crd.Spec.AllocatedPodCgroups[string(pod.UID)].Containers
@@ -203,15 +202,16 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 			devices = append(devices, d)
 		}
 		allocated[claimUID] = devices
+		fmt.Println("allocate, allocated:", allocated)
 
 		CCgroup, _ := rt.containerCgroups(podCG, devices, ca.PodClaimName, pod, claimParams)
-		setClaimAnnotations(CCgroup, pod, ca.Claim)
+		// setClaimAnnotations(CCgroup, pod, ca.Claim)
 		fmt.Println("allocate, CCgroup:", CCgroup)
 
 	}
 	// adding to pod annotations
-	setPodAnnotations(podCG, pod) // not working
-	fmt.Println("allocate, podCG:", podCG)
+	// setPodAnnotations(podCG, pod) // not working
+	// fmt.Println("allocate, podCG:", podCG)
 
 	return allocated, util, podCG
 }

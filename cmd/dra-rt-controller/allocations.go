@@ -183,8 +183,12 @@ func (p *PerNodeAllocatedClaims) RemoveUtil(claimUID string) {
 			period := allocatedCpu.Period
 			deletedUtil := runtime * 1000 / period
 			id := strconv.Itoa(allocatedCpu.ID)
+			newUtil := util[id].Util - deletedUtil
+			if (util[id].Util - deletedUtil) < 0 {
+				newUtil = 0
+			}
 			util[id] = nascrd.AllocatedUtil{
-				Util: util[id].Util - deletedUtil,
+				Util: newUtil,
 			}
 		}
 		p.utilisation[node] = nascrd.AllocatedUtilset{

@@ -1,33 +1,29 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"os"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
+	"github.com/shirou/gopsutil/cpu"
 	// v1beta1 "k8s.io/metrics/pkg/apis/metrics/v1alpha2"
 )
 
 func enumerateCpusets() (AllocatableRtCpus, error) {
 
-	var cfg *rest.Config
-	var err error
+	// var cfg *rest.Config
+	// var err error
 
 	// Use in-cluster configuration if running inside a Kubernetes pod
-	cfg, err = rest.InClusterConfig()
-	if err != nil {
-		return nil, fmt.Errorf("error building in-cluster config: %v", err)
-	}
-	fmt.Println("cluster config is ready")
+	// cfg, err = rest.InClusterConfig()
+	// if err != nil {
+	// 	return nil, fmt.Errorf("error building in-cluster config: %v", err)
+	// }
+	// fmt.Println("cluster config is ready")
 
-	c, err := kubernetes.NewForConfig(cfg)
-	if err != nil {
-		return nil, fmt.Errorf("error building kubernetes client: %v", err)
-	}
-	fmt.Println("kubernetes client is ready")
+	// c, err := kubernetes.NewForConfig(cfg)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("error building kubernetes client: %v", err)
+	// }
+	// fmt.Println("kubernetes client is ready")
 
 	// pod_list, e := c.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
 	// if e != nil {
@@ -38,24 +34,31 @@ func enumerateCpusets() (AllocatableRtCpus, error) {
 	// 	fmt.Printf("Pod %d: %s\n", i, p.Name)
 
 	// }
+	cpuInfo, err := cpu.Info()
+	if err != nil {
+		fmt.Printf("Error fetching CPU info: %v\n", err)
+	}
 
-	nodeName := os.Getenv("NODE_NAME")
-	nodes, _ := c.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
-	fmt.Println("nodeNames:", nodes)
-	node, err := c.CoreV1().Nodes().Get(context.TODO(), nodeName, metav1.GetOptions{})
+	// Print the CPU IDs
+	fmt.Println("CPU IDs:")
+	for i, ci := range cpuInfo {
+		fmt.Printf("CPU %d: %d\n", i, ci.CPU) // ci.CPU gives the CPU ID
+	}
 
-	cpuset := node.Status.Capacity.Cpu().Value()
-	fmt.Println("cpuset:", cpuset)
+	// nodeName := os.Getenv("NODE_NAME")
+	// nodes, _ := c.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
+	// fmt.Println("nodeNames:", nodes)
+	// node, err := c.CoreV1().Nodes().Get(context.TODO(), nodeName, metav1.GetOptions{})
 
 	alldevices := make(AllocatableRtCpus)
-	for id := 0; id < int(cpuset); id++ {
+	for i, ci := range cpuInfo {
 		deviceInfo := &AllocatableCpusetInfo{
 			RtCpuInfo: &RtCpuInfo{
-				id:   id,
+				id:   int(ci.CPU),
 				util: 0,
 			},
 		}
-		alldevices[id] = deviceInfo
+		alldevices[i] = deviceInfo
 	}
 	return alldevices, nil
 }

@@ -42,7 +42,7 @@ func (d AllocatableCpuset) Type() string {
 
 // AllocatedGpu represents an allocated GPU.
 type AllocatedCpu struct {
-	ID      int `json:"id,omitempty"`
+	ID      int `json:"id"`
 	Runtime int `json:"runtime,omitempty"`
 	Period  int `json:"period,omitempty"`
 }
@@ -103,9 +103,8 @@ type ClaimCgroup struct {
 type ContainerCgroup map[string]ClaimCgroup // key is the container Name
 
 type PodCgroup struct {
-	PodName     string          `json:"podName,omitempty"`
-	Containers  ContainerCgroup `json:"containers,omitempty"` // key is the container Name
-	PodRuntimes []int           `json:"podRuntimes,omitempty"`
+	PodName    string          `json:"podName,omitempty"`
+	Containers ContainerCgroup `json:"containers,omitempty"` // key is the container Name
 }
 
 const (

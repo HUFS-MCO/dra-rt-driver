@@ -105,6 +105,7 @@ func NewDeviceState(config *Config) (*DeviceState, error) {
 func (s *DeviceState) Prepare(claimUID string, allocation nascrd.AllocatedCpuset, rtCDIDevices []string) ([]string, error) {
 	s.Lock()
 	defer s.Unlock()
+	fmt.Println("s.allocatable:", s.allocatable)
 
 	if s.prepared[claimUID] != nil {
 		cdiDevices, err := s.cdi.GetClaimDevices(claimUID, s.prepared[claimUID], rtCDIDevices)
@@ -208,15 +209,17 @@ func (s *DeviceState) prepareRtCpus(claimUID string, allocated *nascrd.Allocated
 	prepared := &PreparedRtCpu{}
 
 	for _, device := range allocated.Cpuset {
+		fmt.Println("device.ID:", device.ID)
+		fmt.Println("s.allocatable:", s.allocatable)
+		// if _, exists := s.allocatable[device.ID]; !exists {
+		// 	return nil, fmt.Errorf("requested CPU does not exist: %v", device.ID)
+		// }
 		cpuInfo := &PreparedRtCpuInfo{
-			id:      s.allocatable[device.ID].RtCpuInfo.id,
+			id:      device.ID, //s.allocatable[device.ID].RtCpuInfo.id,
 			util:    int(device.Runtime * 1000 / device.Period),
 			runtime: device.Runtime,
 		}
 
-		if _, exists := s.allocatable[device.ID]; !exists {
-			return nil, fmt.Errorf("requested CPU does not exist: %v", device.ID)
-		}
 		prepared.Cpuset = append(prepared.Cpuset, cpuInfo)
 	}
 
