@@ -105,7 +105,7 @@ func NewDeviceState(config *Config) (*DeviceState, error) {
 func (s *DeviceState) Prepare(claimUID string, allocation nascrd.AllocatedCpuset, rtCDIDevices []string) ([]string, error) {
 	s.Lock()
 	defer s.Unlock()
-	fmt.Println("s.allocatable:", s.allocatable)
+	fmt.Println("s.allocatable from state.go prepare function:", s.allocatable)
 
 	if s.prepared[claimUID] != nil {
 		cdiDevices, err := s.cdi.GetClaimDevices(claimUID, s.prepared[claimUID], rtCDIDevices)
@@ -169,20 +169,17 @@ func (s *DeviceState) Unprepare(claimUID string) error {
 	return nil
 }
 
-func (s *DeviceState) prepareCgroups(claimUID string, allocated nascrd.AllocatedCpuset) (string, error) { // does not handle errors yet
-	s.Lock()
-	defer s.Unlock()
+// func (s *DeviceState) prepareCgroups(claimUID string, allocated nascrd.AllocatedCpuset) (string, error) { // does not handle errors yet
+// 	s.Lock()
+// 	defer s.Unlock()
 
-	if _, ok := s.preparedCgroups[claimUID]; ok {
-		return nascrd.AllocatedPodCgroupStatus, nil
-	}
-	cgroup := preparedCgroup{
-		cgroupUID: allocated.RtCpu.CgroupUID,
-	}
-	s.preparedCgroups[claimUID] = cgroup
-	return nascrd.AllocatedPodCgroupStatus, nil
+// 	cgroup := preparedCgroup{
+// 		cgroupUID: allocated.RtCpu.CgroupUID,
+// 	}
+// 	s.preparedCgroups[claimUID] = cgroup
+// 	return nascrd.AllocatedPodCgroupStatus, nil
 
-}
+// }
 func (s *DeviceState) UnprepareCgroups() error {
 	return nil
 }

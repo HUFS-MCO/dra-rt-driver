@@ -39,3 +39,23 @@ func (pnm *PerNodeMutex) Get(node string) *sync.Mutex {
 	}
 	return pnm.submutex[node]
 }
+
+type PerCoreMutex struct {
+	sync.Mutex
+	submutex map[string]*sync.Mutex
+}
+
+func NewPerCoreMutex() *PerCoreMutex {
+	return &PerCoreMutex{
+		submutex: make(map[string]*sync.Mutex),
+	}
+}
+
+func (pcm *PerCoreMutex) Get(coreID string) *sync.Mutex {
+	pcm.Lock()
+	defer pcm.Unlock()
+	if pcm.submutex[coreID] == nil {
+		pcm.submutex[coreID] = &sync.Mutex{}
+	}
+	return pcm.submutex[coreID]
+}

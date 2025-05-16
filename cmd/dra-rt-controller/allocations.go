@@ -27,14 +27,13 @@ type PerNodeAllocatedClaims struct {
 	sync.RWMutex
 	allocations map[string]map[string]nascrd.AllocatedCpuset
 	utilisation map[string]nascrd.AllocatedUtilset
-	cgroups     map[string]map[string]nascrd.PodCgroup
 }
 
 func NewPerNodeAllocatedClaims() *PerNodeAllocatedClaims {
+	// initialise allocated util set from crd
 	return &PerNodeAllocatedClaims{
 		allocations: make(map[string]map[string]nascrd.AllocatedCpuset),
 		utilisation: make(map[string]nascrd.AllocatedUtilset),
-		cgroups:     make(map[string]map[string]nascrd.PodCgroup),
 	}
 }
 
@@ -77,24 +76,25 @@ func (p *PerNodeAllocatedClaims) GetUtil(node string) nascrd.AllocatedUtilset {
 	return p.utilisation[node]
 }
 
-func (p *PerNodeAllocatedClaims) GetCgroup(node string) map[string]nascrd.PodCgroup {
-	p.RLock()
-	defer p.RUnlock()
+// func (p *PerNodeAllocatedClaims) GetCgroup(node string) map[string]nascrd.PodCgroup {
+// 	p.RLock()
+// 	defer p.RUnlock()
 
-	if !p.ExistsUtil(node) {
-		return make(map[string]nascrd.PodCgroup)
-	}
-	return p.cgroups[node]
-}
+// 	if !p.ExistsUtil(node) {
+// 		return make(map[string]nascrd.PodCgroup)
+// 	}
+// 	return p.cgroups[node]
+// }
 
-func (p *PerNodeAllocatedClaims) VisitNode(node string, visitor func(claimUID string, allocation nascrd.AllocatedCpuset, utilisation nascrd.AllocatedUtilset, cgroups nascrd.PodCgroup)) {
+func (p *PerNodeAllocatedClaims) VisitNode(node string, visitor func(claimUID string, allocation nascrd.AllocatedCpuset, utilisation nascrd.AllocatedUtilset)) {
 	p.RLock()
+	// defer p.RUnlock()
 	for claimUID := range p.allocations {
 		if allocation, exists := p.allocations[claimUID][node]; exists {
 			utilisation := p.utilisation[node]
-			cgroup := p.cgroups[node][p.allocations[claimUID][node].RtCpu.CgroupUID]
+			// cgroup := p.cgroups[node][p.allocations[claimUID][node].RtCpu.CgroupUID]
 			p.RUnlock()
-			visitor(claimUID, allocation, utilisation, cgroup)
+			visitor(claimUID, allocation, utilisation)
 			p.RLock()
 		}
 	}
@@ -117,6 +117,9 @@ func (p *PerNodeAllocatedClaims) Set(claimUID, node string, devices nascrd.Alloc
 	p.Lock()
 	defer p.Unlock()
 
+	if devices.RtCpu == nil {
+		return
+	}
 	_, exists := p.allocations[claimUID]
 	if !exists {
 		p.allocations[claimUID] = make(map[string]nascrd.AllocatedCpuset)
@@ -137,21 +140,21 @@ func (p *PerNodeAllocatedClaims) SetUtil(node string, devices nascrd.AllocatedUt
 	p.utilisation[node] = devices
 }
 
-func (p *PerNodeAllocatedClaims) SetCgroup(cgroupUID string, node string, devices nascrd.PodCgroup) {
-	p.Lock()
-	defer p.Unlock()
+// func (p *PerNodeAllocatedClaims) SetCgroup(cgroupUID string, node string, devices nascrd.PodCgroup) {
+// 	p.Lock()
+// 	defer p.Unlock()
 
-	_, exists := p.cgroups[node]
-	if !exists {
-		p.cgroups[node] = make(map[string]nascrd.PodCgroup)
-	}
-	if _, exists = p.cgroups[node][cgroupUID]; !exists {
-		if devices.Containers != nil {
+// 	_, exists := p.cgroups[node]
+// 	if !exists {
+// 		p.cgroups[node] = make(map[string]nascrd.PodCgroup)
+// 	}
+// 	if _, exists = p.cgroups[node][cgroupUID]; !exists {
+// 		if devices.Containers != nil {
 
-			p.cgroups[node][cgroupUID] = devices
-		}
-	}
-}
+// 			p.cgroups[node][cgroupUID] = devices
+// 		}
+// 	}
+// }
 
 func (p *PerNodeAllocatedClaims) RemoveNode(claimUID, node string) {
 	p.Lock()
@@ -173,37 +176,77 @@ func (p *PerNodeAllocatedClaims) Remove(claimUID string) {
 }
 
 func (p *PerNodeAllocatedClaims) RemoveUtil(claimUID string) {
-	p.Lock()
+	p.Lock() // Lock the entire structure
 	defer p.Unlock()
+
 	for node, allocated := range p.allocations[string(claimUID)] {
+		if _, exists := p.utilisation[node]; !exists {
+			continue // Skip if the node has no utilization data
+		}
+
 		util := p.utilisation[node].Cpus
 
 		for _, allocatedCpu := range allocated.RtCpu.Cpuset {
 			runtime := allocatedCpu.Runtime
 			period := allocatedCpu.Period
-			deletedUtil := runtime * 1000 / period
 			id := strconv.Itoa(allocatedCpu.ID)
-			newUtil := util[id].Util - deletedUtil
-			if (util[id].Util - deletedUtil) < 0 {
+
+			newUtil := util[id].Util - (runtime * 1000 / period)
+			if newUtil < 0 {
 				newUtil = 0
 			}
 			util[id] = nascrd.AllocatedUtil{
 				Util: newUtil,
 			}
 		}
+
 		p.utilisation[node] = nascrd.AllocatedUtilset{
 			Cpus: util,
 		}
 	}
 }
 
-func (p *PerNodeAllocatedClaims) RemoveCgroup(claimUID string) {
-	p.Lock()
+func (p *PerNodeAllocatedClaims) RemoveUtilOtherNodes(claimUID string, currentNode string) {
+	p.Lock() // Lock the entire structure
 	defer p.Unlock()
 
-	for node, allocated := range p.allocations[claimUID] {
-		cgroupUID := allocated.RtCpu.CgroupUID
-		delete(p.cgroups[node], cgroupUID)
-	}
+	for node, allocated := range p.allocations[string(claimUID)] {
+		if _, exists := p.utilisation[node]; !exists {
+			continue // Skip if the node has no utilization data
+		}
+		if node == currentNode {
+			continue
+		}
 
+		util := p.utilisation[node].Cpus
+
+		for _, allocatedCpu := range allocated.RtCpu.Cpuset {
+			runtime := allocatedCpu.Runtime
+			period := allocatedCpu.Period
+			id := strconv.Itoa(allocatedCpu.ID)
+
+			newUtil := util[id].Util - (runtime * 1000 / period)
+			if newUtil < 0 {
+				newUtil = 0
+			}
+			util[id] = nascrd.AllocatedUtil{
+				Util: newUtil,
+			}
+		}
+
+		p.utilisation[node] = nascrd.AllocatedUtilset{
+			Cpus: util,
+		}
+	}
 }
+
+// func (p *PerNodeAllocatedClaims) RemoveCgroup(claimUID string) {
+// 	p.Lock()
+// 	defer p.Unlock()
+
+// 	for node, allocated := range p.allocations[claimUID] {
+// 		cgroupUID := allocated.RtCpu.CgroupUID
+// 		delete(p.cgroups[node], cgroupUID)
+// 	}
+
+// }

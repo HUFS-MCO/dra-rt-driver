@@ -88,24 +88,6 @@ spec:
                       type: object
                   type: object
                 type: object
-              allocatedPodCgroups:
-                additionalProperties:
-                  properties:
-                    containers:
-                      additionalProperties:
-                        properties:
-                          containerCpuset:
-                            type: string
-                          containerPeriod:
-                            type: integer
-                          containerRuntime:
-                            type: integer
-                        type: object
-                      type: object
-                    podName:
-                      type: string
-                  type: object
-                type: object
               allocatedUtilToCpu:
                 description: AllocatedUtilset represents a set of allocated utilisations
                   to CPUs.

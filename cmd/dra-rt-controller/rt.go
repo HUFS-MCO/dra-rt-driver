@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"sync"
 
 	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
 
@@ -54,50 +55,83 @@ func (g *rtdriver) Allocate(crd *nascrd.NodeAllocationState, claim *resourcev1.R
 	if !g.PendingAllocatedClaims.Exists(claimUID, selectedNode) {
 		return nil, fmt.Errorf("no allocations generated for claim '%v' on node '%v' yet", claim.UID, selectedNode)
 	}
-
+	fmt.Println("/////////////////////////////////////////ALLOCATE/////////////////////////////////////////////////////////////")
+	fmt.Println("Allocate, crd.Spec.AllocatedUtilToCpu before getting value from pending:", crd.Spec.AllocatedUtilToCpu)
+	if _, exists := crd.Spec.AllocatedClaims[claimUID]; exists {
+		fmt.Println("Allocate, the claim is already allocated:", crd.Spec.AllocatedClaims[claimUID].RtCpu.Cpuset)
+		return nil, nil
+	}
 	crd.Spec.AllocatedClaims[claimUID] = g.PendingAllocatedClaims.Get(claimUID, selectedNode)
-	crd.Spec.AllocatedUtilToCpu = g.PendingAllocatedClaims.GetUtil(selectedNode)
-	crd.Spec.AllocatedPodCgroups = g.PendingAllocatedClaims.GetCgroup(selectedNode)
-	fmt.Println("Allocate, crd.Spec.AllocatedPodCgroups:", crd.Spec.AllocatedPodCgroups)
+	fmt.Println("selected node is:", selectedNode)
+	crd.SetUtilisation(crd.Spec.AllocatedClaims[claimUID], claimUID)
 	fmt.Println("Allocate, crd.Spec.AllocatedClaims:", crd.Spec.AllocatedClaims)
-
+	fmt.Println("Allocate, crd.Spec.AllocatedUtilToCpu after setutilisation:", crd.Spec.AllocatedUtilToCpu)
+	fmt.Println("//////////////////////////////////////////////////////////////////////////////////////////////////////")
+	// for nodes, _ := range g.PendingAllocatedClaims.utilisation {
+	// 	fmt.Println("Allocate, pending claims after set:", nodes, g.PendingAllocatedClaims.allocations[claimUID][nodes].RtCpu.Cpuset)
+	// }
 	onSuccess := func() {
 		// g.PendingAllocatedClaims.RemoveUtil(claimUID)
-		// g.PendingAllocatedClaims.RemoveCgroup(claimUID)
+		g.PendingAllocatedClaims.RemoveUtilOtherNodes(claimUID, selectedNode)
+		// for nodes, _ := range g.PendingAllocatedClaims.utilisation {
+		// 	fmt.Println("Allocate, pending claims after remove:", nodes, g.PendingAllocatedClaims.allocations[claimUID][nodes].RtCpu.Cpuset)
+		// }
 		g.PendingAllocatedClaims.Remove(claimUID)
-		fmt.Println("what happens in remove cgroups:", g.PendingAllocatedClaims.GetCgroup(selectedNode))
 	}
 
 	return onSuccess, nil
 }
 
-func (g *rtdriver) Deallocate(crd *nascrd.NodeAllocationState, claim *resourcev1.ResourceClaim) error {
+func (g *rtdriver) Deallocate(crd *nascrd.NodeAllocationState, claim *resourcev1.ResourceClaim, selectedNode string) error {
 	claimUID := string(claim.UID)
+	fmt.Println(" before Deallocate(rtdriver), crd.Spec.AllocatedClaims:", crd.Spec.AllocatedClaims)
+	fmt.Println(" before Deallocate, g.PendingAllocatedClaims:", g.PendingAllocatedClaims)
 	g.PendingAllocatedClaims.RemoveUtil(claimUID)
-	g.PendingAllocatedClaims.RemoveCgroup(claimUID)
+	// crd.Spec.AllocatedUtilToCpu = g.PendingAllocatedClaims.GetUtil(selectedNode)
 	g.PendingAllocatedClaims.Remove(claimUID)
+	fmt.Println(" after Deallocate, crd.Spec.AllocatedClaims:", crd.Spec.AllocatedClaims)
+	fmt.Println(" after Deallocate, g.PendingAllocatedClaims:", g.PendingAllocatedClaims)
 	return nil
 }
 
+var utilLock sync.Mutex
+
 func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.Pod, rtcas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, potentialNode string) error {
-	rt.PendingAllocatedClaims.VisitNode(potentialNode, func(claimUID string, allocation nascrd.AllocatedCpuset, utilisation nascrd.AllocatedUtilset, cgroups nascrd.PodCgroup) {
+	rt.PendingAllocatedClaims.VisitNode(potentialNode, func(claimUID string, allocation nascrd.AllocatedCpuset, utilisation nascrd.AllocatedUtilset) {
 		if _, exists := crd.Spec.AllocatedClaims[claimUID]; exists {
-			rt.PendingAllocatedClaims.RemoveUtil(claimUID)
-			rt.PendingAllocatedClaims.RemoveCgroup(claimUID)
+			fmt.Println("////////////////////////////////////////////UNSUITABLENODE//////////////////////////////////////////////////////////")
+			fmt.Println("unsuitableNode, the claim:", claimUID, " is already allocated while visiting the node:", potentialNode)
 			rt.PendingAllocatedClaims.Remove(claimUID)
 		} else {
-			fmt.Println("what is assigned to crd in unsuitable nodes:", cgroups)
 			crd.Spec.AllocatedClaims[claimUID] = allocation
-			crd.Spec.AllocatedUtilToCpu = utilisation
-			crd.Spec.AllocatedPodCgroups[string(pod.UID)] = cgroups
+			// crd.Spec.AllocatedUtilToCpu = utilisation
+			crd.SetUtilisation(allocation, claimUID)
+			fmt.Println("on node:", potentialNode, "the allocated utils are:", crd.Spec.AllocatedUtilToCpu)
 		}
 	})
+
+	fmt.Println("////////////////////////////////////////////STILLUNSUITABLENODE//////////////////////////////////////////////////////////")
+	fmt.Println("let's check the allocated claims and utilisation after visiting the node:", potentialNode, crd.Spec.AllocatedClaims, crd.Spec.AllocatedUtilToCpu)
+	// utilLock.Lock() // Lock to prevent race condition
+	// defer utilLock.Unlock()
 	cgroupUID := string(pod.UID)
 
-	allocated, allocatedUtil, podCgroup := rt.allocate(crd, pod, rtcas, allcas, potentialNode)
-
+	allocated, _ := rt.allocate(crd, pod, rtcas, allcas, potentialNode)
+	util := make(map[string]nascrd.AllocatedUtil)
+	for id, cpu := range crd.Spec.AllocatedUtilToCpu.Cpus {
+		util[id] = nascrd.AllocatedUtil{
+			Util: cpu.Util,
+		}
+	}
+	fmt.Println("get utilisation from pending:", util)
 	for _, ca := range rtcas {
 		claimUID := string(ca.Claim.UID)
+		if _, exists := crd.Spec.AllocatedClaims[claimUID]; exists {
+			fmt.Println("unsuitableNode, the claim is already allocated:", claimUID)
+			continue
+		}
+
+		fmt.Println("unsuitableNode, claimUID:", claimUID)
 		claimParams, _ := ca.ClaimParameters.(*rtcrd.RtClaimParametersSpec)
 		if claimParams.Count != len(allocated[claimUID]) {
 			for _, ca := range allcas {
@@ -105,7 +139,7 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 			}
 			return nil
 		} // it puts everything on only one node
-
+		claimUtil := (claimParams.Runtime * 1000 / claimParams.Period)
 		var devices []nascrd.AllocatedCpu
 		for _, cpu := range allocated[claimUID] {
 			device := cpu
@@ -118,39 +152,40 @@ func (rt *rtdriver) UnsuitableNode(crd *nascrd.NodeAllocationState, pod *corev1.
 				CgroupUID: cgroupUID,
 			},
 		}
-		fmt.Println("allocatedUtil:", allocatedUtil)
-		allocatedUtilisations := nascrd.AllocatedUtilset{
-			Cpus: allocatedUtil,
+		for _, allocatedCpu := range devices {
+			util[strconv.Itoa(allocatedCpu.ID)] = nascrd.AllocatedUtil{
+				Util: util[strconv.Itoa(allocatedCpu.ID)].Util + claimUtil,
+			}
 		}
-		fmt.Println("allocatedUtilisations:", allocatedUtilisations)
+		fmt.Println("show allocated devices and the new utilisation:", devices, util)
 
 		rt.PendingAllocatedClaims.Set(claimUID, potentialNode, allocatedDevices)
-		rt.PendingAllocatedClaims.SetUtil(potentialNode, allocatedUtilisations)
+		fmt.Println("unsuitableNode, pending claims after set:", rt.PendingAllocatedClaims.allocations)
+		fmt.Println("unsuitableNode, crd.Spec.AllocatedClaims:", crd.Spec.AllocatedClaims)
+
 	}
-	fmt.Println("UnsuitableNode, podCgroup:", podCgroup)
-	if len(podCgroup[cgroupUID].Containers) > 0 {
-		rt.PendingAllocatedClaims.SetCgroup(cgroupUID, potentialNode, podCgroup[cgroupUID])
+	allocatedUtilisations := nascrd.AllocatedUtilset{
+		Cpus: util,
 	}
-	fmt.Println("what is assigned to pending after setcgroup:", rt.PendingAllocatedClaims.GetCgroup(potentialNode))
+	rt.PendingAllocatedClaims.SetUtil(potentialNode, allocatedUtilisations)
+	fmt.Println("unsuitableNode, pending utils after set util:", rt.PendingAllocatedClaims.utilisation)
+	fmt.Println("unsuitableNode, crd.Spec.AllocatedUtilToCpu:", crd.Spec.AllocatedUtilToCpu)
+	fmt.Println("////////////////////////////////////////////ENDUNSUITABLENODE//////////////////////////////////////////////////////////")
+
 	return nil
 }
 
-func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cpucas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, node string) (map[string][]nascrd.AllocatedCpu, map[string]nascrd.AllocatedUtil, map[string]nascrd.PodCgroup) {
+func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, cpucas []*controller.ClaimAllocation, allcas []*controller.ClaimAllocation, node string) (map[string][]nascrd.AllocatedCpu, map[string]nascrd.AllocatedUtil) {
 	available := make(map[int]*nascrd.AllocatableCpu)
-	util := crd.Spec.AllocatedUtilToCpu.Cpus
-	// util := make(map[string]nascrd.AllocatedUtil)
-	allocated := make(map[string][]nascrd.AllocatedCpu)
-	fmt.Println("do we have the cgroups in pending and crd?")
-	fmt.Println("pending:", rt.PendingAllocatedClaims.GetCgroup(node))
-	fmt.Println("crd:", crd.Spec.AllocatedPodCgroups)
-	podCG := make(map[string]nascrd.PodCgroup)
-	podCG[string(pod.UID)] = nascrd.PodCgroup{
-		Containers: make(map[string]nascrd.ClaimCgroup),
-		PodName:    pod.Name,
+	// util := crd.Spec.AllocatedUtilToCpu.Cpus
+	util := make(map[string]nascrd.AllocatedUtil)
+	fmt.Println("/////////////////////////////////////////////////allocate/////////////////////////////////////////////////////")
+	for id, cpu := range crd.Spec.AllocatedUtilToCpu.Cpus {
+		util[id] = nascrd.AllocatedUtil{
+			Util: cpu.Util,
+		}
 	}
-	// if _, exists := crd.Spec.AllocatedPodCgroups[string(pod.UID)]; exists {
-	// 	containerCG = crd.Spec.AllocatedPodCgroups[string(pod.UID)].Containers
-	// }
+	allocated := make(map[string][]nascrd.AllocatedCpu)
 
 	for _, device := range crd.Spec.AllocatableCpuset {
 		switch device.Type() {
@@ -163,15 +198,13 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 
 	for _, ca := range cpucas {
 		claimUID := string(ca.Claim.UID)
+		fmt.Println("allocate, claimUID:", claimUID)
 		if _, exists := crd.Spec.AllocatedClaims[claimUID]; exists {
 			devices := crd.Spec.AllocatedClaims[claimUID].RtCpu.Cpuset
-			cgroupUID := crd.Spec.AllocatedClaims[claimUID].RtCpu.CgroupUID
 			for _, device := range devices {
 				allocated[claimUID] = append(allocated[claimUID], device)
 			}
-			if _, exists := crd.Spec.AllocatedPodCgroups[cgroupUID]; exists {
-				podCG[cgroupUID] = crd.Spec.AllocatedPodCgroups[cgroupUID]
-			}
+			fmt.Println("the claim is already allocated and its devices are:", devices)
 
 			continue
 		}
@@ -181,7 +214,7 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 		var devices []nascrd.AllocatedCpu
 		worstFitCpus, err := cpuPartitioning(util, claimUtil, claimParams.Count, "worstFit") //must get the policy from the user
 		if err != nil {
-			return nil, nil, nil
+			return nil, nil
 		}
 		fmt.Println("worstFitCpus:", worstFitCpus)
 		for i := 0; i < claimParams.Count; i++ {
@@ -196,7 +229,7 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 			util[strconv.Itoa(d.ID)] = nascrd.AllocatedUtil{
 				Util: util[strconv.Itoa(d.ID)].Util + claimUtil,
 			}
-			if util[strconv.Itoa(d.ID)].Util >= 950 {
+			if util[strconv.Itoa(d.ID)].Util > 950 {
 				delete(available, d.ID)
 			}
 			devices = append(devices, d)
@@ -204,16 +237,11 @@ func (rt *rtdriver) allocate(crd *nascrd.NodeAllocationState, pod *corev1.Pod, c
 		allocated[claimUID] = devices
 		fmt.Println("allocate, allocated:", allocated)
 
-		CCgroup, _ := rt.containerCgroups(podCG, devices, ca.PodClaimName, pod, claimParams)
-		// setClaimAnnotations(CCgroup, pod, ca.Claim)
-		fmt.Println("allocate, CCgroup:", CCgroup)
-
 	}
-	// adding to pod annotations
-	// setPodAnnotations(podCG, pod) // not working
-	// fmt.Println("allocate, podCG:", podCG)
+	fmt.Println("it picked the worstfit cpus for the claim and the utils are:", util)
+	fmt.Println("/////////////////////////////////////////////endallocate////////////////////////////////////////////////////////")
 
-	return allocated, util, podCG
+	return allocated, util
 }
 
 func cpuPartitioning(spec map[string]nascrd.AllocatedUtil, reqUtil int, reqCpus int, policy string) ([]string, error) {

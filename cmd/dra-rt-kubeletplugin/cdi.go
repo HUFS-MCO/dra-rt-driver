@@ -22,6 +22,7 @@ import (
 	"math/rand"
 	"os"
 	"strconv"
+	"strings"
 
 	cdiapi "github.com/container-orchestrated-devices/container-device-interface/pkg/cdi"
 	cdispec "github.com/container-orchestrated-devices/container-device-interface/specs-go"
@@ -181,23 +182,31 @@ func (cdi *CDIHandler) WriteCgroupToCDI(claim *drapbv1.Claim, crd nascrd.NodeAll
 	} else {
 		return nil, fmt.Errorf("claim %v does not exist", claim.Uid)
 	}
-	cgroupUID := crd.AllocatedClaims[claim.Uid].RtCpu.CgroupUID
-	allocatedCgroups := crd.AllocatedPodCgroups[cgroupUID]
+	// allocatedCgroups := crd.AllocatedPodCgroups[cgroupUID]
 	rtCDIDevices := []string{}
 	runtime := ""
 	period := ""
 	cpusets := ""
-	for _, cgroup := range allocatedCgroups.Containers {
+	runtime = fmt.Sprintf("runtime-%v", crd.AllocatedClaims[claim.Uid].RtCpu.Cpuset[0].Runtime)
+	period = fmt.Sprintf("period-%v", crd.AllocatedClaims[claim.Uid].RtCpu.Cpuset[0].Period)
+	var builder strings.Builder
+	for _, cgroup := range crd.AllocatedClaims[claim.Uid].RtCpu.Cpuset {
 		fmt.Println("allocatedCgroups:", cgroup)
-		runtime = fmt.Sprintf("runtime-%v", cgroup.ContainerRuntime)
-
-		period = fmt.Sprintf("period-%v", cgroup.ContainerPeriod)
-		cpusets = fmt.Sprintf("%v", cgroup.ContainerCpuset)
+		if builder.Len() > 0 {
+			builder.WriteString("-") // TODO: change this later to comma
+		}
+		builder.WriteString(strconv.Itoa(cgroup.ID))
 	}
+	fmt.Println("cgroup.go, builder:", builder.String())
+	claimCpuset := builder.String()
+	// if claimCpuset == "" {
+	// 	claimCpuset = "0"
+	// }
+	cpusets = fmt.Sprintf("%v", claimCpuset)
+
 	rtCDIDevices = append(rtCDIDevices, fmt.Sprintf("%v.%v", runtime, period))
 	rtCDIDevices = append(rtCDIDevices, cpusets)
 	fmt.Println("writecgrouptocdi, rtcdidevices:", rtCDIDevices)
-	delete(crd.AllocatedPodCgroups, cgroupUID)
 
 	return rtCDIDevices, nil
 

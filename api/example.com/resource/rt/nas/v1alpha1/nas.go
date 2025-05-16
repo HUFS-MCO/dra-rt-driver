@@ -17,6 +17,9 @@
 package v1alpha1
 
 import (
+	"strconv"
+	"sync"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -95,23 +98,6 @@ type AllocatedUtilset struct {
 	Cpus MappedUtil `json:"cpus,omitempty"`
 }
 
-type ClaimCgroup struct {
-	ContainerRuntime int    `json:"containerRuntime,omitempty"`
-	ContainerPeriod  int    `json:"containerPeriod,omitempty"`
-	ContainerCpuset  string `json:"containerCpuset,omitempty"`
-}
-type ContainerCgroup map[string]ClaimCgroup // key is the container Name
-
-type PodCgroup struct {
-	PodName    string          `json:"podName,omitempty"`
-	Containers ContainerCgroup `json:"containers,omitempty"` // key is the container Name
-}
-
-const (
-	AllocatedPodCgroupStatus   = "Allocated"
-	UnallocatedPodCgroupStatus = "Unallocated"
-)
-
 // Type returns the type of PreparedDevices this represents.
 func (d PreparedCpuset) Type() string {
 	if d.RtCpu != nil {
@@ -122,11 +108,10 @@ func (d PreparedCpuset) Type() string {
 
 // NodeAllocationStateSpec is the spec for the NodeAllocationState CRD.
 type NodeAllocationStateSpec struct {
-	AllocatableCpuset   []AllocatableCpuset        `json:"allocatableCpuset,omitempty"`
-	AllocatedClaims     map[string]AllocatedCpuset `json:"allocatedClaims,omitempty"`
-	PreparedClaims      map[string]PreparedCpuset  `json:"preparedClaims,omitempty"`
-	AllocatedUtilToCpu  AllocatedUtilset           `json:"allocatedUtilToCpu,omitempty"`
-	AllocatedPodCgroups map[string]PodCgroup       `json:"allocatedPodCgroups,omitempty"` // key is the cgroup UID
+	AllocatableCpuset  []AllocatableCpuset        `json:"allocatableCpuset,omitempty"`
+	AllocatedClaims    map[string]AllocatedCpuset `json:"allocatedClaims,omitempty"`
+	PreparedClaims     map[string]PreparedCpuset  `json:"preparedClaims,omitempty"`
+	AllocatedUtilToCpu AllocatedUtilset           `json:"allocatedUtilToCpu,omitempty"`
 }
 
 // +genclient
@@ -138,6 +123,7 @@ type NodeAllocationStateSpec struct {
 
 // NodeAllocationState holds the state required for allocation on a node.
 type NodeAllocationState struct {
+	sync.RWMutex
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
@@ -153,4 +139,34 @@ type NodeAllocationStateList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 
 	Items []NodeAllocationState `json:"items"`
+}
+
+func (n *NodeAllocationState) SetAllocations(allocations map[string]AllocatedCpuset) {
+	n.RLock()
+	defer n.RUnlock()
+	n.Spec.AllocatedClaims = allocations
+}
+
+// SetUtilisation safely updates CPU utilization for a given claimUID.
+func (n *NodeAllocationState) SetUtilisation(allocations AllocatedCpuset, claimUID string) {
+	n.Lock()
+	defer n.Unlock()
+
+	claim, exists := n.Spec.AllocatedClaims[claimUID]
+	if !exists || claim.RtCpu == nil {
+		return
+	}
+
+	for _, cpu := range claim.RtCpu.Cpuset {
+		if cpu.Period == 0 {
+			continue
+		}
+		claimUtil := (cpu.Runtime * 1000 / cpu.Period)
+		cpuKey := strconv.Itoa(cpu.ID)
+
+		currentUtil := n.Spec.AllocatedUtilToCpu.Cpus[cpuKey].Util
+		n.Spec.AllocatedUtilToCpu.Cpus[cpuKey] = AllocatedUtil{
+			Util: claimUtil + currentUtil,
+		}
+	}
 }

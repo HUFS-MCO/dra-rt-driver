@@ -18,6 +18,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -69,15 +70,44 @@ func (c *Client) Delete(ctx context.Context) error {
 	return nil
 }
 
+// func (c *Client) Update(ctx context.Context, spec *nascrd.NodeAllocationStateSpec) error {
+// 	crd := c.nas.DeepCopy()
+// 	crd.Spec = *spec
+// 	crd, err := c.client.NodeAllocationStates(c.nas.Namespace).Update(ctx, crd, metav1.UpdateOptions{})
+// 	if err != nil {
+// 		return err
+// 	}
+// 	*c.nas = *crd
+// 	return nil
+// }
+
 func (c *Client) Update(ctx context.Context, spec *nascrd.NodeAllocationStateSpec) error {
-	crd := c.nas.DeepCopy()
-	crd.Spec = *spec
-	crd, err := c.client.NodeAllocationStates(c.nas.Namespace).Update(ctx, crd, metav1.UpdateOptions{})
-	if err != nil {
-		return err
+	maxRetries := 4 // Retry up to 4 times
+	var err error
+
+	for i := 0; i < maxRetries; i++ {
+		// Get the latest CRD version
+		crd, getErr := c.client.NodeAllocationStates(c.nas.Namespace).Get(ctx, c.nas.Name, metav1.GetOptions{})
+		if getErr != nil {
+			return fmt.Errorf("failed to retrieve latest CRD: %v", getErr)
+		}
+
+		crd.Spec = *spec // Overwrite with new data
+
+		// Attempt to update
+		crd, err = c.client.NodeAllocationStates(c.nas.Namespace).Update(ctx, crd, metav1.UpdateOptions{})
+		if err == nil {
+			*c.nas = *crd // If successful, update the local reference
+			return nil
+		}
+
+		// If it's a conflict error, retry after a short delay
+		if i < maxRetries-1 {
+			fmt.Println("Retrying update due to conflict...", err)
+		}
 	}
-	*c.nas = *crd
-	return nil
+
+	return fmt.Errorf("error updating NodeAllocationState CRD after retries: %v", err)
 }
 
 func (c *Client) UpdateStatus(ctx context.Context, status string) error {

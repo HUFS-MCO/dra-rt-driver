@@ -115,7 +115,11 @@ func (d *driver) nodePrepareResource(ctx context.Context, claim *drapbv1.Claim) 
 	var err error
 	var prepared []string
 	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		rtCDIDevices, _ := d.state.cdi.WriteCgroupToCDI(claim, d.nascrd.Spec)
+
+		rtCDIDevices, err := d.state.cdi.WriteCgroupToCDI(claim, d.nascrd.Spec)
+		// if err != nil {
+		// 	return fmt.Errorf("error writing cgroup to CDI: %v", err)
+		// }
 		// UpdateParentCgroup(claim, d.nascrd.Spec)
 		prepared, err = d.prepare(ctx, claim.Uid, rtCDIDevices)
 		if err != nil {
@@ -146,7 +150,7 @@ func (d *driver) nodePrepareResource(ctx context.Context, claim *drapbv1.Claim) 
 			Error: fmt.Sprintf("error preparing resource: %v", err),
 		}
 	}
-
+	fmt.Println("prepared CDI devices:", prepared)
 	klog.FromContext(ctx).Info("Prepared devices", "claim", claim.Uid)
 	return &drapbv1.NodePrepareResourceResponse{CDIDevices: prepared}
 }
@@ -217,12 +221,6 @@ func (d *driver) unprepare(ctx context.Context, claimUID string) error {
 	err = d.state.Unprepare(claimUID)
 	if err != nil {
 		return err
-	}
-	if _, exists := d.nascrd.Spec.AllocatedClaims[claimUID]; exists {
-		cgroupUID := d.nascrd.Spec.AllocatedClaims[claimUID].RtCpu.CgroupUID
-		if _, exists := d.nascrd.Spec.AllocatedPodCgroups[cgroupUID]; exists {
-			delete(d.nascrd.Spec.AllocatedPodCgroups, cgroupUID)
-		}
 	}
 	delete(d.nascrd.Spec.PreparedClaims, claimUID)
 

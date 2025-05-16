@@ -43,6 +43,7 @@ type driver struct {
 	namespace string
 	clientset clientset.Interface
 	rtdriver  *rtdriver
+	coreLock  *PerCoreMutex
 }
 
 var _ controller.Driver = &driver{}
@@ -53,6 +54,7 @@ func NewDriver(config *Config) *driver {
 		namespace: config.namespace,
 		clientset: config.clientSets.Example,
 		rtdriver:  NewRtDriver(),
+		coreLock:  NewPerCoreMutex(),
 	}
 }
 
@@ -133,10 +135,6 @@ func (d driver) allocate(ctx context.Context, claim *resourcev1.ResourceClaim, c
 		crd.Spec.AllocatedClaims = make(map[string]nascrd.AllocatedCpuset)
 	}
 
-	if crd.Spec.AllocatedPodCgroups == nil {
-		crd.Spec.AllocatedPodCgroups = make(map[string]nascrd.PodCgroup)
-	}
-
 	if crd.Spec.AllocatedUtilToCpu.Cpus == nil {
 		utils := make(map[string]nascrd.AllocatedUtil)
 		for _, cpu := range crd.Spec.AllocatableCpuset {
@@ -180,7 +178,6 @@ func (d driver) Deallocate(ctx context.Context, claim *resourcev1.ResourceClaim)
 	if selectedNode == "" {
 		return nil
 	}
-
 	d.lock.Get(selectedNode).Lock()
 	defer d.lock.Get(selectedNode).Unlock()
 
@@ -190,24 +187,63 @@ func (d driver) Deallocate(ctx context.Context, claim *resourcev1.ResourceClaim)
 	}
 	crd := nascrd.NewNodeAllocationState(crdconfig)
 
+	fmt.Println("Before deallocating, crd.Spec.AllocatedClaims:", crd.Spec.AllocatedClaims)
+	fmt.Println("Before deallocating, crd.Spec.AllocatedUtilToCpu:", crd.Spec.AllocatedUtilToCpu)
+
 	client := nasclient.New(crd, d.clientset.NasV1alpha1())
+	// err := client.Get(ctx)
+	// if err != nil {
+	// 	return fmt.Errorf("error retrieving node specific Cpu CRD: %v", err)
+	// }
+
+	fmt.Println("Before fetch, CRD ResourceVersion:", crd.ResourceVersion)
 	err := client.Get(ctx)
 	if err != nil {
 		return fmt.Errorf("error retrieving node specific Cpu CRD: %v", err)
 	}
-
-	if crd.Spec.AllocatedClaims == nil {
-		return nil
-	}
+	fmt.Println("After fetch, CRD ResourceVersion:", crd.ResourceVersion)
 
 	if _, exists := crd.Spec.AllocatedClaims[string(claim.UID)]; !exists {
+		fmt.Println("Warning: Claim not found in allocations:", string(claim.UID))
 		return nil
 	}
+
+	latestCrd := nascrd.NewNodeAllocationState(crdconfig)
+	latestClient := nasclient.New(latestCrd, d.clientset.NasV1alpha1())
+
+	// Force fetching latest version
+	if latestCrd.ResourceVersion != crd.ResourceVersion {
+		err := latestClient.Get(ctx)
+		if err != nil {
+			return fmt.Errorf("error retrieving latest CRD: %v", err)
+		}
+		crd = latestCrd // Use latest CRD version
+	}
+
+	// Get the list of cores involved in this deallocation
+	// coreIDs := []string{}
+	// for _, cpuss := range crd.Spec.AllocatedClaims[string(claim.UID)].RtCpu.Cpuset {
+	// 	coreIDs = append(coreIDs, strconv.Itoa(cpuss.ID))
+	// }
+	// if len(coreIDs) == 0 {
+	// 	return nil // No cores to lock, return early
+	// }
+
+	// Lock all involved cores **before modifying utilization**
+	// for _, coreID := range coreIDs {
+	// 	d.coreLock.Get(coreID).Lock()
+	// }
+	// defer func() {
+	// 	// Unlock cores after processing
+	// 	for _, coreID := range coreIDs {
+	// 		d.coreLock.Get(coreID).Unlock()
+	// 	}
+	// }()
 
 	devices := crd.Spec.AllocatedClaims[string(claim.UID)]
 	switch devices.Type() {
 	case nascrd.RtCpuType:
-		err = d.rtdriver.Deallocate(crd, claim)
+		err = d.rtdriver.Deallocate(crd, claim, selectedNode)
 	default:
 		err = fmt.Errorf("unknown AllocatedDevices.Type(): %v", devices.Type())
 	}
@@ -215,30 +251,37 @@ func (d driver) Deallocate(ctx context.Context, claim *resourcev1.ResourceClaim)
 		return fmt.Errorf("unable to deallocate devices '%v': %v", devices, err)
 	}
 
-	if _, exists := crd.Spec.AllocatedClaims[string(claim.UID)]; exists {
-		util := crd.Spec.AllocatedUtilToCpu.Cpus
-		for _, cpuss := range crd.Spec.AllocatedClaims[string(claim.UID)].RtCpu.Cpuset {
-			runtime := cpuss.Runtime
-			period := cpuss.Period
-			id := strconv.Itoa(cpuss.ID)
-			deletedUtil := (runtime * 1000) / period
-			util[id] = nascrd.AllocatedUtil{
-				Util: util[id].Util - deletedUtil,
+	if crd.Spec.AllocatedUtilToCpu.Cpus == nil {
+		crd.Spec.AllocatedUtilToCpu.Cpus = make(map[string]nascrd.AllocatedUtil)
+	}
+
+	for _, cpuss := range devices.RtCpu.Cpuset {
+		runtime := cpuss.Runtime
+		period := cpuss.Period
+		id := strconv.Itoa(cpuss.ID)
+
+		if utilEntry, exists := crd.Spec.AllocatedUtilToCpu.Cpus[id]; exists {
+			newUtil := utilEntry.Util - ((runtime * 1000) / period)
+			if newUtil < 0 {
+				newUtil = 0
 			}
-		}
-		crd.Spec.AllocatedUtilToCpu = nascrd.AllocatedUtilset{
-			Cpus: util,
+			crd.Spec.AllocatedUtilToCpu.Cpus[id] = nascrd.AllocatedUtil{
+				Util: newUtil,
+			}
+		} else {
+			fmt.Println("Warning: CPU Utilization entry missing for core:", id)
 		}
 	}
 
-	cgroupUID := crd.Spec.AllocatedClaims[string(claim.UID)].RtCpu.CgroupUID
 	delete(crd.Spec.AllocatedClaims, string(claim.UID))
-	delete(crd.Spec.AllocatedPodCgroups, cgroupUID)
 
 	err = client.Update(ctx, &crd.Spec)
 	if err != nil {
+		fmt.Println("Error updating CRD:", err)
 		return fmt.Errorf("error updating NodeAllocationState CRD: %v", err)
 	}
+	fmt.Println("After Update, crd.Spec.AllocatedClaims:", crd.Spec.AllocatedClaims)
+	fmt.Println("After Update, crd.Spec.AllocatedUtilToCpu:", crd.Spec.AllocatedUtilToCpu)
 
 	return nil
 }
@@ -286,10 +329,6 @@ func (d driver) unsuitableNode(ctx context.Context, pod *corev1.Pod, allcas []*c
 
 	if crd.Spec.AllocatedClaims == nil {
 		crd.Spec.AllocatedClaims = make(map[string]nascrd.AllocatedCpuset)
-	}
-
-	if crd.Spec.AllocatedPodCgroups == nil {
-		crd.Spec.AllocatedPodCgroups = make(map[string]nascrd.PodCgroup)
 	}
 
 	if crd.Spec.AllocatedUtilToCpu.Cpus == nil {
