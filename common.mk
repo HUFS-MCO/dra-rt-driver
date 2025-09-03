@@ -15,7 +15,7 @@
 GOLANG_VERSION ?= 1.24.6
 
 DRIVER_NAME := dra-rt-driver
-MODULE := github.com/nasim-samimi/$(DRIVER_NAME)
+MODULE := github.com/HUFS-MCO/$(DRIVER_NAME)
 
 VERSION  ?= v0.1.0
 vVERSION := v$(VERSION:v%=%)
@@ -27,6 +27,6 @@ PLURAL_EXCEPTIONS  = DeviceClassParameters:DeviceClassParameters
 PLURAL_EXCEPTIONS += RtClaimParameters:RtClaimParameters
 
 ifeq ($(IMAGE_NAME),)
-REGISTRY ?= nasimm
+REGISTRY ?= back1ash
 IMAGE_NAME = $(REGISTRY)/$(DRIVER_NAME)
 endif
