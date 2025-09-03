@@ -23,10 +23,10 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/client-go/util/retry"
 	"k8s.io/klog/v2"
-	drapbv1 "k8s.io/kubelet/pkg/apis/dra/v1alpha3"
+	drapbv1 "k8s.io/kubelet/pkg/apis/dra/v1"
 
-	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
-	nasclient "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1/client"
+	nascrd "github.com/HUFS-MCO/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
+	nasclient "github.com/HUFS-MCO/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1/client"
 )
 
 var _ drapbv1.NodeServer = &driver{}

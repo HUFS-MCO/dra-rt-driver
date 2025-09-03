@@ -1,6 +1,6 @@
-module github.com/nasim-samimi/dra-rt-driver
+module github.com/HUFS-MCO/dra-rt-driver
 
-go 1.22.5
+go 1.24.6
 
 require (
 	github.com/container-orchestrated-devices/container-device-interface v0.5.4

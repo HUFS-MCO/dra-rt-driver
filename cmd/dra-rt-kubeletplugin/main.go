@@ -35,7 +35,7 @@ import (
 )
 
 const (
-	DriverName = "rt.resource.example.com" // nas. 제거
+	DriverName = "rt.resource.example.com"
 
 	PluginRegistrationPath = "/var/lib/kubelet/plugins_registry/" + DriverName + ".sock"
 	DriverPluginPath       = "/var/lib/kubelet/plugins/" + DriverName

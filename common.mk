@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-GOLANG_VERSION ?= 1.22.2
+GOLANG_VERSION ?= 1.24.6
 
 DRIVER_NAME := dra-rt-driver
 MODULE := github.com/nasim-samimi/$(DRIVER_NAME)
