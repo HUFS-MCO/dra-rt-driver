@@ -1,20 +1,20 @@
 module github.com/nasim-samimi/dra-rt-driver
 
-go 1.22.2
+go 1.22.5
 
 require (
 	github.com/container-orchestrated-devices/container-device-interface v0.5.4
 	github.com/prometheus/client_golang v1.16.0
 	github.com/spf13/pflag v1.0.5
 	github.com/urfave/cli/v2 v2.25.3
-	k8s.io/api v0.28.0
-	k8s.io/apimachinery v0.28.0
-	k8s.io/client-go v0.28.0
-	k8s.io/component-base v0.28.0
-	k8s.io/dynamic-resource-allocation v0.28.0
-	k8s.io/klog/v2 v2.120.1
-	k8s.io/kubelet v0.28.0
-	k8s.io/metrics v0.28.0
+    k8s.io/api v0.31.0
+    k8s.io/apimachinery v0.31.0  
+    k8s.io/client-go v0.31.0
+    k8s.io/component-base v0.31.0
+    k8s.io/dynamic-resource-allocation v0.31.0
+    k8s.io/klog/v2 v2.130.1
+    k8s.io/kubelet v0.31.0
+    k8s.io/metrics v0.31.0
 )
 
 require (

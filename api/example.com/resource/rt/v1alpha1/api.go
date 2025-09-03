@@ -17,15 +17,47 @@
 package v1alpha1
 
 import (
-	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
+	"fmt"
+
+	resourcev1 "k8s.io/api/resource/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
-	GroupName = "rt.resource.example.com"
+	GroupName = "rt.resource.example.com" // nas. 제거
 	Version   = "v1alpha1"
 
-	RtClaimParametersKind = "RtClaimParameters"
+	DriverName        = "rt.resource.example.com" // 추가
+	RtCpuType         = "rtcpu"
+	UnknownDeviceType = "unknown"
+
+	NodeAllocationStateStatusReady    = "Ready"
+	NodeAllocationStateStatusNotReady = "NotReady"
 )
+
+type DeviceClassConfig struct {
+	Name      string
+	Namespace string
+	Driver    string
+}
+
+func NewDeviceClass(config *DeviceClassConfig) *resourcev1.DeviceClass {
+	return &resourcev1.DeviceClass{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      config.Name,
+			Namespace: config.Namespace,
+		},
+		Spec: resourcev1.DeviceClassSpec{
+			Selectors: []resourcev1.DeviceSelector{
+				{
+					CEL: &resourcev1.CELDeviceSelector{
+						Expression: fmt.Sprintf("device.driver == '%s'", config.Driver),
+					},
+				},
+			},
+		},
+	}
+}
 
 func DefaultDeviceClassParametersSpec() *DeviceClassParametersSpec {
 	return &DeviceClassParametersSpec{

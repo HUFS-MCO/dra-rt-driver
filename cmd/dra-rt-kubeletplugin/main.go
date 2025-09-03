@@ -25,17 +25,17 @@ import (
 
 	"github.com/urfave/cli/v2"
 
+	"k8s.io/client-go/kubernetes"
 	plugin "k8s.io/dynamic-resource-allocation/kubeletplugin"
 	"k8s.io/klog/v2"
 
-	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
-	rtcrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/v1alpha1"
-	exampleclientset "github.com/nasim-samimi/dra-rt-driver/pkg/example.com/resource/clientset/versioned"
-	"github.com/nasim-samimi/dra-rt-driver/pkg/flags"
+	nascrd "github.com/HUFS-MCO/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
+	exampleclientset "github.com/HUFS-MCO/dra-rt-driver/pkg/example.com/resource/clientset/versioned"
+	"github.com/HUFS-MCO/dra-rt-driver/pkg/flags"
 )
 
 const (
-	DriverName = rtcrd.GroupName
+	DriverName = "rt.resource.example.com" // nas. 제거
 
 	PluginRegistrationPath = "/var/lib/kubelet/plugins_registry/" + DriverName + ".sock"
 	DriverPluginPath       = "/var/lib/kubelet/plugins/" + DriverName
@@ -57,10 +57,16 @@ type Config struct {
 }
 
 func main() {
-	if err := newApp().Run(os.Args); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
-	}
+	plugin := kubeletplugin.New(
+		driverName,
+		kubeletplugin.WithResourceSlicePublisher(publishResourceSlices),
+	)
+
+	plugin.Run(ctx)
+}
+
+func publishResourceSlices(ctx context.Context, client kubernetes.Interface) error {
+	return nil
 }
 
 func newApp() *cli.App {

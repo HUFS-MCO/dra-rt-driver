@@ -1,28 +1,28 @@
-# Two pods, one container each
-# Each container asking for 1 distinct GPU
-
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: rt-test1
-
 ---
-apiVersion: resource.k8s.io/v1alpha2
-kind: ResourceClaimTemplate
+apiVersion: resource.k8s.io/v1
+kind: ResourceClaim
 metadata:
   namespace: rt-test1
-  name: rt.example.com
+  name: rt-claim-1
 spec:
-  spec:
-    resourceClassName: rt.example.com
-    parametersRef:
-      apiGroup: rt.resource.example.com
-      kind: RtClaimParameters
-      name: rtclaims
-
+  devices:
+    requests:
+    - name: rtcpu-request
+      exactly:
+        deviceClassName: rt.example.com
+        allocationMode: All
+        count: 2
+        selectors:
+        - cel:
+            expression: |-
+              device.attributes["rt.resource.example.com"].runtime == 100 &&
+              device.attributes["rt.resource.example.com"].period == 1000
 ---
-
 apiVersion: rt.resource.example.com/v1alpha1
 kind: RtClaimParameters
 metadata:
@@ -32,15 +32,12 @@ spec:
   count: 2
   runtime: 100
   period: 1000
-
 ---
 apiVersion: v1
 kind: Pod
 metadata:
   namespace: rt-test1
   name: pod0
-  labels:
-    app: pod
 spec:
   containers:
   - name: ctr0
@@ -52,27 +49,4 @@ spec:
       - name: rtcpu
   resourceClaims:
   - name: rtcpu
-    source:
-      resourceClaimTemplateName: rt.example.com
-
----
-apiVersion: v1
-kind: Pod
-metadata:
-  namespace: rt-test1
-  name: pod1
-  labels:
-    app: pod
-spec:
-  containers:
-  - name: ctr0
-    image: ubuntu:22.04
-    command: ["bash", "-c"]
-    args: ["export; sleep 9999"]
-    resources:
-      claims:
-      - name: rtcpu
-  resourceClaims:
-  - name: rtcpu
-    source:
-      resourceClaimTemplateName: rt.example.com
+    resourceClaimName: rt-claim-1

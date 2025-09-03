@@ -22,14 +22,14 @@ import (
 	"strconv"
 
 	corev1 "k8s.io/api/core/v1"
-	resourcev1 "k8s.io/api/resource/v1alpha2"
+	resourcev1 "k8s.io/api/resource/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/dynamic-resource-allocation/controller"
 
-	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
-	nasclient "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1/client"
-	rtcrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/v1alpha1"
-	clientset "github.com/nasim-samimi/dra-rt-driver/pkg/example.com/resource/clientset/versioned"
+	nascrd "github.com/HUFS-MCO/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
+	nasclient "github.com/HUFS-MCO/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1/client"
+	rtcrd "github.com/HUFS-MCO/dra-rt-driver/api/example.com/resource/rt/v1alpha1"
+	clientset "github.com/HUFS-MCO/dra-rt-driver/pkg/example.com/resource/clientset/versioned"
 )
 
 const (
@@ -58,42 +58,33 @@ func NewDriver(config *Config) *driver {
 	}
 }
 
-func (d driver) GetClassParameters(ctx context.Context, class *resourcev1.ResourceClass) (interface{}, error) {
-	if class.ParametersRef == nil {
+func (d driver) GetClassParameters(ctx context.Context, class *resourcev1.DeviceClass) (interface{}, error) {
+	if class.Spec.ParametersRef == nil {
 		return rtcrd.DefaultDeviceClassParametersSpec(), nil
 	}
-	if class.ParametersRef.APIGroup != DriverAPIGroup {
-		return nil, fmt.Errorf("incorrect API group: %v", class.ParametersRef.APIGroup)
+	if class.Spec.ParametersRef.APIGroup != DriverAPIGroup {
+		return nil, fmt.Errorf("incorrect API group: %v", class.Spec.ParametersRef.APIGroup)
 	}
-	dc, err := d.clientset.RtV1alpha1().DeviceClassParameters().Get(ctx, class.ParametersRef.Name, metav1.GetOptions{})
+	dc, err := d.clientset.RtV1alpha1().DeviceClassParameters().Get(ctx, class.Spec.ParametersRef.Name, metav1.GetOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("error getting DeviceClassParameters called '%v': %v", class.ParametersRef.Name, err)
+		return nil, fmt.Errorf("error getting DeviceClassParameters called '%v': %v", class.Spec.ParametersRef.Name, err)
 	}
 	return &dc.Spec, nil
 }
 
-func (d driver) GetClaimParameters(ctx context.Context, claim *resourcev1.ResourceClaim, class *resourcev1.ResourceClass, classParameters interface{}) (interface{}, error) {
-	if claim.Spec.ParametersRef == nil {
+func (d driver) GetClaimParameters(ctx context.Context, claim *resourcev1.ResourceClaim, class *resourcev1.DeviceClass, classParameters interface{}) (interface{}, error) {
+	if len(claim.Spec.Devices.Requests) == 0 {
 		return rtcrd.DefaultRtClaimParametersSpec(), nil
 	}
-	if claim.Spec.ParametersRef.APIGroup != DriverAPIGroup {
-		return nil, fmt.Errorf("incorrect API group: %v", claim.Spec.ParametersRef.APIGroup)
+
+	request := claim.Spec.Devices.Requests[0]
+	if len(request.Selectors) == 0 {
+		return rtcrd.DefaultRtClaimParametersSpec(), nil
 	}
 
-	switch claim.Spec.ParametersRef.Kind {
-	case rtcrd.RtClaimParametersKind:
-		gc, err := d.clientset.RtV1alpha1().RtClaimParameters(claim.Namespace).Get(ctx, claim.Spec.ParametersRef.Name, metav1.GetOptions{})
-		if err != nil {
-			return nil, fmt.Errorf("error getting RtClaimParameters called '%v' in namespace '%v': %v", claim.Spec.ParametersRef.Name, claim.Namespace, err)
-		}
-		err = d.rtdriver.ValidateClaimParameters(&gc.Spec)
-		if err != nil {
-			return nil, fmt.Errorf("error validating RtClaimParameters called '%v' in namespace '%v': %v", claim.Spec.ParametersRef.Name, claim.Namespace, err)
-		}
-		return &gc.Spec, nil
-	default:
-		return nil, fmt.Errorf("unknown ResourceClaim.ParametersRef.Kind: %v", claim.Spec.ParametersRef.Kind)
-	}
+	// CEL 표현식에서 파라미터 추출하거나 별도 CRD 참조
+	// 여기서는 기본값 반환 (실제로는 CEL 파싱 필요)
+	return rtcrd.DefaultRtClaimParametersSpec(), nil
 }
 
 func (d driver) Allocate(ctx context.Context, cas []*controller.ClaimAllocation, selectedNode string) {
@@ -106,7 +97,7 @@ func (d driver) Allocate(ctx context.Context, cas []*controller.ClaimAllocation,
 	}
 }
 
-func (d driver) allocate(ctx context.Context, claim *resourcev1.ResourceClaim, claimParameters interface{}, class *resourcev1.ResourceClass, classParameters interface{}, selectedNode string) (*resourcev1.AllocationResult, error) {
+func (d driver) allocate(ctx context.Context, claim *resourcev1.ResourceClaim, claimParameters interface{}, class *resourcev1.DeviceClass, classParameters interface{}, selectedNode string) (*resourcev1.AllocationResult, error) {
 
 	if selectedNode == "" {
 		return nil, fmt.Errorf("TODO: immediate allocations is not yet supported")

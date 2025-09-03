@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/client-go/util/retry"
 	"k8s.io/klog/v2"
 	drapbv1 "k8s.io/kubelet/pkg/apis/dra/v1alpha3"
@@ -225,4 +226,57 @@ func (d *driver) unprepare(ctx context.Context, claimUID string) error {
 	delete(d.nascrd.Spec.PreparedClaims, claimUID)
 
 	return nil
+}
+
+func (d *driver) publishResourceSlices(ctx context.Context) error {
+	rtcpus := d.discoverRtCpus()
+
+	devices := []resourcev1.Device{}
+	for i, rtcpu := range rtcpus {
+		device := resourcev1.Device{
+			Name: fmt.Sprintf("rtcpu-%d", i),
+			Attributes: map[resourcev1.QualifiedName]resourcev1.DeviceAttribute{
+				"rt.resource.example.com/runtime": {
+					IntValue: &rtcpu.Runtime,
+				},
+				"rt.resource.example.com/period": {
+					IntValue: &rtcpu.Period,
+				},
+				"rt.resource.example.com/count": {
+					IntValue: &rtcpu.Count,
+				},
+			},
+			Capacity: map[resourcev1.QualifiedName]resource.Quantity{
+				"rt.resource.example.com/cores": resource.MustParse(fmt.Sprintf("%d", rtcpu.Count)),
+			},
+		}
+		devices = append(devices, device)
+	}
+
+	resourceSlice := &resourcev1.ResourceSlice{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: fmt.Sprintf("%s-rt.resource.example.com-", d.nodeName),
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion: "v1",
+					Kind:       "Node",
+					Name:       d.nodeName,
+					UID:        d.nodeUID,
+					Controller: &[]bool{true}[0],
+				},
+			},
+		},
+		Spec: resourcev1.ResourceSliceSpec{
+			Driver:   "rt.resource.example.com",
+			NodeName: d.nodeName,
+			Pool: resourcev1.ResourcePool{
+				Name:               d.nodeName,
+				Generation:         0,
+				ResourceSliceCount: 1,
+			},
+			Devices: devices,
+		},
+	}
+
+	return d.client.Create(ctx, resourceSlice)
 }
