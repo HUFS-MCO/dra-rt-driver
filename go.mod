@@ -7,14 +7,15 @@ require (
 	github.com/prometheus/client_golang v1.16.0
 	github.com/spf13/pflag v1.0.5
 	github.com/urfave/cli/v2 v2.25.3
-    k8s.io/api v0.31.0
-    k8s.io/apimachinery v0.31.0  
-    k8s.io/client-go v0.31.0
-    k8s.io/component-base v0.31.0
-    k8s.io/dynamic-resource-allocation v0.31.0
+    k8s.io/api v0.34.0
+    k8s.io/apimachinery v0.34.0  
+    k8s.io/client-go v0.34.0
+    k8s.io/component-base v0.34.0
+    k8s.io/dynamic-resource-allocation v0.34.0
+	k8s.io/kubernetes v1.34.0
     k8s.io/klog/v2 v2.130.1
-    k8s.io/kubelet v0.31.0
-    k8s.io/metrics v0.31.0
+    k8s.io/kubelet v0.34.0
+    k8s.io/metrics v0.34.0
 )
 
 require (
