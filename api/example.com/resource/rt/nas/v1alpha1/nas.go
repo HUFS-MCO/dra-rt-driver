@@ -126,9 +126,8 @@ type NodeAllocationState struct {
 	sync.RWMutex
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	Spec   NodeAllocationStateSpec `json:"spec,omitempty"`
-	Status string                  `json:"status,omitempty"`
+	Spec              NodeAllocationStateSpec `json:"spec,omitempty"`
+	Status            string                  `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
