@@ -24,7 +24,7 @@ import (
 
 	nascrd "github.com/HUFS-MCO/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
 
-	"github.com/HUFS-MCO/dra-rt-driver/api/example.com/resource/rt/v1alpha1/controller"
+	"github.com/HUFS-MCO/dra-rt-driver/pkg/controller"
 	corev1 "k8s.io/api/core/v1"
 	resourcev1 "k8s.io/api/resource/v1"
 

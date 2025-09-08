@@ -29,9 +29,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/urfave/cli/v2"
 
+	"github.com/HUFS-MCO/dra-rt-driver/pkg/controller"
 	"k8s.io/client-go/informers"
 	"k8s.io/component-base/metrics/legacyregistry"
-	"k8s.io/dynamic-resource-allocation/controller"
 	"k8s.io/klog/v2"
 
 	_ "k8s.io/component-base/metrics/prometheus/restclient" // for client metric registration
