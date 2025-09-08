@@ -22,13 +22,13 @@ import (
 	"strconv"
 	"sync"
 
-	nascrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
+	nascrd "github.com/HUFS-MCO/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
 
+	"github.com/HUFS-MCO/dra-rt-driver/api/example.com/resource/rt/v1alpha1/controller"
 	corev1 "k8s.io/api/core/v1"
 	resourcev1 "k8s.io/api/resource/v1"
-	"k8s.io/dynamic-resource-allocation/controller"
 
-	rtcrd "github.com/nasim-samimi/dra-rt-driver/api/example.com/resource/rt/v1alpha1"
+	rtcrd "github.com/HUFS-MCO/dra-rt-driver/api/example.com/resource/rt/v1alpha1"
 )
 
 type rtdriver struct {
