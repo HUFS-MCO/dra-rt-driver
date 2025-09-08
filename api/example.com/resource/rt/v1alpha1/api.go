@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	"fmt"
 
+	nascrd "github.com/HUFS-MCO/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
 	resourcev1 "k8s.io/api/resource/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
