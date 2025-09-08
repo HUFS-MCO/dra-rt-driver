@@ -21,6 +21,7 @@ import (
 
 	"github.com/spf13/pflag"
 	"github.com/urfave/cli/v2"
+	"k8s.io/apimachinery/pkg/util/version"
 
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/component-base/featuregate"
