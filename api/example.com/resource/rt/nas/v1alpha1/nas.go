@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	"strconv"
+	"sync"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -122,6 +123,7 @@ type NodeAllocationStateSpec struct {
 
 // NodeAllocationState holds the state required for allocation on a node.
 type NodeAllocationState struct {
+	sync.RWMutex      `json:"-"`
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	Spec              NodeAllocationStateSpec `json:"spec,omitempty"`
