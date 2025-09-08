@@ -35,7 +35,11 @@ type LoggingConfig struct {
 }
 
 func NewLoggingConfig() *LoggingConfig {
-	fg := featuregate.NewVersionedFeatureGate()
+	v, err := version.ParseSemantic("v1.25.0")
+    if err != nil {
+        panic(err)
+    }
+	fg := featuregate.NewVersionedFeatureGate(v)
 	var _ pflag.Value = fg // compile-time check for the type conversion below
 	l := &LoggingConfig{
 		featureGate: fg,
