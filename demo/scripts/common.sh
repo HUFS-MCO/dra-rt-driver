@@ -26,7 +26,7 @@ SCRIPTS_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)"
 : ${DRIVER_NAME:=dra-rt-driver}
 
 # The registry, image and tag for the example driver
-: ${DRIVER_IMAGE_REGISTRY:="nasimm"}
+: ${DRIVER_IMAGE_REGISTRY:="back1ash"}
 : ${DRIVER_IMAGE_NAME:="${DRIVER_NAME}"}
 : ${DRIVER_IMAGE_TAG:="v0.1.0"}
 : ${DRIVER_IMAGE_PLATFORM:="ubuntu22.04"}
