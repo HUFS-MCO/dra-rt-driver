@@ -20,11 +20,11 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/HUFS-MCO/dra-rt-driver/pkg/controller"
 	corev1 "k8s.io/api/core/v1"
 	resourcev1 "k8s.io/api/resource/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	nascrd "github.com/HUFS-MCO/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1"
 	nasclient "github.com/HUFS-MCO/dra-rt-driver/api/example.com/resource/rt/nas/v1alpha1/client"
@@ -59,17 +59,17 @@ func NewDriver(config *Config) *driver {
 }
 
 func (d driver) GetClassParameters(ctx context.Context, class *resourcev1.DeviceClass) (interface{}, error) {
-	if class.Spec.ParametersRef == nil {
+	if len(class.Spec.Selectors) == 0 {
 		return rtcrd.DefaultDeviceClassParametersSpec(), nil
 	}
-	if class.Spec.ParametersRef.APIGroup != DriverAPIGroup {
-		return nil, fmt.Errorf("incorrect API group: %v", class.Spec.ParametersRef.APIGroup)
+
+	celExpr := class.Spec.Selectors[0].Cel.Expression
+
+	if !strings.Contains(celExpr, "driver.example.com") {
+		return nil, fmt.Errorf("incorrect driver in CEL expression: %s", celExpr)
 	}
-	dc, err := d.clientset.RtV1alpha1().DeviceClassParameters().Get(ctx, class.Spec.ParametersRef.Name, metav1.GetOptions{})
-	if err != nil {
-		return nil, fmt.Errorf("error getting DeviceClassParameters called '%v': %v", class.Spec.ParametersRef.Name, err)
-	}
-	return &dc.Spec, nil
+
+	return rtcrd.DefaultDeviceClassParametersSpec(), nil
 }
 
 func (d driver) GetClaimParameters(ctx context.Context, claim *resourcev1.ResourceClaim, class *resourcev1.DeviceClass, classParameters interface{}) (interface{}, error) {
@@ -78,13 +78,19 @@ func (d driver) GetClaimParameters(ctx context.Context, claim *resourcev1.Resour
 	}
 
 	request := claim.Spec.Devices.Requests[0]
+
 	if len(request.Selectors) == 0 {
 		return rtcrd.DefaultRtClaimParametersSpec(), nil
 	}
 
-	// CEL 표현식에서 파라미터 추출하거나 별도 CRD 참조
-	// 여기서는 기본값 반환 (실제로는 CEL 파싱 필요)
-	return rtcrd.DefaultRtClaimParametersSpec(), nil
+	celExpr := request.Selectors[0].Cel.Expression
+
+	params := rtcrd.DefaultRtClaimParametersSpec()
+
+	if strings.Contains(celExpr, "cpu.cores") {
+	}
+
+	return params, nil
 }
 
 func (d driver) Allocate(ctx context.Context, cas []*controller.ClaimAllocation, selectedNode string) {
@@ -287,6 +293,15 @@ func (d driver) UnsuitableNodes(ctx context.Context, pod *corev1.Pod, cas []*con
 
 	for _, ca := range cas {
 		ca.UnsuitableNodes = unique(ca.UnsuitableNodes)
+	}
+	perKindCas := make(map[string][]*controller.ClaimAllocation)
+	for _, ca := range cas {
+		switch ca.ClaimParameters.(type) {
+		case *rtcrd.RtClaimParametersSpec:
+			perKindCas[rtcrd.RtClaimParametersKind] = append(perKindCas[rtcrd.RtClaimParametersKind], ca)
+		default:
+			return fmt.Errorf("unknown ResourceClaimParameters kind: %T", ca.ClaimParameters)
+		}
 	}
 
 	return nil
