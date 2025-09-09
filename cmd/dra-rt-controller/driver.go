@@ -395,11 +395,12 @@ func (d driver) unsuitableNode(ctx context.Context, pod *corev1.Pod, allcas []*c
 
 func buildAllocationResult(selectedNode string, requestName string) *resourcev1.AllocationResult {
 	return &resourcev1.AllocationResult{
-		Devices: resourcev1.DeviceAllocationResult{
-			Request: requestName,
-			Driver:  "rt.example.com",
-			Pool:    selectedNode,
-			Device:  selectedNode,
+		Devices: []resourcev1.DeviceAllocationResult{
+			{
+				ResourceName: requestName,
+				Devices:      []string{selectedNode},
+				Driver:       "rt.example.com", // 실제 드라이버명으로 변경
+			},
 		},
 	}
 }
@@ -408,8 +409,14 @@ func getSelectedNode(claim *resourcev1.ResourceClaim) string {
 	if claim.Status.Allocation == nil {
 		return ""
 	}
+	if len(claim.Status.Allocation.Devices) == 0 {
+		return ""
+	}
+	if len(claim.Status.Allocation.Devices[0].Devices) == 0 {
+		return ""
+	}
 
-	return claim.Status.Allocation.Devices.Device
+	return claim.Status.Allocation.Devices[0].Devices[0]
 }
 func unique(s []string) []string {
 	set := make(map[string]struct{})
