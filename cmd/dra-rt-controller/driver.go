@@ -65,7 +65,7 @@ func (d driver) GetClassParameters(ctx context.Context, class *resourcev1.Device
 
 	celExpr := class.Spec.Selectors[0].CEL.Expression
 
-	if !strings.Contains(celExpr, "driver.example.com") {
+	if !strings.Contains(celExpr, "rt.example.com") {
 		return nil, fmt.Errorf("incorrect driver in CEL expression: %s", celExpr)
 	}
 
@@ -79,18 +79,20 @@ func (d driver) GetClaimParameters(ctx context.Context, claim *resourcev1.Resour
 
 	request := claim.Spec.Devices.Requests[0]
 
-	if len(request.Requirements) == 0 {
+	var selectors []resourcev1.DeviceSelector
+	if request.FirstAvailable != nil && len(request.FirstAvailable) > 0 {
+		selectors = request.FirstAvailable[0].Selectors
+	} else if request.Exactly != nil {
+		selectors = request.Exactly.Selectors
+	}
+
+	if len(selectors) == 0 {
 		return rtcrd.DefaultRtClaimParametersSpec(), nil
 	}
 
-	celExpr := request.Requirements[0].Cel.Expression
+	celExpr := selectors[0].CEL.Expression
 
-	params := rtcrd.DefaultRtClaimParametersSpec()
-
-	if strings.Contains(celExpr, "cpu.cores") {
-	}
-
-	return params, nil
+	return rtcrd.DefaultRtClaimParametersSpec(), nil
 }
 
 func (d driver) Allocate(ctx context.Context, cas []*controller.ClaimAllocation, selectedNode string) {
@@ -114,8 +116,16 @@ func (d driver) allocate(ctx context.Context, claim *resourcev1.ResourceClaim, c
 	}
 
 	request := claim.Spec.Devices.Requests[0]
-	if request.DeviceClassName != class.Name {
-		return nil, fmt.Errorf("device class mismatch: expected %s, got %s", class.Name, request.DeviceClassName)
+
+	var deviceClassName string
+	if request.FirstAvailable != nil && len(request.FirstAvailable) > 0 {
+		deviceClassName = request.FirstAvailable[0].DeviceClassName
+	} else if request.Exactly != nil {
+		deviceClassName = request.Exactly.DeviceClassName
+	}
+
+	if deviceClassName != class.Name {
+		return nil, fmt.Errorf("device class mismatch: expected %s, got %s", class.Name, deviceClassName)
 	}
 
 	d.lock.Get(selectedNode).Lock()
@@ -176,7 +186,7 @@ func (d driver) allocate(ctx context.Context, claim *resourcev1.ResourceClaim, c
 
 	onSuccess()
 
-	return buildAllocationResult(selectedNode, true), nil
+	return buildAllocationResult(selectedNode, request.Name), nil
 }
 
 func (d driver) Deallocate(ctx context.Context, claim *resourcev1.ResourceClaim) error {
@@ -383,41 +393,23 @@ func (d driver) unsuitableNode(ctx context.Context, pod *corev1.Pod, allcas []*c
 	return nil
 }
 
-func buildAllocationResult(selectedNode string, shareable bool) *resourcev1.AllocationResult {
-	nodeSelector := &corev1.NodeSelector{
-		NodeSelectorTerms: []corev1.NodeSelectorTerm{
-			{
-				MatchFields: []corev1.NodeSelectorRequirement{
-					{
-						Key:      "metadata.name",
-						Operator: "In",
-						Values:   []string{selectedNode},
-					},
-				},
-			},
+func buildAllocationResult(selectedNode string, requestName string) *resourcev1.AllocationResult {
+	return &resourcev1.AllocationResult{
+		Devices: resourcev1.DeviceRequestAllocationResult{
+			Request: requestName,
+			Driver:  "rt.example.com",
+			Pool:    selectedNode,
+			Device:  selectedNode,
 		},
 	}
-	allocation := &resourcev1.AllocationResult{
-		Devices: []resourcev1.DeviceAllocationResult{
-			{
-				Device:  selectedNode,
-				Driver:  rtcrd.DriverName,
-				Pool:    selectedNode,
-				Request: "rt-resource",
-			},
-		},
-	}
-	return allocation
 }
 
 func getSelectedNode(claim *resourcev1.ResourceClaim) string {
 	if claim.Status.Allocation == nil {
 		return ""
 	}
-	if claim.Status.Allocation.AvailableOnNodes == nil {
-		return ""
-	}
-	return claim.Status.Allocation.Devices[0].Pool
+
+	return claim.Status.Allocation.Devices.Pool
 }
 
 func unique(s []string) []string {
