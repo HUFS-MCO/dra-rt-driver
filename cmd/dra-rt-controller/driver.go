@@ -63,7 +63,7 @@ func (d driver) GetClassParameters(ctx context.Context, class *resourcev1.Device
 		return rtcrd.DefaultDeviceClassParametersSpec(), nil
 	}
 
-	celExpr := class.Spec.Selectors[0].Cel.Expression
+	celExpr := class.Spec.Selectors[0].CEL.Expression
 
 	if !strings.Contains(celExpr, "driver.example.com") {
 		return nil, fmt.Errorf("incorrect driver in CEL expression: %s", celExpr)
@@ -79,11 +79,11 @@ func (d driver) GetClaimParameters(ctx context.Context, claim *resourcev1.Resour
 
 	request := claim.Spec.Devices.Requests[0]
 
-	if len(request.Selectors) == 0 {
+	if len(request.Requirements) == 0 {
 		return rtcrd.DefaultRtClaimParametersSpec(), nil
 	}
 
-	celExpr := request.Selectors[0].Cel.Expression
+	celExpr := request.Requirements[0].Cel.Expression
 
 	params := rtcrd.DefaultRtClaimParametersSpec()
 
@@ -107,6 +107,15 @@ func (d driver) allocate(ctx context.Context, claim *resourcev1.ResourceClaim, c
 
 	if selectedNode == "" {
 		return nil, fmt.Errorf("TODO: immediate allocations is not yet supported")
+	}
+
+	if len(claim.Spec.Devices.Requests) == 0 {
+		return nil, fmt.Errorf("no device requests found in claim")
+	}
+
+	request := claim.Spec.Devices.Requests[0]
+	if request.DeviceClassName != class.Name {
+		return nil, fmt.Errorf("device class mismatch: expected %s, got %s", class.Name, request.DeviceClassName)
 	}
 
 	d.lock.Get(selectedNode).Lock()
@@ -389,8 +398,14 @@ func buildAllocationResult(selectedNode string, shareable bool) *resourcev1.Allo
 		},
 	}
 	allocation := &resourcev1.AllocationResult{
-		AvailableOnNodes: nodeSelector,
-		Shareable:        shareable,
+		Devices: []resourcev1.DeviceAllocationResult{
+			{
+				Device:  selectedNode,
+				Driver:  rtcrd.DriverName,
+				Pool:    selectedNode,
+				Request: "rt-resource",
+			},
+		},
 	}
 	return allocation
 }
@@ -402,7 +417,7 @@ func getSelectedNode(claim *resourcev1.ResourceClaim) string {
 	if claim.Status.Allocation.AvailableOnNodes == nil {
 		return ""
 	}
-	return claim.Status.Allocation.AvailableOnNodes.NodeSelectorTerms[0].MatchFields[0].Values[0]
+	return claim.Status.Allocation.Devices[0].Pool
 }
 
 func unique(s []string) []string {
