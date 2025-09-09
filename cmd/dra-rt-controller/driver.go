@@ -90,7 +90,7 @@ func (d driver) GetClaimParameters(ctx context.Context, claim *resourcev1.Resour
 		return rtcrd.DefaultRtClaimParametersSpec(), nil
 	}
 
-	celExpr := selectors[0].CEL.Expression
+	// celExpr := selectors[0].CEL.Expression
 
 	return rtcrd.DefaultRtClaimParametersSpec(), nil
 }
@@ -163,7 +163,7 @@ func (d driver) allocate(ctx context.Context, claim *resourcev1.ResourceClaim, c
 		}
 	}
 	if _, exists := crd.Spec.AllocatedClaims[string(claim.UID)]; exists {
-		return buildAllocationResult(selectedNode, true), nil
+		return buildAllocationResult(selectedNode, request.Name), nil
 	}
 
 	var onSuccess OnSuccessCallback
@@ -173,7 +173,7 @@ func (d driver) allocate(ctx context.Context, claim *resourcev1.ResourceClaim, c
 	case *rtcrd.RtClaimParametersSpec:
 		onSuccess, err = d.rtdriver.Allocate(crd, claim, claimParams, class, classParams, selectedNode)
 	default:
-		err = fmt.Errorf("unknown ResourceClaim.ParametersRef.Kind: %v", claim.Spec.ParametersRef.Kind)
+		err = fmt.Errorf("unknown ResourceClaim.ParametersRef.Kind: ")
 	}
 	if err != nil {
 		return nil, fmt.Errorf("unable to allocate devices on node '%v': %v", selectedNode, err)
@@ -395,7 +395,7 @@ func (d driver) unsuitableNode(ctx context.Context, pod *corev1.Pod, allcas []*c
 
 func buildAllocationResult(selectedNode string, requestName string) *resourcev1.AllocationResult {
 	return &resourcev1.AllocationResult{
-		Devices: resourcev1.DeviceRequestAllocationResult{
+		Devices: resourcev1.DeviceAllocationResult{
 			Request: requestName,
 			Driver:  "rt.example.com",
 			Pool:    selectedNode,
@@ -409,9 +409,8 @@ func getSelectedNode(claim *resourcev1.ResourceClaim) string {
 		return ""
 	}
 
-	return claim.Status.Allocation.Devices.Pool
+	return claim.Status.Allocation.Devices.Device
 }
-
 func unique(s []string) []string {
 	set := make(map[string]struct{})
 	var news []string
