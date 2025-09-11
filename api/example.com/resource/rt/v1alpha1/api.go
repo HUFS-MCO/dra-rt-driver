@@ -34,6 +34,7 @@ const (
 
 	NodeAllocationStateStatusReady    = "Ready"
 	NodeAllocationStateStatusNotReady = "NotReady"
+	RtClaimParametersKind             = "RtClaimParameters"
 )
 
 type DeviceClassConfig struct {
